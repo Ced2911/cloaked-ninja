@@ -61,31 +61,36 @@ u8 **psxMemRLUT = NULL;
 0xbfc0_0000-0xbfc7_ffff		BIOS Mirror (512K) Uncached
 */
 
-int psxMemInit() {
-	int i;
+u8 * virtual_memory = NULL;
+s8 *psxVM = NULL;
 
+int psxMemInit() {
+	int i, j;
+
+	virtual_memory = (unsigned char *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
+
+	psxVM = (s8 *)virtual_memory;
+
+	// Create Mapping ...
+	psxM = (s8 *)VirtualAlloc(virtual_memory, 0x00400000, MEM_COMMIT, PAGE_READWRITE);
+	// Parallel Port
+	psxP = (s8 *)VirtualAlloc(virtual_memory+0x1f000000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
+	// Hardware Regs + Scratch Pad
+	psxH = (s8 *)VirtualAlloc(virtual_memory+0x1f800000, 0x10000, MEM_COMMIT, PAGE_READWRITE);
+	// Bios
+	psxR = (s8 *)VirtualAlloc(virtual_memory+0x1fc00000, 0x80000, MEM_COMMIT, PAGE_READWRITE);
+
+#if 1
 	psxMemRLUT = (u8 **)malloc(0x10000 * sizeof(void *));
 	psxMemWLUT = (u8 **)malloc(0x10000 * sizeof(void *));
 	memset(psxMemRLUT, 0, 0x10000 * sizeof(void *));
 	memset(psxMemWLUT, 0, 0x10000 * sizeof(void *));
 
-	psxM = mmap(0, 0x00220000,
-		PROT_WRITE | PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-
-	psxP = &psxM[0x200000];
-	psxH = &psxM[0x210000];
-
-	psxR = (s8 *)malloc(0x00080000);
-
-	if (psxMemRLUT == NULL || psxMemWLUT == NULL || 
-		psxM == NULL || psxP == NULL || psxH == NULL) {
-		SysMessage(_("Error allocating memory!"));
-		return -1;
-	}
-
-// MemR
-	for (i = 0; i < 0x80; i++) 
+	// MemR
+	for (i = 0; i < 0x80; i++) {
+		j = i;
 		psxMemRLUT[i + 0x0000] = (u8 *)&psxM[(i & 0x1f) << 16];
+	}
 
 	memcpy(psxMemRLUT + 0x8000, psxMemRLUT, 0x80 * sizeof(void *));
 	memcpy(psxMemRLUT + 0xa000, psxMemRLUT, 0x80 * sizeof(void *));
@@ -93,21 +98,21 @@ int psxMemInit() {
 	psxMemRLUT[0x1f00] = (u8 *)psxP;
 	psxMemRLUT[0x1f80] = (u8 *)psxH;
 
-	for (i = 0; i < 0x08; i++) 
-		psxMemRLUT[i + 0x1fc0] = (u8 *)&psxR[i << 16];
+	for (i = 0; i < 0x08; i++) psxMemRLUT[i + 0x1fc0] = (u8 *)&psxR[i << 16];
 
 	memcpy(psxMemRLUT + 0x9fc0, psxMemRLUT + 0x1fc0, 0x08 * sizeof(void *));
 	memcpy(psxMemRLUT + 0xbfc0, psxMemRLUT + 0x1fc0, 0x08 * sizeof(void *));
 
 // MemW
-	for (i = 0; i < 0x80; i++) 
-		psxMemWLUT[i + 0x0000] = (u8 *)&psxM[(i & 0x1f) << 16];
+	for (i = 0; i < 0x80; i++) psxMemWLUT[i + 0x0000] = (u8 *)&psxM[(i & 0x1f) << 16];
 
 	memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * sizeof(void *));
 	memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * sizeof(void *));
 
 	psxMemWLUT[0x1f00] = (u8 *)psxP;
 	psxMemWLUT[0x1f80] = (u8 *)psxH;
+
+#endif
 
 	return 0;
 }
@@ -118,6 +123,7 @@ void psxMemReset() {
 
 	memset(psxM, 0, 0x00200000);
 	memset(psxP, 0, 0x00010000);
+	memset(psxH, 0, 0x00003000);
 
 	// Load BIOS
 	if (strcmp(Config.Bios, "HLE") != 0) {
@@ -137,15 +143,16 @@ void psxMemReset() {
 }
 
 void psxMemShutdown() {
-	munmap(psxM, 0x00220000);
-
-	free(psxR);
-	free(psxMemRLUT);
-	free(psxMemWLUT);
+	VirtualFree(psxM, 0x00200000, MEM_DECOMMIT);
+	VirtualFree(psxP, 0x00010000, MEM_DECOMMIT);
+	VirtualFree(psxH, 0x00003000, MEM_DECOMMIT);
+	VirtualFree(virtual_memory, VM_SIZE, MEM_RELEASE);
 }
 
 static int writeok = 1;
 
+
+#if 0
 u8 psxMemRead8(u32 mem) {
 	char *p;
 	u32 t;
@@ -371,3 +378,101 @@ void * psxMemPointer(u32 mem) {
 		return NULL;
 	}
 }
+# else 
+
+u8 psxMemRead8(u32 mem) {
+	char *p;	
+	psxRegs.cycle += 0;
+	
+	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+		return psxHwRead8(mem);
+	} else {
+		return psxVMu8(mem);
+	}
+}
+
+u16 psxMemRead16(u32 mem) {
+	char *p;	
+	psxRegs.cycle += 1;
+		
+	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+		return psxHwRead16(mem);
+	} else {
+		return psxVMu16(mem);
+	}
+}
+
+u32 psxMemRead32(u32 mem) {
+	char * p;
+	psxRegs.cycle += 1;
+		
+	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+		return psxHwRead32(mem);
+	} else {
+		return psxVMu32(mem);
+	}
+}
+
+void psxMemWrite8(u32 mem, u8 value) {	
+	psxRegs.cycle += 1;
+
+	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+		psxHwWrite8(mem, value);
+	} else {
+		if (writeok) {
+			psxVM[(mem) & VM_MASK] = value;
+		}
+	}
+}
+
+void psxMemWrite16(u32 mem, u16 value) {
+	psxRegs.cycle += 1;
+
+	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+		psxHwWrite16(mem, value);
+	} else {
+		if (writeok) {
+			psxVMu16ref(mem) = SWAPu16(value);
+		}
+	}
+}
+
+void psxMemWrite32(u32 mem, u32 value) {
+	psxRegs.cycle += 1;
+
+	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+		psxHwWrite32(mem, value);
+	} else {
+		if (mem != 0xfffe0130) {
+			if (writeok) {
+				psxVMu32ref(mem) = SWAPu32(value);
+			}
+		} else {
+			int i;
+
+			// a0-44: used for cache flushing
+			switch (value) {
+				case 0x800: case 0x804:
+					if (writeok == 0) break;
+					writeok = 0;
+					psxRegs.ICache_valid = 0;
+					break;
+				case 0x00: case 0x1e988:
+					if (writeok == 1) break;
+					writeok = 1;
+					break;
+				default:
+#ifdef PSXMEM_LOG
+					PSXMEM_LOG("unk %8.8lx = %x\n", mem, value);
+#endif
+					break;
+			}
+		}
+	}
+}
+
+void * psxMemPointer(u32 mem) {
+	return (void *)virtual_memory[mem];
+}
+
+#endif

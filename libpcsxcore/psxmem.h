@@ -127,6 +127,25 @@ extern s8 *psxH;
 #define psxHu16ref(mem)	(*(u16 *)&psxH[(mem) & 0xffff])
 #define psxHu32ref(mem)	(*(u32 *)&psxH[(mem) & 0xffff])
 
+// NEW
+#define VM_SIZE	0x20000000
+#define VM_MASK 0x1fffffff
+
+extern s8 *psxVM;
+#define psxVMs8(mem)	psxVM[(mem) & VM_MASK]
+#define psxVMs16(mem)	(SWAP16(*(s16 *)&psxVM[(mem) & VM_MASK]))
+#define psxVMs32(mem)	(SWAP32(*(s32 *)&psxVM[(mem) & VM_MASK]))
+#define psxVMu8(mem)	(*(u8 *)&psxVM[(mem) & VM_MASK])
+#define psxVMu16(mem)	(SWAP16(*(u16 *)&psxVM[(mem) & VM_MASK]))
+#define psxVMu32(mem)	(SWAP32(*(u32 *)&psxVM[(mem) & VM_MASK]))
+
+#define psxVMs8ref(mem)		psxVM[(mem) & VM_MASK]
+#define psxVMs16ref(mem)	(*(s16 *)&psxVM[(mem) & VM_MASK])
+#define psxVMs32ref(mem)	(*(s32 *)&psxVM[(mem) & VM_MASK])
+#define psxVMu8ref(mem)		(*(u8 *)&psxVM[(mem) & VM_MASK])
+#define psxVMu16ref(mem)	(*(u16 *)&psxVM[(mem) & VM_MASK])
+#define psxVMu32ref(mem)	(*(u32 *)&psxVM[(mem) & VM_MASK])
+
 extern u8 **psxMemWLUT;
 extern u8 **psxMemRLUT;
 
