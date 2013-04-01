@@ -1,4 +1,4 @@
-#define PSX_WIDTH 640
+#define PSX_WIDTH 1024
 #define PSX_HEIGHT 512
 
 #ifdef __cplusplus

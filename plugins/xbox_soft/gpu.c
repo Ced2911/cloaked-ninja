@@ -1360,6 +1360,8 @@ ENDVRAM:
 		if(bSkipNextFrame) primFunc=primTableSkip;
 		else               primFunc=primTableJ;
 
+		//primFunc=primTableSkip;
+
 		for(;i<iSize;)
 		{
 			if(DataWriteMode==DR_VRAMTRANSFER) goto STARTVRAM;
@@ -1533,6 +1535,69 @@ __inline BOOL CheckForEndlessLoop(unsigned long laddr)
 	else                   lUsedAddr[2]=laddr;
 	lUsedAddr[0]=laddr;
 	return FALSE;
+}
+
+
+static uint32_t gpuDmaChainSize(uint32_t * baseAddrL, uint32_t addr) {
+	uint32_t size;
+	uint32_t DMACommandCounter = 0;
+	unsigned char * baseAddrB;
+	baseAddrB = (unsigned char*) baseAddrL;
+	lUsedAddr[0] = lUsedAddr[1] = lUsedAddr[2] = 0xffffff;
+
+	// initial linked list ptr (word)
+	size = 1;
+
+	do {
+		addr &= 0x1ffffc;
+
+		if (DMACommandCounter++ > 2000000) break;
+		if (CheckForEndlessLoop(addr)) break;
+
+
+		// # 32-bit blocks to transfer
+		size += baseAddrB[addr+3];
+
+		
+		// next 32-bit pointer
+		addr = GETLE32(&baseAddrL[addr>>2])&0xffffff;
+		size += 1;
+	} while (addr != 0xffffff);
+
+	
+	return size;
+}
+
+
+long CALLBACK GPUdmaChain__OMP(uint32_t * baseAddrL, uint32_t addr)
+{
+	uint32_t dmaMem;
+	unsigned char * baseAddrB;
+	short count;unsigned int DMACommandCounter = 0;
+	int i = 0;
+	uint32_t size = gpuDmaChainSize(baseAddrL, addr);
+	GPUIsBusy;
+
+	lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
+
+	baseAddrB = (unsigned char*) baseAddrL;
+
+	#pragma omp parallel for
+	for(i=0; i < size; i++) {
+		if(iGPUHeight==512) addr&=0x1FFFFC;
+
+		count = baseAddrB[addr+3];
+
+		dmaMem=addr+4;
+
+		if(count>0) GPUwriteDataMem(&baseAddrL[dmaMem>>2],count);
+
+		addr = GETLE32(&baseAddrL[addr>>2])&0xffffff;
+	}
+
+	GPUIsIdle;
+
+	return 0;
 }
 
 long CALLBACK GPUdmaChain(uint32_t * baseAddrL, uint32_t addr)

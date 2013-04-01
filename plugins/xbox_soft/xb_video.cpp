@@ -67,6 +67,7 @@ IDirect3DVertexDeclaration9*	pVertexDecl;
 XMMATRIX matWVP;
 
 extern "C" unsigned char *pPsxScreen;
+extern "C" unsigned int g_pPitch;
 
 // Structure to hold vertex data.
 struct COLORVERTEX
@@ -76,13 +77,12 @@ struct COLORVERTEX
 	DWORD       Color;
 };
 
-COLORVERTEX Vertices[4] =
+COLORVERTEX Vertices[] =
 {
 	// {  X,	Y,	  Z,	U,	 V,		Color	}
 	{ -1.f, -1.f, 0.0f,  0.0f,  1.0f, 0xFFFF0000 }, //1
 	{ -1.f,  1.f, 0.0f,  0.0f,  0.0f, 0xFF0FF000 }, //2
 	{  1.f, -1.f, 0.0f,  1.0f,  1.0f, 0xFF00FF00 }, //3
-	{  1.f,  1.f, 0.0f,  1.0f,  0.0f, 0xFF00FF00 }  //4
 };
 
 // Define the vertex elements.
@@ -118,7 +118,7 @@ extern "C" unsigned int  VideoInit()
 	d3dpp.EnableAutoDepthStencil = TRUE;
 	d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	// Create the Direct3D device.
 	g_pD3D->CreateDevice( 0, D3DDEVTYPE_HAL, NULL, D3DCREATE_HARDWARE_VERTEXPROCESSING,
@@ -166,102 +166,58 @@ extern "C" unsigned int  VideoInit()
 
 	// Create a vertex declaration from the element descriptions.
 	g_pd3dDevice->CreateVertexDeclaration( VertexElements, &pVertexDecl );
-
-	// Create texture
-	//g_pd3dDevice->CreateTexture(PSX_WIDTH, PSX_HEIGHT,1, 0,D3DFMT_LIN_X8R8G8B8, D3DUSAGE_CPU_CACHED_MEMORY, &g_PsxTexture, NULL);
-
-	//IDirect3DDevice9_CreateTexture(g_pd3dDevice, PSX_WIDTH, PSX_HEIGHT,1, 0,D3DFMT_LIN_X8R8G8B8, D3DUSAGE_CPU_CACHED_MEMORY, &g_PsxTexture, NULL);
-	
+		
 	// Set shaders.
 	g_pd3dDevice->SetVertexShader( pVertexShader );
 	g_pd3dDevice->SetPixelShader( pPixelShader );
 
-	// Set psx texture
-	//g_pd3dDevice->SetTexture(0, g_PsxTexture);
-
 	// Set the vertex declaration.
 	g_pd3dDevice->SetVertexDeclaration( pVertexDecl );
 
+	// Create texture
+	D3DXCreateTexture(
+			g_pd3dDevice, PSX_WIDTH,
+			PSX_HEIGHT, D3DX_DEFAULT, 0, D3DFMT_LIN_X8R8G8B8, D3DPOOL_MANAGED,
+			&g_PsxTexture
+			);
+	D3DLOCKED_RECT texture_info;
+	g_PsxTexture->LockRect( 0,  &texture_info, NULL, NULL );
+	pPsxScreen = (unsigned char *)texture_info.pBits;
+	g_PsxTexture->UnlockRect(0);
+
+	g_pPitch = texture_info.Pitch;
 
 	UpdateScrenRes(PSX_WIDTH, PSX_HEIGHT);
 	return S_OK;
 }
 
-int lastx = 0;
-int lasty=0;
-
 extern "C" void UpdateScrenRes(int x,int y){
-	g_pd3dDevice->AcquireThreadOwnership();
+	g_pd3dDevice->SetTexture(0, g_PsxTexture);	
 
+	// Update Vertices
+	Vertices[0].TextureUV[1] = (float) y / (float) PSX_HEIGHT;
 
-	if(lastx!=x || lasty!=y)
-	{
-		D3DXCreateTexture(
-			g_pd3dDevice, x,
-			y, D3DX_DEFAULT, 0, D3DFMT_LIN_X8R8G8B8, D3DPOOL_MANAGED,
-			&g_PsxTexture
-			);
-
-		g_pd3dDevice->SetTexture(0, g_PsxTexture);
-
-		RECT d3dr;
-		D3DLOCKED_RECT texture_info;
-
-		d3dr.left=0;
-		d3dr.top=0;
-		d3dr.right=x;
-		d3dr.bottom=y;
-
-		g_PsxTexture->LockRect( 0,  &texture_info, &d3dr, NULL );
-		pPsxScreen = (unsigned char *)texture_info.pBits;
-		g_PsxTexture->UnlockRect(0);
-	}
-	lastx=x;
-	lasty=y;
-
-	g_pd3dDevice->ReleaseThreadOwnership();
+	Vertices[2].TextureUV[0] = (float) x / (float) PSX_WIDTH;
+	Vertices[2].TextureUV[1] = (float) y / (float) PSX_HEIGHT;
 }
 
 extern "C" void UnlockLockDisplay(){
-	g_pd3dDevice->AcquireThreadOwnership();
-
-	RECT d3dr;
 	D3DLOCKED_RECT texture_info;
 
-	d3dr.left=0;
-	d3dr.top=0;
-	d3dr.right=lastx;
-	d3dr.bottom=lasty;
+	g_pd3dDevice->SetTexture(0, NULL);
 
-	g_PsxTexture->LockRect( 0,  &texture_info, &d3dr, NULL );
+	g_PsxTexture->LockRect( 0,  &texture_info, NULL, NULL );
 	g_PsxTexture->UnlockRect(0);
-
-	g_pd3dDevice->ReleaseThreadOwnership();
 };
 
 extern "C" void XbDispUpdate()
 {
-	g_pd3dDevice->AcquireThreadOwnership();
-
-	//UnlockLockDisplay();
-
 	// Clear the backbuffer.
 	g_pd3dDevice->Clear( 0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
 		0xff00FF00, 1.0f, 0L );
 
-
-
-	// Draw the vertices.  Note that it is more efficient to draw large amounts
-	// of vertices using vertex and index buffers.
-
-	g_pd3dDevice->DrawPrimitiveUP( D3DPT_TRIANGLESTRIP, 2, Vertices, sizeof( COLORVERTEX ) );
-	//g_pd3dDevice->DrawPrimitive(D3DPT_RECTLIST, 0, 1 );
+	g_pd3dDevice->DrawPrimitiveUP( D3DPT_RECTLIST, 1, Vertices, sizeof( COLORVERTEX ) );
 
 	// Present the backbuffer contents to the display.
 	g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-
-	//free
-	//g_pd3dDevice->SetTexture(0, NULL);
-
-	g_pd3dDevice->ReleaseThreadOwnership();
 }

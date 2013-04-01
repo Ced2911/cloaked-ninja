@@ -146,10 +146,8 @@ extern s8 *psxVM;
 #define psxVMu16ref(mem)	(*(u16 *)&psxVM[(mem) & VM_MASK])
 #define psxVMu32ref(mem)	(*(u32 *)&psxVM[(mem) & VM_MASK])
 
-extern u8 **psxMemWLUT;
-extern u8 **psxMemRLUT;
-
-#define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
+#define PSXM(mem)		(u8*)(&psxVM[(mem) & VM_MASK])
+//#define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 //#define PSXM(mem)		((u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 
 #define PSXMs8(mem)		(*(s8 *)PSXM(mem))

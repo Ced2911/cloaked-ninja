@@ -101,9 +101,24 @@ const char *SysLibError(){
 void SysCloseLibrary(void *lib){
 }		
 
+static void ShowFPS() {
+	static unsigned long lastTick = 0;
+	static int frames = 0;
+	unsigned long nowTick;
+	frames++;
+	nowTick = GetTickCount();
+	if (lastTick + 1000 <= nowTick) {
+
+		printf("SysUpdate %d fps\r\n", frames);
+
+		frames = 0;
+		lastTick = nowTick;
+	}
+}
+
 // Called on VBlank (to update i.e. pads)
 void SysUpdate(){
-
+	ShowFPS();
 }
 
 // Returns to the Gui

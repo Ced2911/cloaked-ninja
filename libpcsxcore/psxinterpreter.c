@@ -34,7 +34,7 @@ static u32 branchPC;
 void ClearCaches();
 
 // use swith instead of array func
-#define XB_OPTI
+//#define XB_OPTI
 
 // These macros are used to assemble the repassembler functions
 
@@ -401,7 +401,7 @@ static int psxDelayBranchTest(u32 tar1) {
     tar2 = psxBranchNoDelay();
     if (tar2 == (u32)-1)
         return 0;
-
+																														
     debugI();
 
     /*
@@ -1191,40 +1191,17 @@ static void intShutdown() {
 
 // interpreter execution
 static void execI() { 
-	u32 func_code;
-	//u32 *code = Read_ICache(psxRegs.pc, FALSE);
 	u32 *code = (u32 *)PSXM(psxRegs.pc);
 	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
-/*
+
 	debugI();
 
 	if (Config.Debug) ProcessDebug();
-*/
+
 	psxRegs.pc += 4;
 	psxRegs.cycle += BIAS;
-#if 1
-//#ifndef XB_OPTI
 
-	//lil opti from coz
-	func_code = psxRegs.code >> 26;
-	if(func_code == 0)
-	{
-		psxSPECIAL();
-	}
-	else if (func_code == 35){
-		psxLW();
-	}
-	else if (func_code == 18){
-		psxCOP2();
-	}
-	else if (func_code == 9){
-		psxADDIU();
-	}
-	else
-		psxBSC[func_code]();
-#else
-	CallPsxBsc(psxRegs.code >> 26);
-#endif
+	psxBSC[psxRegs.code >> 26]();
 }
 
 __inline void callPsxSPC(int func_code){

@@ -1682,7 +1682,7 @@ static void preMemWrite(int size) {
     InvalidateCPURegs();
     resp += 8;
 }
-
+#if 0
 static void recLB() {
     // Rt = mem[Rs + Im] (signed)
 
@@ -1984,7 +1984,131 @@ static void recLW() {
         PutHWReg32(_Rt_);
     }
 }
+#else
+static void recLB() {
+    // Rt = mem[Rs + Im] (signed)
 
+    if (IsConst(_Rs_)) {
+        u32 addr = iRegs[_Rs_].k + _Imm_;		
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+			// TODO
+		} else {
+			if (!_Rt_) return;
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+            LBZ(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+            return;
+		}
+    }
+
+    preMemRead();
+    CALLFunc((u32) psxMemRead8);
+    if (_Rt_) {
+        EXTSB(PutHWReg32(_Rt_), GetHWRegSpecial(RETVAL));
+        DisposeHWReg(GetSpecialIndexFromHWRegs(RETVAL));
+    }
+}
+
+static void recLBU() {
+    // Rt = mem[Rs + Im] (unsigned)
+
+    if (IsConst(_Rs_)) {
+        u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+			// TODO
+		} else {
+			if (!_Rt_) return;
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+            LBZ(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+            return;
+		}
+    }
+
+    preMemRead();
+    CALLFunc((u32) psxMemRead8);
+
+    if (_Rt_) {
+        SetDstCPUReg(3);
+        PutHWReg32(_Rt_);
+    }
+}
+
+static void recLH() {
+    // Rt = mem[Rs + Im] (signed)
+
+    if (IsConst(_Rs_)) {
+        u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+			// TODO
+		} else {
+			if (!_Rt_) return;
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+            LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+            EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+            return;
+		}
+    }
+
+    preMemRead();
+    CALLFunc((u32) psxMemRead16);
+    if (_Rt_) {
+        EXTSH(PutHWReg32(_Rt_), GetHWRegSpecial(RETVAL));
+        DisposeHWReg(GetSpecialIndexFromHWRegs(RETVAL));
+    }
+}
+
+static void recLHU() {
+    // Rt = mem[Rs + Im] (unsigned)
+
+    if (IsConst(_Rs_)) {
+        u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+			// Todo
+		} else {
+            if (!_Rt_) return;
+
+            LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+            LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+            return;
+        }
+    }
+
+    preMemRead();
+    CALLFunc((u32) psxMemRead16);
+    if (_Rt_) {
+        SetDstCPUReg(3);
+        PutHWReg32(_Rt_);
+    }
+}
+
+static void recLW() {
+    // Rt = mem[Rs + Im] (unsigned)
+
+    if (IsConst(_Rs_)) {
+        u32 addr = iRegs[_Rs_].k + _Imm_;
+        
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+			// TODO
+		} else {
+			if (!_Rt_) return;
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+            LWBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+            return;
+		}
+    }
+
+    preMemRead();
+    CALLFunc((u32) psxMemRead32);
+    if (_Rt_) {
+        SetDstCPUReg(3);
+        PutHWReg32(_Rt_);
+    }
+}
+#endif
 #if 0
 REC_FUNC(LWL);
 REC_FUNC(LWR);
@@ -1997,18 +2121,30 @@ REC_FUNC_R8(SWL);
 REC_FUNC_R8(SWR);
 #endif
 static void recSB() {
+#if 1
     preMemWrite(1);
     CALLFunc((u32) psxMemWrite8);
+#else
+
+#endif
 }
 
 static void recSH() {
+#if 1
     preMemWrite(2);
     CALLFunc((u32) psxMemWrite16);
+#else
+
+#endif
 }
 
 static void recSW() {
+#if 1
     preMemWrite(4);
     CALLFunc((u32) psxMemWrite32);
+#else
+
+#endif
 }
 
 static void recSLL() {

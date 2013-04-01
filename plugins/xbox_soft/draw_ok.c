@@ -51,6 +51,7 @@ unsigned short usCursorActive = 0;
 
 unsigned char *pBackBuffer = 0;
 unsigned char *pPsxScreen = 0;
+unsigned int g_pPitch;
 
 int finalw,finalh;
 
@@ -87,7 +88,7 @@ int root_window_id=0;
 // Create display
 void CreateDisplay(void){
 
-};
+}
 
 void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 {
@@ -107,7 +108,7 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 
 	int loop = 0;
 	int offset = 0;
-	int32_t lPitch = PSXDisplay.DisplayMode.x << 2;
+	int32_t lPitch = g_pPitch;
 
 	for(loop=0; loop < 1024; loop += 128)
 		__dcbt(loop, psxVuw);
@@ -202,7 +203,6 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 			}
 		}
 	}
-	// ClearCaches();
 }
 
 extern time_t tStart;

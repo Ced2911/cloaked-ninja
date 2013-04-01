@@ -87,11 +87,9 @@ static u32 gpuDmaChainSize(u32 addr) {
 
 int gpuReadStatus() {
 	int hard;
-
-
+	
 	// GPU plugin
 	hard = GPU_readStatus();
-
 
 	// Gameshark Lite - wants to see VRAM busy
 	// - Must enable GPU 'Fake Busy States' hack
@@ -99,6 +97,34 @@ int gpuReadStatus() {
 		hard &= ~GPUSTATUS_READYFORVRAM;
 
 	return hard;
+}
+
+long __GPUdmaChain(uint32_t addr)
+{
+	uint32_t dmaMem;
+	short count;
+	unsigned int DMACommandCounter = 0;
+	uint32_t * m = (uint32_t *)psxM;
+	
+	lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
+	do
+	{
+		addr &= 0x1ffffc;
+		if(DMACommandCounter++ > 2000000) break;
+		if(CheckForEndlessLoop(addr)) break;
+
+		count = psxMu8( addr + 3 );
+
+		dmaMem=addr+4;
+
+		if(count>0) 
+			GPU_writeDataMem(&m[ dmaMem >> 2],count);
+
+		addr = psxMu32( addr >> 2 ) & 0xffffff;
+	}
+	while (addr != 0xffffff);
+
+	return 0;
 }
 
 void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
@@ -152,6 +178,8 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 
 			size = gpuDmaChainSize(madr);
 			GPU_dmaChain((u32 *)psxM, madr & 0x1fffff);
+
+			//__GPUdmaChain(madr & 0x1fffff);
 			
 			// Tekken 3 = use 1.0 only (not 1.5x)
 
