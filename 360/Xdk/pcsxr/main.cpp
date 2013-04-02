@@ -7,47 +7,10 @@
 #include "r3000a.h"
 
 char * game = "game:\\Castlevanina - SOTN.bin";
-//char * game = "game:\\psxisos\\castle.bin";
 
-//--------------------------------------------------------------------------------------
-// Name: ClearCaches
-// Desc: This function gets the caches into a known state, with no useful data in them.
-//       It doesn't clear the instruction caches, but the data caches should be
-//       thoroughly flushed.
-//--------------------------------------------------------------------------------------
-// Turn off all optimizations so that the useless code below won't be optimized away.
-#pragma optimize("", off)
-extern "C" void ClearCaches()
-{
-	const size_t MemSize = 2000000;
-	char* pMemory = new char[MemSize];
+extern "C" void gpuDmaThreadInit();
 
-	// Zero the newly allocated memory - this gets as much of it as will
-	// fit into the L2 cache. This step isn't strictly necessary, but it avoids
-	// any potential warnings about reading from uninitialized memory.
-	XMemSet( pMemory, 0, MemSize );
-
-	// Now loop through, reading from every byte. This pulls the data into the
-	// L1 cache - as much of it as will fit.
-	DWORD gSum = 0;
-	for( int i = 0; i < MemSize; ++i )
-	{
-		gSum += pMemory[i];
-	}
-
-	// Now flush the data out of the caches. This should leave the L1 and L2
-	// caches virtually empty.
-	for( int i = 0; i < MemSize; i += 128 )
-		__dcbf( i, pMemory );
-
-	delete [] pMemory;
-}
-// Restore optimizations.
-#pragma optimize("", on)
-
-
-extern "C" int funct (register void (*func)(), register u32 hw1, register u32 hw2);
-int main(){
+int main() {
 	
 	// __SetHWThreadPriorityHigh();
 	SetIsoFile(game);
@@ -64,13 +27,16 @@ int main(){
 	strcpy(Config.Mcd1,"game:\\BIOS\\Memcard1.mcd");
 	strcpy(Config.Mcd2,"game:\\BIOS\\Memcard2.mcd");
 
-	Config.PsxOut = 0;
-	Config.HLE = 1;
+	Config.PsxOut = 1;
+	Config.HLE = 0;
 	Config.Xa = 0;  //XA enabled
 	Config.Cdda = 0;
 	Config.PsxAuto = 0; //Autodetect
+	// Config.SlowBoot = 1;
 	
 	cdrIsoInit();
+
+	gpuDmaThreadInit();
 
 	if (SysInit() == -1) 
 	{
@@ -106,6 +72,6 @@ int main(){
 		SysPrintf("LoadCdrom: %08x\r\n",res);
 
 	SysPrintf("Execute\r\n");
-
+	// SysReset();
 	psxCpu->Execute();
 }

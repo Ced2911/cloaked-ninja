@@ -25,10 +25,6 @@
 #include "ppf.h"
 #include "psxdma.h"
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 cdrStruct cdr;
 
 /* CD-ROM magic numbers */

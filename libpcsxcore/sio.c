@@ -24,10 +24,6 @@
 #include "sio.h"
 #include <sys/stat.h>
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 // Status Flags
 #define TX_RDY		0x0001
 #define RX_RDY		0x0002

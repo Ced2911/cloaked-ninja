@@ -24,10 +24,6 @@
 #include "plugins.h"
 #include "cdriso.h"
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 static char IsoFile[MAXPATHLEN] = "";
 static s64 cdOpenCaseTime = 0;
 

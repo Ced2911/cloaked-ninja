@@ -22,10 +22,6 @@
 
 #include "cheat.h"
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 Cheat *Cheats = NULL;
 int NumCheats = 0;
 static int NumCheatsAllocated = 0;

@@ -39,8 +39,6 @@ extern unsigned int hSyncCount;
 #define GPUSTATUS_DRAWINGALLOWED      0x00000400
 #define GPUSTATUS_DITHER              0x00000200
 
-
-
 // Taken from PEOPS SOFTGPU
 u32 lUsedAddr[3];
 
@@ -59,7 +57,6 @@ static __inline boolean CheckForEndlessLoop(u32 laddr) {
 static u32 gpuDmaChainSize(u32 addr) {
 	u32 size;
 	u32 DMACommandCounter = 0;
-
 	lUsedAddr[0] = lUsedAddr[1] = lUsedAddr[2] = 0xffffff;
 
 	// initial linked list ptr (word)
@@ -78,6 +75,7 @@ static u32 gpuDmaChainSize(u32 addr) {
 		
 		// next 32-bit pointer
 		addr = psxMu32( addr & ~0x3 ) & 0xffffff;
+		//addr = __loadwordbytereverse(0,&baseAddrL[addr>>2])&0xffffff;
 		size += 1;
 	} while (addr != 0xffffff);
 
@@ -99,32 +97,108 @@ int gpuReadStatus() {
 	return hard;
 }
 
-long __GPUdmaChain(uint32_t addr)
+void gpuDmaChain(uint32_t addr)
 {
 	uint32_t dmaMem;
+	unsigned char * baseAddrB;
 	short count;
 	unsigned int DMACommandCounter = 0;
-	uint32_t * m = (uint32_t *)psxM;
-	
+	uint32_t * baseAddrL = (u32 *)psxM;
+
+
 	lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
+
+	baseAddrB = (unsigned char*) baseAddrL;
+
+	// Must be in a thread ?!
 	do
 	{
-		addr &= 0x1ffffc;
+		addr&=0x1FFFFC;
 		if(DMACommandCounter++ > 2000000) break;
 		if(CheckForEndlessLoop(addr)) break;
 
-		count = psxMu8( addr + 3 );
+		count = baseAddrB[addr+3];
 
 		dmaMem=addr+4;
 
 		if(count>0) 
-			GPU_writeDataMem(&m[ dmaMem >> 2],count);
+			GPU_writeDataMem(&baseAddrL[dmaMem>>2],count);
 
-		addr = psxMu32( addr >> 2 ) & 0xffffff;
+		addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
+		//addr = psxMu32( addr >> 2 ) & 0xffffff;
 	}
 	while (addr != 0xffffff);
+}
 
-	return 0;
+static volatile	uint32_t dma_thread_running = 0;
+static volatile uint32_t dma_addr;
+static volatile uint32_t dma_thread_exit = 0;
+
+static void WaitForGpuThread() {
+    while(dma_thread_running) {
+		YieldProcessor(); // or r31, r31, r31
+	}
+
+	// High priority
+	__asm{
+		or r3, r3, r3
+	};
+}
+
+static void gpuDmaThread() {
+	while(!dma_thread_exit) {
+		if (dma_thread_running) {
+			uint32_t addr = dma_addr;
+			uint32_t dmaMem;
+			unsigned char * baseAddrB;
+			short count;
+			unsigned int DMACommandCounter = 0;
+			uint32_t * baseAddrL = (u32 *)psxM;
+
+
+			lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
+
+			baseAddrB = (unsigned char*) baseAddrL;
+
+			// Must be in a thread ?!
+			do
+			{
+				addr&=0x1FFFFC;
+				if(DMACommandCounter++ > 2000000) break;
+				if(CheckForEndlessLoop(addr)) break;
+
+				count = baseAddrB[addr+3];
+
+				dmaMem=addr+4;
+
+				if(count>0) 
+					GPU_writeDataMem(&baseAddrL[dmaMem>>2],count);
+
+				addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
+				//addr = psxMu32( addr >> 2 ) & 0xffffff;
+			}
+			while (addr != 0xffffff);
+
+			dma_thread_running = 0;
+		}
+	}
+}
+
+void gpuDmaChainThread(uint32_t addr)
+{
+	WaitForGpuThread();
+	
+	dma_addr = addr;
+
+	dma_thread_running = 1;
+}
+
+void gpuDmaThreadInit() {
+	HANDLE gpuHandle = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)gpuDmaThread, NULL, CREATE_SUSPENDED, NULL);
+
+	XSetThreadProcessor(gpuHandle, 2);
+	//SetThreadPriority(threadid ,THREAD_PRIORITY_HIGHEST);
+	ResumeThread(gpuHandle);
 }
 
 void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
@@ -177,9 +251,12 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 #endif
 
 			size = gpuDmaChainSize(madr);
-			GPU_dmaChain((u32 *)psxM, madr & 0x1fffff);
+
+			//GPU_dmaChain((u32 *)psxM, madr & 0x1fffff);
 
 			//__GPUdmaChain(madr & 0x1fffff);
+			gpuDmaChain(madr & 0x1fffff);
+			//gpuDmaChainThread(madr & 0x1fffff);
 			
 			// Tekken 3 = use 1.0 only (not 1.5x)
 

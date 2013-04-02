@@ -35,10 +35,6 @@
 #include <sys/time.h>
 #endif
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 static FILE *cdHandle = NULL;
 static FILE *cddaHandle = NULL;
 static FILE *subHandle = NULL;
@@ -331,7 +327,7 @@ static void startCDDA(unsigned int offset) {
 	playing = TRUE;
 
 #ifdef _XBOX
-	CreateThread(NULL,NULL,playthread,NULL,CREATE_SUSPENDED,NULL);
+	threadid = CreateThread(NULL,NULL,playthread,NULL,CREATE_SUSPENDED,NULL);
 	XSetThreadProcessor(threadid, 2);
 	//SetThreadPriority(threadid ,THREAD_PRIORITY_HIGHEST);
 	ResumeThread(threadid);

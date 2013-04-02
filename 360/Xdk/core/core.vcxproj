@@ -282,6 +282,7 @@
       <CallAttributedProfiling>Disabled</CallAttributedProfiling>
       <CompileAs>CompileAsC</CompileAs>
       <OpenMPSupport>true</OpenMPSupport>
+      <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">
@@ -405,6 +406,7 @@
       <CompileAs>CompileAsC</CompileAs>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

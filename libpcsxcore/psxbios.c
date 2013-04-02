@@ -26,10 +26,6 @@
 #include "psxbios.h"
 #include "psxhw.h"
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 char *biosA0n[256] = {
 // 0x00
 	"open",		"lseek",	"read",		"write",

@@ -30,12 +30,6 @@ static int branch = 0;
 static int branch2 = 0;
 static u32 branchPC;
 
-// ClearCaches
-void ClearCaches();
-
-// use swith instead of array func
-//#define XB_OPTI
-
 // These macros are used to assemble the repassembler functions
 
 #ifdef PSXCPU_LOG
@@ -46,16 +40,6 @@ void ClearCaches();
 
 __inline void execI();
 
-#ifdef XB_OPTI
-
-__inline void CallPsxBsc(int func_code);
-__inline void callPsxSPC(int func_code);
-__inline void CallPsxREG(int func_code);
-__inline void callPsxCP0(int func_code);
-__inline void callPsxCP2(int func_code);
-__inline void callPsxCP2BSC(int func_code);
-
-#else
 
 // Subsets
 void (*psxBSC[64])();
@@ -65,19 +49,15 @@ void (*psxCP0[32])();
 void (*psxCP2[64])();
 void (*psxCP2BSC[32])();
 
-#endif
-
 static void delayRead(int reg, u32 bpc) {
 	u32 rold, rnew;
 
 //	SysPrintf("delayRead at %x!\n", psxRegs.pc);
 
 	rold = psxRegs.GPR.r[reg];
-#ifndef XB_OPTI
+
 	psxBSC[psxRegs.code >> 26](); // branch delay load
-#else
-	CallPsxBsc(psxRegs.code >> 26);
-#endif
+
 	rnew = psxRegs.GPR.r[reg];
 
 	psxRegs.pc = bpc;
@@ -99,11 +79,7 @@ static void delayWrite(int reg, u32 bpc) {
 	SysPrintf("%s\n", disR3000AF(PSXMu32(bpc), bpc));*/
 
 	// no changes from normal behavior
-#ifndef XB_OPTI
 	psxBSC[psxRegs.code >> 26]();
-#else
-	CallPsxBsc(psxRegs.code >> 26);
-#endif
 	branch = 0;
 	psxRegs.pc = bpc;
 
@@ -306,11 +282,9 @@ void psxDelayTest(int reg, u32 bpc) {
 		case 3:
 			delayWrite(reg, bpc); return;
 	}
-#ifndef XB_OPTI
+
 	psxBSC[psxRegs.code >> 26]();
-#else
-	CallPsxBsc(psxRegs.code >> 26);
-#endif
+
 	branch = 0;
 	psxRegs.pc = bpc;
 
@@ -322,7 +296,7 @@ static u32 psxBranchNoDelay(void) {
     u32 *code;
     u32 temp;
 
-    code = Read_ICache(psxRegs.pc, TRUE);
+    code = (u32 *)PSXM(psxRegs.pc);
     psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
     switch (_Op_) {
         case 0x00: // SPECIAL
@@ -385,61 +359,6 @@ static u32 psxBranchNoDelay(void) {
     return (u32)-1;
 }
 
-static int psxDelayBranchExec(u32 tar) {
-    execI();
-
-    branch = 0;
-    psxRegs.pc = tar;
-    psxRegs.cycle += BIAS;
-    psxBranchTest();
-    return 1;
-}
-
-static int psxDelayBranchTest(u32 tar1) {
-    u32 tar2, tmp1, tmp2;
-
-    tar2 = psxBranchNoDelay();
-    if (tar2 == (u32)-1)
-        return 0;
-																														
-    debugI();
-
-    /*
-     * Branch in delay slot:
-     * - execute 1 instruction at tar1
-     * - jump to tar2 (target of branch in delay slot; this branch
-     *   has no normal delay slot, instruction at tar1 was fetched instead)
-     */
-    psxRegs.pc = tar1;
-    tmp1 = psxBranchNoDelay();
-    if (tmp1 == (u32)-1) {
-        return psxDelayBranchExec(tar2);
-    }
-    debugI();
-    psxRegs.cycle += BIAS;
-
-    /*
-     * Got a branch at tar1:
-     * - execute 1 instruction at tar2
-     * - jump to target of that branch (tmp1)
-     */
-    psxRegs.pc = tar2;
-    tmp2 = psxBranchNoDelay();
-    if (tmp2 == (u32)-1) {
-        return psxDelayBranchExec(tmp1);
-    }
-    debugI();
-    psxRegs.cycle += BIAS;
-
-    /*
-     * Got a branch at tar2:
-     * - execute 1 instruction at tmp1
-     * - jump to target of that branch (tmp2)
-     */
-    psxRegs.pc = tmp1;
-    return psxDelayBranchExec(tmp2);
-}
-
 __inline void doBranch(u32 tar) {
 	u32 *code;
 	u32 tmp;
@@ -495,11 +414,7 @@ __inline void doBranch(u32 tar) {
 			break;
 	}
 
-#ifndef XB_OPTI
 	psxBSC[psxRegs.code >> 26]();
-#else
-	CallPsxBsc(psxRegs.code >> 26);
-#endif
 
 	branch = 0;
 	psxRegs.pc = branchPC;
@@ -1048,47 +963,26 @@ void psxNULL() {
 }
 
 void psxSPECIAL() {
-	// psxSPC[_Funct_]();
-#ifndef XB_OPTI
 	psxSPC[_Funct_]();
-#else
-	callPsxSPC(_Funct_);
-#endif
 }
 
 void psxREGIMM() {
-#ifndef XB_OPTI
 	psxREG[_Rt_](); // branch delay load
-#else
-	CallPsxREG(_Rt_);
-#endif
 }
 
 void psxCOP0() {
-#ifndef XB_OPTI
 	psxCP0[_Rs_]();
-#else
-	callPsxCP0(_Rs_);
-#endif
 
 }
 
 void psxCOP2() {
 	if ((psxRegs.CP0.n.Status & 0x40000000) == 0 )
 		return;
-#ifndef XB_OPTI
 	psxCP2[_Funct_]();
-#else
-	callPsxCP2(_Funct_);
-#endif
 }
 
 void psxBASIC() {
-#ifndef XB_OPTI
 	psxCP2BSC[_Rs_]();
-#else
-	callPsxCP2BSC(_Rs_);
-#endif
 }
 
 void psxHLE() {
@@ -1096,7 +990,6 @@ void psxHLE() {
 	psxHLEt[psxRegs.code & 0x07]();		// HDHOSHY experimental patch
 }
 
-//#ifndef XB_OPTI
 void (*psxBSC[64])() = {
 	psxSPECIAL, psxREGIMM, psxJ   , psxJAL  , psxBEQ , psxBNE , psxBLEZ, psxBGTZ,
 	psxADDI   , psxADDIU , psxSLTI, psxSLTIU, psxANDI, psxORI , psxXORI, psxLUI ,
@@ -1151,7 +1044,6 @@ void (*psxCP2BSC[32])() = {
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL
 };
-//#endif
 
 ///////////////////////////////////////////
 
@@ -1191,6 +1083,7 @@ static void intShutdown() {
 
 // interpreter execution
 static void execI() { 
+#if 1
 	u32 *code = (u32 *)PSXM(psxRegs.pc);
 	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 
@@ -1201,369 +1094,25 @@ static void execI() {
 	psxRegs.pc += 4;
 	psxRegs.cycle += BIAS;
 
+	printf("bsc code = %04x\n", psxRegs.code >> 26);
+
 	psxBSC[psxRegs.code >> 26]();
+#else
+	u32 *code = (u32 *)PSXM(psxRegs.pc);
+	psxRegs.code = ((code == NULL) ? 0 : (*code));
+
+	debugI();
+
+	if (Config.Debug) ProcessDebug();
+
+	psxRegs.pc += 4;
+	psxRegs.cycle += BIAS;
+
+	printf("bsc code = %04x\n", (psxRegs.code >> 2)&0x3f);
+
+	psxBSC[(psxRegs.code >> 2)&0x3f]();
+#endif
 }
-
-__inline void callPsxSPC(int func_code){
-	psxSPC[func_code]();
-	/*
-	switch (func_code){
-		case 0:
-			psxSLL();
-			return;
-		case 2:
-			psxSRL();
-			return;
-		case 3:
-			psxSRA();
-			return;
-		case 4:
-			psxSLLV();
-			return;
-		case 6:
-			psxSRLV();
-			return;
-		case 7:
-			psxSRAV();
-			return;
-		case 8:
-			psxJR();
-			return;
-		case 9:
-			psxJALR();
-			return;
-		case 12:
-			psxSYSCALL();
-			return;
-		case 13:
-			psxBREAK();
-			return;
-		case 16:
-			psxMFHI();
-			return;
-		case 17:
-			psxMTHI();
-			return;
-		case 18:
-			psxMFLO();
-			return;
-		case 19:
-			psxMTLO();
-			return;
-		case 24:
-			psxMULT();
-			return;
-		case 25:
-			psxMULTU();
-			return;
-		case 26:
-			psxDIV();
-			return;
-		case 27:
-			psxDIVU();
-			return;
-		case 32:
-			psxADD();
-			return;
-		case 33:
-			psxADDU();
-			return;
-		case 34:
-			psxSUB();
-			return;
-		case 35:
-			psxSUBU();
-			return;
-		case 36:
-			psxAND();
-			return;
-		case 37:
-			psxOR();
-			return;
-		case 38:
-			psxXOR();
-			return;
-		case 39:
-			psxNOR();
-			return;
-		case 42:
-			psxSLT();
-			return;
-		case 43:
-			psxSLTU();
-			return;
-		default:
-			psxNULL();
-			return;
-	}
-	*/
-}
-
-__inline void CallPsxBsc(int func_code){
-	/*
-	switch(func_code){
-		case 0:
-			psxSPECIAL();
-			return;
-		case 1:
-			psxREGIMM();
-			return;
-		case 2:
-			psxJ();
-			return;
-		case 3:
-			psxJAL();
-			return;
-		case 4:
-			psxBEQ();
-			return;
-		case 5:
-			psxBNE();
-			return;
-		case 6:
-			psxBLEZ();
-			return;
-		case 7:
-			psxBGTZ();
-			return;
-		case 8:
-			psxADDI();
-			return;
-		case 9:
-			psxADDIU();
-			return;
-		case 10:
-			psxSLTI();
-			return;
-		case 11:
-			psxSLTIU();
-			return;
-		case 12:
-			psxANDI();
-			return;
-		case 13:
-			psxORI();
-			return;
-		case 14:
-			psxXORI();
-			return;
-		case 15:
-			psxLUI();
-			return;
-		case 16:
-			psxCOP0();
-			return;
-		case 18:
-			psxCOP2();
-			return;
-		case 32:
-			psxLB();
-			return;
-		case 33:
-			psxLH();
-			return;
-		case 34:
-			psxLWL();
-			return;
-		case 35:
-			psxLW();
-			return;
-		case 36:
-			psxLBU();
-			return;
-		case 37:
-			psxLHU();
-			return;
-		case 38:
-			psxLWR();
-			return;
-		case 40:
-			psxSB();
-			return;
-		case 41:
-			psxSH();
-			return;
-		case 42:
-			psxSWL();
-			return;
-		case 43:
-			psxSW();
-			return;
-		case 46:
-			psxSWR();
-			return;
-		case 50:
-			gteLWC2();
-			return;
-		case 58:
-			gteSWC2();
-			return;
-		case 59:
-			psxHLE();
-			return;
-		default:
-			psxNULL();
-			return;
-	}
-	*/
-	psxBSC[func_code]();
-}
-
-__inline void CallPsxREG(int func_code){
-	if(func_code==0){
-		psxBLTZ();
-	}
-	else if(func_code==1){
-		psxBGEZ();
-	}
-	else if(func_code==16){
-		psxBLTZAL();
-	}
-	else if(func_code==17){
-		psxBGEZAL();
-	}
-	else{
-		psxNULL();
-	}
-};
-__inline void callPsxCP0(int func_code){
-	/*switch(func_code){
-		case 0:
-			psxMFC0();
-			return;
-		case 2:
-			psxCFC0();
-			return;
-		case 4:
-			psxMTC0();
-			return;
-		case 6:
-			psxCTC0();
-			return;
-		case 16:
-			psxRFE();
-			return;
-		default:
-			psxNULL();
-			return;
-	}*/
-	if(func_code==0){
-		psxMFC0();
-	}
-	else if(func_code==2){
-		psxCFC0();
-	}
-	else if(func_code==4){
-		psxMTC0();
-	}
-	else if(func_code==6){
-		psxCTC0();
-	}
-	else if(func_code==16){
-		psxRFE();
-	}
-	else{
-		psxNULL();
-	}
-};
-__inline void callPsxCP2(int func_code){
-	psxCP2[func_code]();
-	/*
-	switch(func_code){
-		case 0:
-			psxBASIC();
-			return;
-		case 1:
-			gteRTPS();
-			return;
-		case 6:
-			gteNCLIP();
-			return;
-		case 12:
-			gteOP();
-			return;
-		case 16:
-			gteDPCS();
-			return;
-		case 17:
-			gteINTPL();
-			return;
-		case 18:
-			gteMVMVA();
-			return;
-		case 19:
-			gteNCDS();
-			return;
-		case 20:
-			gteCDP();
-			return;
-		case 22:
-			gteNCDT();
-			return;
-		case 27:
-			gteNCCS();
-			return;
-		case 28:
-			gteCC();
-			return;
-		case 30:
-			gteNCS();
-			return;
-		case 32:
-			gteNCT();
-			return;
-		case 40:
-			gteSQR();
-			return;
-		case 41:
-			gteDCPL();
-			return;
-		case 42:
-			gteDPCT();
-			return;
-		case 45:
-			gteAVSZ3();
-			return;
-		case 46:
-			gteAVSZ4();
-			return;
-		case 48:
-			gteRTPT();
-			return;
-		case 61:
-			gteGPF();
-			return;
-		case 62:
-			gteGPL();
-			return;
-		case 63:
-			gteNCCT();
-			return;
-		default:
-			psxNULL();
-			return;
-	}
-	*/
-};
-__inline void callPsxCP2BSC(int func_code){
-
-	if(func_code == 0){
-		psxMFC2();
-	}
-	else if(func_code == 2){
-		psxCFC2();
-	}
-	else if(func_code == 4){
-		gteMTC2();
-	}
-	else if(func_code == 6){
-		gteCTC2();
-	}
-	else{
-		psxNULL();
-	}
-};
-
 
 R3000Acpu psxInt = {
 	intInit,

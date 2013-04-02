@@ -382,6 +382,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsC</CompileAs>
+      <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

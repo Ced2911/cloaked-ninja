@@ -187,6 +187,9 @@ extern "C" unsigned int  VideoInit()
 
 	g_pPitch = texture_info.Pitch;
 
+	// Clear psx surface
+	//XMemSet(pPsxScreen, 0, texture_info.Pitch * PSX_HEIGHT);
+
 	UpdateScrenRes(PSX_WIDTH, PSX_HEIGHT);
 	return S_OK;
 }

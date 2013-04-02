@@ -26,10 +26,6 @@
 #include "mdec.h"
 #include "ppf.h"
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 char CdromId[10] = "";
 char CdromLabel[33] = "";
 

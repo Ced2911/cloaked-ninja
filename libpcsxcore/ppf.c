@@ -24,10 +24,6 @@
 #include "ppf.h"
 #include "cdrom.h"
 
-#ifdef _XBOX
-#include "opti.h"
-#endif
-
 typedef struct tagPPF_DATA {
 	s32					addr;
 	s32					pos;
