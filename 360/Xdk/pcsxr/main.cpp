@@ -6,7 +6,9 @@
 #include "cdriso.h"
 #include "r3000a.h"
 
-char * game = "game:\\Castlevanina - SOTN.bin";
+
+char * game = "game:\\Soul Blade (USA) (v1.0)\\Soul Blade (USA) (v1.0).bin";
+//char * game = "game:\\Castlevanina - SOTN.bin";
 
 extern "C" void gpuDmaThreadInit();
 

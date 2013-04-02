@@ -110,16 +110,21 @@ void psxBranchTest() {
 	// GameShark Sampler: Give VSync pin some delay before exception eats it
 	if (psxHu32(0x1070) & psxHu32(0x1074)) {
 		if ((psxRegs.CP0.n.Status & 0x401) == 0x401) {
+			
+#if defined(__BIGENDIAN__)
+			// Crash Bandicoot 2: Don't run exceptions when GTE in pipeline
+			u8 opcode = *PSXM(psxRegs.pc);
+			
+			if( ((opcode) & 0xfe) != 0x4a ) {
+#else
 			u32 opcode;
 			u32 * code = (u32 *)PSXM(psxRegs.pc);
 			//u32 *code = Read_ICache(psxRegs.pc, TRUE);;
-
-			// 
-
 			// Crash Bandicoot 2: Don't run exceptions when GTE in pipeline
 			opcode = SWAP32(*code);
 
 			if( ((opcode >> 24) & 0xfe) != 0x4a ) {
+#endif
 #ifdef PSXCPU_LOG
 				PSXCPU_LOG("Interrupt: %x %x\n", psxHu32(0x1070), psxHu32(0x1074));
 #endif
