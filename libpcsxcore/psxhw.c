@@ -664,7 +664,7 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("GPU DATA 32bit write %x\n", value);
 #endif
-			GPU_writeData(value); return;
+			gpuWriteData(value); return;
 		case 0x1f801814:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("GPU STATUS 32bit write %x\n", value);

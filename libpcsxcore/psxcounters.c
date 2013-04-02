@@ -22,6 +22,7 @@
  */
 
 #include "psxcounters.h"
+#include "gpu.h"
 
 /******************************************************************************/
 
@@ -294,7 +295,7 @@ void psxRcntUpdate()
             GPU_vBlank( 0 );
             setIrq( 0x01 );
 
-            GPU_updateLace();
+            gpuUpdateLace();
             EmuUpdate();
         }
     }

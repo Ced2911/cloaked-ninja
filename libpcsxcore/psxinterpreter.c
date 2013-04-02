@@ -100,11 +100,11 @@ static void delayReadWrite(int reg, u32 bpc) {
 
 // this defines shall be used with the tmp 
 // of the next func (instead of _Funct_...)
-#define _tFunct_  ((tmp      ) & 0x3F)  // The funct part of the instruction register 
-#define _tRd_     ((tmp >> 11) & 0x1F)  // The rd part of the instruction register 
-#define _tRt_     ((tmp >> 16) & 0x1F)  // The rt part of the instruction register 
-#define _tRs_     ((tmp >> 21) & 0x1F)  // The rs part of the instruction register 
-#define _tSa_     ((tmp >>  6) & 0x1F)  // The sa part of the instruction register
+#define _tFunct_  (_fFunct_(tmp))		// The funct part of the instruction register 
+#define _tRd_     (_fRd_(tmp))			// The rd part of the instruction register 
+#define _tRt_     (_fRt_(tmp))			// The rt part of the instruction register 
+#define _tRs_     (_fRs_(tmp))			// The rs part of the instruction register 
+#define _tSa_     (_fSa_(tmp))			// The sa part of the instruction register
 
 int psxTestLoadDelay(int reg, u32 tmp) {
 	if (tmp == 0) return 0; // NOP

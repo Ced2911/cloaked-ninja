@@ -145,6 +145,20 @@ static void WaitForGpuThread() {
 	};
 }
 
+void gpuWriteData(uint32_t v) {
+	if(!dma_thread_exit) {
+		WaitForGpuThread();
+	} 
+	GPU_writeData(v);
+}
+
+void gpuUpdateLace() {
+	if(!dma_thread_exit) {
+		WaitForGpuThread();
+	} 
+	GPU_updateLace();
+}
+
 static void gpuDmaThread() {
 	while(!dma_thread_exit) {
 		if (dma_thread_running) {
@@ -160,7 +174,6 @@ static void gpuDmaThread() {
 
 			baseAddrB = (unsigned char*) baseAddrL;
 
-			// Must be in a thread ?!
 			do
 			{
 				addr&=0x1FFFFC;
@@ -255,8 +268,8 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 			//GPU_dmaChain((u32 *)psxM, madr & 0x1fffff);
 
 			//__GPUdmaChain(madr & 0x1fffff);
-			gpuDmaChain(madr & 0x1fffff);
-			//gpuDmaChainThread(madr & 0x1fffff);
+			//gpuDmaChain(madr & 0x1fffff);
+			gpuDmaChainThread(madr & 0x1fffff);
 			
 			// Tekken 3 = use 1.0 only (not 1.5x)
 
