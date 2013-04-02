@@ -362,6 +362,9 @@ __inline void doBranch(u32 tar) {
 	u32 *code;
 	u32 tmp;
 
+	u32 pc = psxRegs.pc + 4;
+	u32 cycle = psxRegs.cycle + BIAS;
+
 	branch2 = branch = 1;
 	branchPC = tar;
 	/*
@@ -374,8 +377,8 @@ __inline void doBranch(u32 tar) {
 
 	debugI();
 
-	psxRegs.pc += 4;
-	psxRegs.cycle += BIAS;
+	psxRegs.pc = pc;
+	psxRegs.cycle = cycle;
 
 	// check for load delay
 	tmp = _Op_;
@@ -630,12 +633,14 @@ void psxJALR() {
 #define _oB_ (_u32(_rRs_) + _Imm_)
 
 void psxLB() {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -650,12 +655,14 @@ void psxLB() {
 }
 
 void psxLBU() {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -670,12 +677,14 @@ void psxLBU() {
 }
 
 void psxLH() {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -690,12 +699,13 @@ void psxLH() {
 }
 
 void psxLHU() {
+	u32 pc = psxRegs.pc;
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -710,12 +720,13 @@ void psxLHU() {
 }
 
 void psxLW() {
+	u32 pc = psxRegs.pc;
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -736,14 +747,15 @@ void psxLWL() {
 	u32 addr = _oB_;
 	u32 shift = addr & 3;
 	u32 mem = psxMemRead32(addr & ~3);
+	u32 pc = psxRegs.pc;
 
 
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -770,13 +782,14 @@ void psxLWR() {
 	u32 addr = _oB_;
 	u32 shift = addr & 3;
 	u32 mem = psxMemRead32(addr & ~3);
+	u32 pc = psxRegs.pc;
 		
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -849,12 +862,14 @@ void psxSWR() {
 *********************************************************/
 void psxMFC0()
 {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -867,12 +882,14 @@ void psxMFC0()
 
 void psxCFC0()
 {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -919,12 +936,14 @@ void psxCTC0() { MTC0(_Rd_, _u32(_rRt_)); }
 
 void psxMFC2()
 {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -935,12 +954,14 @@ void psxMFC2()
 
 void psxCFC2()
 {
+	u32 pc = psxRegs.pc;
+
 	// load delay = 1 latency
 	if( branch == 0 )
 	{
 		// simulate: beq r0,r0,lw+4 / lw / (delay slot)
-		psxRegs.pc -= 4;
-		doBranch( psxRegs.pc + 4 );
+		psxRegs.pc = pc - 4;
+		doBranch( pc );
 
 		return;
 	}
@@ -1055,20 +1076,14 @@ static void intReset() {
 static void intExecute() {
 	for (;;) 
 	{
-		// __dcbt(0, psxRegs.ICache_Addr);
-		// __dcbt(512, psxRegs.ICache_Code);
 		execI();
-		// ClearCaches();
 	}
 }
 
 static void intExecuteBlock() {
 	branch2 = 0;
 	while (!branch2){
-		// __dcbt(0, psxRegs.ICache_Addr);
-		// __dcbt(512, psxRegs.ICache_Code);
 		execI();
-		// ClearCaches();
 	}
 }
 
@@ -1080,15 +1095,18 @@ static void intShutdown() {
 
 // interpreter execution
 static void execI() { 
+	u32 pc = psxRegs.pc + 4;
+	u32 cycle = psxRegs.cycle + BIAS;
+
 	u32 *code = (u32 *)PSXM(psxRegs.pc);
 	psxRegs.code = SWAP32(*code);
 
 	debugI();
 
 	if (Config.Debug) ProcessDebug();
-
-	psxRegs.pc += 4;
-	psxRegs.cycle += BIAS;
+	
+	psxRegs.pc = pc;
+	psxRegs.cycle = cycle;
 
 	psxBSC[_Op_]();
 }
