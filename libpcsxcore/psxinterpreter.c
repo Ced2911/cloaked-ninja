@@ -513,6 +513,7 @@ void psxDIVU() {
 
 void psxMULT() {
 	u64 res = (s64)((s64)_i32(_rRs_) * (s64)_i32(_rRt_));
+	//u64 res = __mulh(_i32(_rRs_), _i32(_rRt_));
 
 	psxRegs.GPR.n.lo = (u32)(res & 0xffffffff);
 	psxRegs.GPR.n.hi = (u32)((res >> 32) & 0xffffffff);
@@ -520,6 +521,7 @@ void psxMULT() {
 
 void psxMULTU() {
 	u64 res = (u64)((u64)_u32(_rRs_) * (u64)_u32(_rRt_));
+	//u64 res = __umulh(_u32(_rRs_), _u32(_rRt_));
 
 	psxRegs.GPR.n.lo = (u32)(res & 0xffffffff);
 	psxRegs.GPR.n.hi = (u32)((res >> 32) & 0xffffffff);
