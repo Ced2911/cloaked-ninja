@@ -108,7 +108,7 @@ static void delayReadWrite(int reg, u32 bpc) {
 
 int psxTestLoadDelay(int reg, u32 tmp) {
 	if (tmp == 0) return 0; // NOP
-	switch (tmp >> 26) {
+	switch (_fOp_(tmp)) {
 		case 0x00: // SPECIAL
 			switch (_tFunct_) {
 				case 0x00: // SLL
