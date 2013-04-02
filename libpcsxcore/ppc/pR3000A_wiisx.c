@@ -688,7 +688,7 @@ static int iLoadTest() {
 	u32 tmp;
 
 	// check for load delay
-	tmp = psxRegs.code >> 26;
+	tmp = _Op_;
 	switch (tmp) {
 	case 0x10: // COP0
 		switch (_Rs_) {

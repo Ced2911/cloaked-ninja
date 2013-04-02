@@ -393,10 +393,10 @@ void ProcessDebug() {
     }
     if (mapping_e) {
         MarkMap(psxRegs.pc, MAP_EXEC);
-        if ((psxRegs.code >> 26) == 3) {
+        if ((_Op_) == 3) {
             MarkMap(_JumpTarget_, MAP_EXEC_JAL);
         }
-        if (((psxRegs.code >> 26) == 0) && ((psxRegs.code && 0x3F) == 9)) {
+        if (((_Op_) == 0) && ((psxRegs.code && 0x3F) == 9)) {
             MarkMap(_Rd_, MAP_EXEC_JAL);
         }
     }

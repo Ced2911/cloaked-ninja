@@ -645,7 +645,7 @@ static int iLoadTest() {
     u32 tmp;
 
     // check for load delay
-    tmp = psxRegs.code >> 26;
+    tmp = _Op_;
     switch (tmp) {
         case 0x10: // COP0
             switch (_Rs_) {
@@ -708,7 +708,7 @@ static void SetBranch() {
         return;
     }
 
-    switch( psxRegs.code >> 26 ) {
+    switch( _Op_ ) {
         // Lode Runner (jr - beq)
 
         // bltz - bgez - bltzal - bgezal / beq - bne - blez - bgtz
@@ -763,7 +763,7 @@ static void iJump(u32 branchPC) {
         return;
     }
 
-    recBSC[psxRegs.code >> 26]();
+    recBSC[_Op_]();
 
     iFlushRegs(branchPC);
     LIW(PutHWRegSpecial(PSXPC), branchPC);
@@ -842,7 +842,7 @@ static void iBranch(u32 branchPC, int savectx) {
     }
 
     pc += 4;
-    recBSC[psxRegs.code >> 26]();
+    recBSC[_Op_]();
 
     iFlushRegs(branchPC);
     LIW(PutHWRegSpecial(PSXPC), branchPC);
@@ -2871,7 +2871,7 @@ static void recRecompile() {
         psxRegs.code = SWAP32(*(u32 *) p);
         pc += 4;
         count++;
-        recBSC[psxRegs.code >> 26]();
+        recBSC[_Op_]();
 
         if (branch) {
             branch = 0;

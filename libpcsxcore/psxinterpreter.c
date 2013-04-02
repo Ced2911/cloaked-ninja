@@ -56,7 +56,7 @@ static void delayRead(int reg, u32 bpc) {
 
 	rold = psxRegs.GPR.r[reg];
 
-	psxBSC[psxRegs.code >> 26](); // branch delay load
+	psxBSC[_Op_](); // branch delay load
 
 	rnew = psxRegs.GPR.r[reg];
 
@@ -79,7 +79,7 @@ static void delayWrite(int reg, u32 bpc) {
 	SysPrintf("%s\n", disR3000AF(PSXMu32(bpc), bpc));*/
 
 	// no changes from normal behavior
-	psxBSC[psxRegs.code >> 26]();
+	psxBSC[_Op_]();
 	branch = 0;
 	psxRegs.pc = bpc;
 
@@ -283,7 +283,7 @@ void psxDelayTest(int reg, u32 bpc) {
 			delayWrite(reg, bpc); return;
 	}
 
-	psxBSC[psxRegs.code >> 26]();
+	psxBSC[_Op_]();
 
 	branch = 0;
 	psxRegs.pc = bpc;
@@ -381,7 +381,7 @@ __inline void doBranch(u32 tar) {
 	psxRegs.cycle += BIAS;
 
 	// check for load delay
-	tmp = psxRegs.code >> 26;
+	tmp = _Op_;
 	switch (tmp) {
 		case 0x10: // COP0
 			switch (_Rs_) {
@@ -414,7 +414,7 @@ __inline void doBranch(u32 tar) {
 			break;
 	}
 
-	psxBSC[psxRegs.code >> 26]();
+	psxBSC[_Op_]();
 
 	branch = 0;
 	psxRegs.pc = branchPC;
@@ -1083,7 +1083,6 @@ static void intShutdown() {
 
 // interpreter execution
 static void execI() { 
-#if 1
 	u32 *code = (u32 *)PSXM(psxRegs.pc);
 	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 
@@ -1094,24 +1093,7 @@ static void execI() {
 	psxRegs.pc += 4;
 	psxRegs.cycle += BIAS;
 
-	printf("bsc code = %04x\n", psxRegs.code >> 26);
-
-	psxBSC[psxRegs.code >> 26]();
-#else
-	u32 *code = (u32 *)PSXM(psxRegs.pc);
-	psxRegs.code = ((code == NULL) ? 0 : (*code));
-
-	debugI();
-
-	if (Config.Debug) ProcessDebug();
-
-	psxRegs.pc += 4;
-	psxRegs.cycle += BIAS;
-
-	printf("bsc code = %04x\n", (psxRegs.code >> 2)&0x3f);
-
-	psxBSC[(psxRegs.code >> 2)&0x3f]();
-#endif
+	psxBSC[_Op_]();
 }
 
 R3000Acpu psxInt = {
