@@ -277,6 +277,7 @@
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <OpenMPSupport>true</OpenMPSupport>
       <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">

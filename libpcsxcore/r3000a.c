@@ -106,6 +106,34 @@ void psxException(u32 code, u32 bd) {
 	if (Config.HLE) psxBiosException();
 }
 
+static void nothing() {
+}
+
+#define ITR_HANDLER(func, psxint)			\
+static void _##psxint##_func() {			\
+	psxRegs.interrupt &= ~(1 << psxint);	\
+	func();									\
+}											\
+											\
+void (*_##psxint##Handler[])() = {			\
+	nothing,								\
+	_##psxint##_func						\
+};											\
+
+ITR_HANDLER(sioInterrupt, PSXINT_SIO);
+ITR_HANDLER(cdrInterrupt, PSXINT_CDR);
+ITR_HANDLER(cdrReadInterrupt, PSXINT_CDREAD);
+ITR_HANDLER(gpuInterrupt, PSXINT_GPUDMA);
+ITR_HANDLER(mdec1Interrupt, PSXINT_MDECOUTDMA);
+ITR_HANDLER(spuInterrupt, PSXINT_SPUDMA);
+ITR_HANDLER(GPU_idle, PSXINT_GPUBUSY);
+ITR_HANDLER(mdec0Interrupt, PSXINT_MDECINDMA);
+ITR_HANDLER(gpuotcInterrupt, PSXINT_GPUOTCDMA);
+ITR_HANDLER(cdrDmaInterrupt, PSXINT_CDRDMA);
+ITR_HANDLER(cdrPlayInterrupt, PSXINT_CDRPLAY);
+ITR_HANDLER(cdrDecodedBufferInterrupt, PSXINT_CDRDBUF);
+ITR_HANDLER(cdrLidSeekInterrupt, PSXINT_CDRLID);
+
 void psxBranchTest() {
 	// GameShark Sampler: Give VSync pin some delay before exception eats it
 	if (psxHu32(0x1070) & psxHu32(0x1074)) {
@@ -135,7 +163,7 @@ void psxBranchTest() {
 
 	if ((psxRegs.cycle - psxNextsCounter) >= psxNextCounter)
 		psxRcntUpdate();
-
+#if 0
 	if (psxRegs.interrupt) {
 		if ((psxRegs.interrupt & (1 << PSXINT_SIO)) && !Config.Sio) { // sio
 			if ((psxRegs.cycle - psxRegs.intCycle[PSXINT_SIO].sCycle) >= psxRegs.intCycle[PSXINT_SIO].cycle) {
@@ -222,6 +250,107 @@ void psxBranchTest() {
 			}
 		}
 	}
+#else
+	// Because each fps count ...
+#define BF_INT(psxint) \
+	((psxRegs.interrupt & (1 << psxint))) && (((psxRegs.intCycle[psxint].cycle - ((psxRegs.cycle - psxRegs.intCycle[psxint].sCycle) + 1))) >> 31)
+
+	// Slow =>
+	// ((psxRegs.interrupt & (1 << psxint)) >> psxint) & (((psxRegs.intCycle[psxint].cycle - ((psxRegs.cycle - psxRegs.intCycle[psxint].sCycle) + 1))   & 0xFFFFFFFF) >> 31)
+	// Faster but not still not good
+	// ((psxRegs.interrupt & (1 << psxint)) >> psxint) && (((psxRegs.intCycle[psxint].cycle - ((psxRegs.cycle - psxRegs.intCycle[psxint].sCycle) + 1))  & 0xFFFFFFFF) >> 31)
+
+#if 1
+	if (psxRegs.interrupt) {
+
+		if (BF_INT(PSXINT_CDR)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_CDR);
+			cdrInterrupt();
+		}
+
+		if (BF_INT(PSXINT_SIO)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_SIO);
+			sioInterrupt();
+		}
+
+		if (BF_INT(PSXINT_CDREAD)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_CDREAD);
+			cdrReadInterrupt();
+		}
+
+		if (BF_INT(PSXINT_GPUDMA)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_GPUDMA);
+			gpuInterrupt();
+		}
+
+		if (BF_INT(PSXINT_MDECOUTDMA)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_MDECOUTDMA);
+			mdec1Interrupt();
+		}
+
+		if (BF_INT(PSXINT_SPUDMA)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_SPUDMA);
+			spuInterrupt();
+		}
+
+		if (BF_INT(PSXINT_GPUBUSY)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_GPUBUSY);
+			GPU_idle();
+		}
+
+		if (BF_INT(PSXINT_MDECINDMA)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_MDECINDMA);
+			mdec0Interrupt();
+		}
+
+		if (BF_INT(PSXINT_GPUOTCDMA)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_GPUOTCDMA);
+			gpuotcInterrupt();
+		}
+
+		if (BF_INT(PSXINT_CDRDMA)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_CDRDMA);
+			cdrDmaInterrupt();
+		}
+
+		if (BF_INT(PSXINT_CDRPLAY)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_CDRPLAY);
+			cdrPlayInterrupt();
+		}
+
+		if (BF_INT(PSXINT_CDRDBUF)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_CDRDBUF);
+			cdrDecodedBufferInterrupt();
+		}
+
+		if (BF_INT(PSXINT_CDRLID)) {
+			psxRegs.interrupt &= ~(1 << PSXINT_CDRLID);
+			cdrLidSeekInterrupt();
+		}
+	}
+#else
+	if (psxRegs.interrupt) {
+#define BF_DO_INT(psxint) \
+	_##psxint##Handler[psxint]();
+
+		BF_DO_INT(PSXINT_SIO);
+		BF_DO_INT(PSXINT_CDR);
+		BF_DO_INT(PSXINT_CDREAD);
+		BF_DO_INT(PSXINT_GPUDMA);
+		BF_DO_INT(PSXINT_MDECOUTDMA);
+		BF_DO_INT(PSXINT_SPUDMA);
+		BF_DO_INT(PSXINT_GPUBUSY);
+		BF_DO_INT(PSXINT_MDECINDMA);
+		BF_DO_INT(PSXINT_GPUOTCDMA);		
+		BF_DO_INT(PSXINT_CDRDMA);
+		BF_DO_INT(PSXINT_CDRDBUF);
+		BF_DO_INT(PSXINT_CDRLID);		
+		BF_DO_INT(PSXINT_CDRPLAY);
+	}
+
+#endif
+
+#endif
 }
 
 void psxJumpTest() {

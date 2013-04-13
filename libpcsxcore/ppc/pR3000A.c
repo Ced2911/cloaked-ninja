@@ -33,10 +33,17 @@
 
 
 /* variable declarations */
+#if 0
 static u32 psxRecLUT[0x010000];
 static char recMem[RECMEM_SIZE] __attribute__((aligned(32))); /* the recompiled blocks will be here */
 static char recRAM[0x200000] __attribute__((aligned(32))); /* and the ptr to the blocks here */
 static char recROM[0x080000] __attribute__((aligned(32))); /* and here */
+#else
+static char * recMem; /* the recompiled blocks will be here */
+static u32 psxRecLUT[0x010000];
+static char recRAM[0x200000] __attribute__((aligned(32))); /* and the ptr to the blocks here */
+static char recROM[0x080000] __attribute__((aligned(32))); /* and here */
+#endif
 
 static u32 pc; /* recompiler pc */
 static u32 pcold; /* recompiler oldpc */
@@ -92,7 +99,7 @@ void __declspec(naked) __icbi(int offset, const void * base)
 {
 	__asm {
 		icbi r3,r4
-			blr
+		blr
 	}
 }
 
@@ -992,7 +999,13 @@ static void rec##f() { \
 /*	branch = 2; */\
 }
 
-static int allocMem() {
+
+// From coz	
+void* balloc( size_t size );
+
+static int allocMem() {	
+// USE VM 
+#if 1
     int i;
 
     for (i = 0; i < 0x80; i++) psxRecLUT[i + 0x0000] = (u32) & recRAM[(i & 0x1f) << 16];
@@ -1000,6 +1013,12 @@ static int allocMem() {
     memcpy(psxRecLUT + 0xa000, psxRecLUT, 0x80 * 4);
 
     for (i = 0; i < 0x08; i++) psxRecLUT[i + 0xbfc0] = (u32) & recROM[i << 16];
+#endif
+	
+#if 1
+	// DR for xdk
+	recMem = (char*) balloc(RECMEM_SIZE);
+#endif
 
     return 0;
 }
@@ -1010,9 +1029,10 @@ static int recInit() {
 
 static void recReset() {
     printf("recReset ..\r\n");
+#if 1
     memset(recRAM, 0, 0x200000);
     memset(recROM, 0, 0x080000);
-
+#endif
     ppcInit();
     ppcSetPtr((u32 *) recMem);
 

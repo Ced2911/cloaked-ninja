@@ -268,21 +268,23 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOPSXREC;_DEBUG;_XBOX;_LIB;__BIGENDIAN__;__ppc__;__BIGENDIAN__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>;_DEBUG;_XBOX;_LIB;__BIGENDIAN__;__ppc__;__BIGENDIAN__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderOutputFile>$(OutDir)$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <CallAttributedProfiling>Disabled</CallAttributedProfiling>
+      <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <CompileAs>CompileAsC</CompileAs>
       <OpenMPSupport>true</OpenMPSupport>
       <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <AssemblerOutput>All</AssemblerOutput>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">

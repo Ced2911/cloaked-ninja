@@ -38,6 +38,12 @@ static u32 branchPC;
 #define debugI()
 #endif
 
+// try to avoid branch jump as soon as possible
+//#define AGGRESSIF // slower ...
+
+// use table instead of swith for psxdelay
+// #define TIMING_TABLE // no perf gain
+
 __inline void execI();
 
 
@@ -49,15 +55,21 @@ void (*psxCP0[32])();
 void (*psxCP2[64])();
 void (*psxCP2BSC[32])();
 
+#ifdef AGGRESSIF
+static __inline void execOp(u32 op);
+#endif
+
 static void delayRead(int reg, u32 bpc) {
 	u32 rold, rnew;
 
 //	SysPrintf("delayRead at %x!\n", psxRegs.pc);
 
 	rold = psxRegs.GPR.r[reg];
-
+#ifdef AGGRESSIF
+	execOp(_Op_);
+#else
 	psxBSC[_Op_](); // branch delay load
-
+#endif
 	rnew = psxRegs.GPR.r[reg];
 
 	psxRegs.pc = bpc;
@@ -79,7 +91,11 @@ static void delayWrite(int reg, u32 bpc) {
 	SysPrintf("%s\n", disR3000AF(PSXMu32(bpc), bpc));*/
 
 	// no changes from normal behavior
-	psxBSC[_Op_]();
+#ifdef AGGRESSIF
+	execOp(_Op_);
+#else
+	psxBSC[_Op_](); // branch delay load
+#endif
 	branch = 0;
 	psxRegs.pc = bpc;
 
@@ -106,6 +122,184 @@ static void delayReadWrite(int reg, u32 bpc) {
 #define _tRs_     (_fRs_(tmp))			// The rs part of the instruction register 
 #define _tSa_     (_fSa_(tmp))			// The sa part of the instruction register
 
+#ifdef TIMING_TABLE
+
+int ret_reg(int reg, u32 tmp) {
+	switch (_tRt_) {
+		case 0x00: case 0x01:
+		case 0x10: case 0x11: // BLTZ/BGEZ...
+			// Xenogears - lbu v0 / beq v0
+			// - no load delay (fixes battle loading)
+			break;
+
+			if (_tRs_ == reg) return 2;
+			break;
+	}
+	return 0;
+}
+
+int ret_0(int reg, u32 tmp) {
+	return 0;
+}
+int ret_jal(int reg, u32 tmp) {
+	if (31 == reg) 
+		return 3;
+	return 0;
+}
+
+int ret_s_ops(int reg, u32 tmp) {
+	if (_tRt_ == reg && _tRs_ == reg) return 1; else
+	if (_tRs_ == reg) return 2; else
+	if (_tRt_ == reg) return 3;
+	return 0;
+}
+
+int ret__tRt__reg3(int reg, u32 tmp) {
+	if (_tRt_ == reg) return 3;
+	return 0;
+}
+
+int ret__tRt__reg2(int reg, u32 tmp) {
+	if (_tRt_ == reg) return 2;
+	return 0;
+}
+
+int ret_cop0(int reg, u32 tmp) {
+	switch (_tFunct_) {
+		case 0x00: // MFC0
+			if (_tRt_ == reg) return 3;
+			break;
+		case 0x02: // CFC0
+			if (_tRt_ == reg) return 3;
+			break;
+		case 0x04: // MTC0
+			if (_tRt_ == reg) return 2;
+			break;
+		case 0x06: // CTC0
+			if (_tRt_ == reg) return 2;
+			break;
+		// RFE just a break;
+	}
+	return 0;
+}
+int ret_cop2(int reg, u32 tmp) {
+	switch (_tFunct_) {
+		case 0x00: 
+			switch (_tRs_) {
+				case 0x00: // MFC2
+					if (_tRt_ == reg) return 3;
+					break;
+				case 0x02: // CFC2
+					if (_tRt_ == reg) return 3;
+					break;
+				case 0x04: // MTC2
+					if (_tRt_ == reg) return 2;
+					break;
+				case 0x06: // CTC2
+					if (_tRt_ == reg) return 2;
+					break;
+			}
+			break;
+		// RTPS... break;
+	}
+	return 0;
+}
+int ret_timing_lw(int reg, u32 tmp) {
+	if (_tRt_ == reg) return 3; else
+	if (_tRs_ == reg) return 2;
+	return 0;
+}
+int ret_timing_l(int reg, u32 tmp) {
+	if (_tRt_ == reg && _tRs_ == reg) return 1; else
+	if (_tRs_ == reg) return 2; else
+	if (_tRt_ == reg) return 3;
+	return 0;
+}
+int ret_timing_s(int reg, u32 tmp) {
+	if (_tRt_ == reg || _tRs_ == reg) return 2;
+	return 0;
+}
+int ret_timing_c2(int reg, u32 tmp) {
+	if (_tRs_ == reg) return 2;
+	return 0;
+}
+int (*_timingSPC[64])(int reg, u32 tmp) = {
+//	0          1          2        3        4        5        6        7
+	ret_0	, ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x00
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x08
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x10
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x18
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x20
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x28
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x30
+	ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , ret_0   , //	0x38
+};
+int timingSPC(int reg, u32 tmp) {
+	//return _timingSPC[v](v, reg, tmp);
+	switch (_tFunct_) {
+		case 0x00: // SLL
+		case 0x02: case 0x03: // SRL/SRA
+			if (_tRd_ == reg && _tRt_ == reg) return 1; else
+			if (_tRt_ == reg) return 2; else
+			if (_tRd_ == reg) return 3;
+			break;
+
+		case 0x08: // JR
+			if (_tRs_ == reg) return 2;
+			break;
+		case 0x09: // JALR
+			if (_tRd_ == reg && _tRs_ == reg) return 1; else
+			if (_tRs_ == reg) return 2; else
+			if (_tRd_ == reg) return 3;
+			break;
+
+		// SYSCALL/BREAK just a break;
+
+		case 0x20: case 0x21: case 0x22: case 0x23:
+		case 0x24: case 0x25: case 0x26: case 0x27: 
+		case 0x2a: case 0x2b: // ADD/ADDU...
+		case 0x04: case 0x06: case 0x07: // SLLV...
+			if (_tRd_ == reg && (_tRt_ == reg || _tRs_ == reg)) return 1; else
+			if (_tRt_ == reg || _tRs_ == reg) return 2; else
+			if (_tRd_ == reg) return 3;
+			break;
+
+		case 0x10: case 0x12: // MFHI/MFLO
+			if (_tRd_ == reg) return 3;
+			break;
+		case 0x11: case 0x13: // MTHI/MTLO
+			if (_tRs_ == reg) return 2;
+			break;
+
+		case 0x18: case 0x19:
+		case 0x1a: case 0x1b: // MULT/DIV...
+			if (_tRt_ == reg || _tRs_ == reg) return 2;
+			break;
+	}
+	return 0;
+}
+int (*timingBSC[64])(int reg, u32 tmp) = {
+//	0				1				2				3				4				5				6				7
+	timingSPC ,		ret_reg,		ret_0,			ret_jal,		ret_0,			ret_0,			ret_0,			ret_0, //	0x00
+	ret_s_ops ,		ret_s_ops,		ret_s_ops,		ret_s_ops,		ret_s_ops,		ret_s_ops,		ret_s_ops,		ret_s_ops, //	0x08
+	ret_cop0  ,		ret_0,			ret_cop2,		ret_0,			ret_0,			ret_0,			ret_0,			ret_0, //	0x10
+	ret_0,			ret_0,			ret_0,			ret_0,			ret_0,			ret_0,			ret_0,			ret_0, //	0x18
+	ret_timing_l,	ret_timing_l,	ret_timing_lw,	ret_timing_l,	ret_timing_l,	ret_timing_l ,	ret_timing_lw,	ret_0, //	0x20
+	ret_timing_s,	ret_timing_s,	ret_timing_s,	ret_timing_s,	ret_0,			ret_0,			ret_timing_s,	ret_0, //	0x28
+	ret_0,			ret_0,			ret_timing_c2,	ret_0,			ret_0,			ret_0,			ret_0,			ret_0, //	0x30
+	ret_0,			ret_0,			ret_timing_c2,	ret_0,			ret_0,			ret_0,			ret_0,			ret_0  //	0x38
+};
+
+int psxTestLoadDelay(int reg, u32 tmp) {
+	if (tmp == 0) return 0; // NOP
+	
+	return timingBSC[_fOp_(tmp)](reg, tmp);
+
+	return 0;
+}
+
+
+#else
 int psxTestLoadDelay(int reg, u32 tmp) {
 	if (tmp == 0) return 0; // NOP
 	switch (_fOp_(tmp)) {
@@ -262,6 +456,7 @@ int psxTestLoadDelay(int reg, u32 tmp) {
 	return 0;
 }
 
+#endif
 void psxDelayTest(int reg, u32 bpc) {
 	u32 *code;
 	u32 tmp;
@@ -281,7 +476,11 @@ void psxDelayTest(int reg, u32 bpc) {
 			delayWrite(reg, bpc); return;
 	}
 
-	psxBSC[_Op_]();
+#ifdef AGGRESSIF
+	execOp(_Op_);
+#else
+	psxBSC[_Op_](); // branch delay load
+#endif
 
 	branch = 0;
 	psxRegs.pc = bpc;
@@ -382,6 +581,7 @@ __inline void doBranch(u32 tar) {
 
 	// check for load delay
 	tmp = _Op_;
+#if 0
 	switch (tmp) {
 		case 0x10: // COP0
 			switch (_Rs_) {
@@ -413,8 +613,47 @@ __inline void doBranch(u32 tar) {
 			}
 			break;
 	}
+#else 	
+	if (tmp >= 0x20 && tmp <= 0x26) { // LB/LH/LWL/LW/LBU/LHU/LWR
+		psxDelayTest(_Rt_, branchPC);
+		return;
+	}
 
-	psxBSC[_Op_]();
+	// tmp 
+	switch (tmp) {
+		case 0x10: // COP0
+			switch (_Rs_) {
+				case 0x00: // MFC0
+				case 0x02: // CFC0
+					psxDelayTest(_Rt_, branchPC);
+					return;
+			}
+			break;
+		case 0x12: // COP2
+			switch (_Funct_) {
+				case 0x00:
+					switch (_Rs_) {
+						case 0x00: // MFC2
+						case 0x02: // CFC2
+							psxDelayTest(_Rt_, branchPC);
+							return;
+					}
+					break;
+			}
+			break;
+		case 0x32: // LWC2
+			psxDelayTest(_Rt_, branchPC);
+			return;
+		default:
+			break;
+	}
+#endif
+
+#ifdef AGGRESSIF
+	execOp(_Op_);
+#else
+	psxBSC[_Op_](); // branch delay load
+#endif
 
 	branch = 0;
 	psxRegs.pc = branchPC;
@@ -986,19 +1225,104 @@ void psxSPECIAL() {
 	psxSPC[_Funct_]();
 }
 
+/*
+//	0          1          2        3        4        5        6        7	
+	psxBLTZ  , psxBGEZ  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	//	0x00
+	psxNULL  , psxNULL  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	//	0x08
+	psxBLTZAL, psxBGEZAL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	//	0x10
+	psxNULL  , psxNULL  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL	//	0x18
+*/
 void psxREGIMM() {
+	u32 rt = _Rt_;
+#ifdef AGGRESSIF
+	// 0x00 0x01 0x10 0x11
+	if (rt == 0x00) {
+		psxBLTZ();
+	} else if (rt == 0x01) {
+		psxBGEZ();
+	} else if (rt == 0x10) {
+		psxBLTZAL();
+	} else if (rt == 0x11) {
+		psxBGEZAL();
+	}
+#else
 	psxREG[_Rt_](); // branch delay load
+#endif
 }
 
-void psxCOP0() {
+void psxCOP0() {	
+#ifdef AGGRESSIF
+	u32 rs = _Rs_;
+	/*
+	//	0          1          2        3        4        5        6        7	
+	psxMFC0, psxNULL, psxCFC0, psxNULL, psxMTC0, psxNULL, psxCTC0, psxNULL,	 	//	0x00
+	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	 	//	0x08
+	psxRFE , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	 	//	0x10
+	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL		//	0x18
+	*/
+	/*
+	void psxMTC0() { MTC0(_Rd_, _u32(_rRt_)); }
+	void psxCTC0() { MTC0(_Rd_, _u32(_rRt_)); }
+	*/
+	switch(rs) {
+	case 0x00:
+		psxMFC0();
+		break;
+	case 0x02:
+		psxCFC0();
+		break;
+		/*
+	case 0x04:
+		psxMTC0();
+		break;
+	case 0x06:
+		psxCTC0();
+		break;
+		*/
+	case 0x04:
+	case 0x06:
+		MTC0(_Rd_, _u32(_rRt_));
+		break;
+	case 0x10:
+		psxRFE();
+		break;
+	}
+#else
 	psxCP0[_Rs_]();
-
+#endif
 }
 
 void psxCOP2() {
 	if ((psxRegs.CP0.n.Status & 0x40000000) == 0 )
 		return;
+#ifdef AGGRESSIF
+	{
+		u32 func = _Funct_;
+		if (func == 0) {
+			u32 rs = _Rs_;
+			// psxMFC2, psxNULL, psxCFC2, psxNULL, gteMTC2, psxNULL, gteCTC2, psxNULL,
+			switch(rs) {
+			case 0x00:
+				psxMFC2();
+				break;
+			case 0x02:
+				psxCFC2();
+				break;
+			case 0x04:
+				gteMTC2();
+				break;
+			case 0x06:
+				gteCTC2();
+				break;
+			}
+		} else {
+			// call gte func
+			psxCP2[func]();
+		}
+	}
+#else
 	psxCP2[_Funct_]();
+#endif
 }
 
 void psxBASIC() {
@@ -1010,18 +1334,20 @@ void psxHLE() {
 	psxHLEt[psxRegs.code & 0x07]();		// HDHOSHY experimental patch
 }
 
+// execi
 void (*psxBSC[64])() = {
-	psxSPECIAL, psxREGIMM, psxJ   , psxJAL  , psxBEQ , psxBNE , psxBLEZ, psxBGTZ,
-	psxADDI   , psxADDIU , psxSLTI, psxSLTIU, psxANDI, psxORI , psxXORI, psxLUI ,
-	psxCOP0   , psxNULL  , psxCOP2, psxNULL , psxNULL, psxNULL, psxNULL, psxNULL,
-	psxNULL   , psxNULL  , psxNULL, psxNULL , psxNULL, psxNULL, psxNULL, psxNULL,
-	psxLB     , psxLH    , psxLWL , psxLW   , psxLBU , psxLHU , psxLWR , psxNULL,
-	psxSB     , psxSH    , psxSWL , psxSW   , psxNULL, psxNULL, psxSWR , psxNULL, 
-	psxNULL   , psxNULL  , gteLWC2, psxNULL , psxNULL, psxNULL, psxNULL, psxNULL,
-	psxNULL   , psxNULL  , gteSWC2, psxHLE  , psxNULL, psxNULL, psxNULL, psxNULL 
+//	0          1          2        3        4        5        6        7
+	psxSPECIAL, psxREGIMM, psxJ   , psxJAL  , psxBEQ , psxBNE , psxBLEZ, psxBGTZ, //	0x00
+	psxADDI   , psxADDIU , psxSLTI, psxSLTIU, psxANDI, psxORI , psxXORI, psxLUI , //	0x08
+	psxCOP0   , psxNULL  , psxCOP2, psxNULL , psxNULL, psxNULL, psxNULL, psxNULL, //	0x10
+	psxNULL   , psxNULL  , psxNULL, psxNULL , psxNULL, psxNULL, psxNULL, psxNULL, //	0x18
+	psxLB     , psxLH    , psxLWL , psxLW   , psxLBU , psxLHU , psxLWR , psxNULL, //	0x20
+	psxSB     , psxSH    , psxSWL , psxSW   , psxNULL, psxNULL, psxSWR , psxNULL, //	0x28
+	psxNULL   , psxNULL  , gteLWC2, psxNULL , psxNULL, psxNULL, psxNULL, psxNULL, //	0x30
+	psxNULL   , psxNULL  , gteSWC2, psxHLE  , psxNULL, psxNULL, psxNULL, psxNULL  //	0x38
 };
 
-
+// psxSPECIAL
 void (*psxSPC[64])() = {
 	psxSLL , psxNULL , psxSRL , psxSRA , psxSLLV   , psxNULL , psxSRLV, psxSRAV,
 	psxJR  , psxJALR , psxNULL, psxNULL, psxSYSCALL, psxBREAK, psxNULL, psxNULL,
@@ -1033,20 +1359,25 @@ void (*psxSPC[64])() = {
 	psxNULL, psxNULL , psxNULL, psxNULL, psxNULL   , psxNULL , psxNULL, psxNULL
 };
 
+// psxREGIMM
 void (*psxREG[32])() = {
-	psxBLTZ  , psxBGEZ  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
-	psxNULL  , psxNULL  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
-	psxBLTZAL, psxBGEZAL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
-	psxNULL  , psxNULL  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL
+//	0          1          2        3        4        5        6        7	
+	psxBLTZ  , psxBGEZ  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	//	0x00
+	psxNULL  , psxNULL  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	//	0x08
+	psxBLTZAL, psxBGEZAL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	//	0x10
+	psxNULL  , psxNULL  , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL	//	0x18
 };
 
+// psxCOP0
 void (*psxCP0[32])() = {
-	psxMFC0, psxNULL, psxCFC0, psxNULL, psxMTC0, psxNULL, psxCTC0, psxNULL,
-	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
-	psxRFE , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
-	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL
+//	0          1          2        3        4        5        6        7	
+	psxMFC0, psxNULL, psxCFC0, psxNULL, psxMTC0, psxNULL, psxCTC0, psxNULL,	 	//	0x00
+	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	 	//	0x08
+	psxRFE , psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,	 	//	0x10
+	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL		//	0x18
 };
 
+// psxCOP2
 void (*psxCP2[64])() = {
 	psxBASIC, gteRTPS , psxNULL , psxNULL, psxNULL, psxNULL , gteNCLIP, psxNULL, // 00
 	psxNULL , psxNULL , psxNULL , psxNULL, gteOP  , psxNULL , psxNULL , psxNULL, // 08
@@ -1058,6 +1389,7 @@ void (*psxCP2[64])() = {
 	psxNULL , psxNULL , psxNULL , psxNULL, psxNULL, gteGPF  , gteGPL  , gteNCCT  // 38
 };
 
+// psxBASIC
 void (*psxCP2BSC[32])() = {
 	psxMFC2, psxNULL, psxCFC2, psxNULL, gteMTC2, psxNULL, gteCTC2, psxNULL,
 	psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL, psxNULL,
@@ -1095,6 +1427,28 @@ static void intClear(u32 Addr, u32 Size) {
 static void intShutdown() {
 }
 
+#ifdef AGGRESSIF
+static __inline void execOp(u32 op) {
+	switch(op) {
+		// psxSPECIAL
+		case 0x00:
+			psxSPECIAL();
+			break;
+		case 0x01:
+			psxREGIMM();
+			break;
+		case 0x10:
+			psxCOP0();
+			break;
+		case 0x12:
+			psxCOP2();
+			break;
+		default:
+			psxBSC[op]();
+	}
+}
+#endif
+
 // interpreter execution
 static void execI() { 
 	u32 pc = psxRegs.pc + 4;
@@ -1105,12 +1459,16 @@ static void execI() {
 
 	debugI();
 
-	if (Config.Debug) ProcessDebug();
+	// if (Config.Debug) ProcessDebug();
 	
 	psxRegs.pc = pc;
 	psxRegs.cycle = cycle;
-
+		
+#ifdef AGGRESSIF
+	execOp(_Op_);
+#else
 	psxBSC[_Op_]();
+#endif
 }
 
 R3000Acpu psxInt = {

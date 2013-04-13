@@ -134,7 +134,7 @@ static volatile	uint32_t dma_thread_running = 0;
 static volatile uint32_t dma_addr;
 static volatile uint32_t dma_thread_exit = 0;
 
-static void WaitForGpuThread() {
+static __inline void WaitForGpuThread() {
     while(dma_thread_running) {
 		YieldProcessor(); // or r31, r31, r31
 	}
