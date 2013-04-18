@@ -12,6 +12,9 @@ char * game = "game:\\Castlevanina - SOTN.bin";
 
 extern "C" void gpuDmaThreadInit();
 
+
+
+
 int main() {
 	
 	// __SetHWThreadPriorityHigh();
@@ -20,8 +23,8 @@ int main() {
 	int res, ret;
 	XMemSet(&Config, 0, sizeof(PcsxConfig));
 	
-	// Config.Cpu = CPU_INTERPRETER;
-	Config.Cpu = CPU_DYNAREC;
+	Config.Cpu = CPU_INTERPRETER;
+	//Config.Cpu = CPU_DYNAREC;
 
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
 	//strcpy(Config.Bios, "HLE"); // Use HLE

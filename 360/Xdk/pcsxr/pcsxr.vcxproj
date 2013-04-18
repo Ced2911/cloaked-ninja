@@ -279,6 +279,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallAttributedProfiling>Disabled</CallAttributedProfiling>
       <OpenMPSupport>true</OpenMPSupport>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilibd.lib;d3d9d.lib;d3dx9d.lib;xgraphicsd.lib;xboxkrnl.lib;xnetd.lib;xaudiod2.lib;xactd3.lib;x3daudiod.lib;xmcored.lib;xbdm.lib;vcompd.lib;core.lib;video.lib;audio.lib;zlib.lib;input.lib;%(AdditionalDependencies)</AdditionalDependencies>

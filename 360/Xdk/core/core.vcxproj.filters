@@ -181,9 +181,6 @@
     <ClCompile Include="..\..\..\libpcsxcore\psxinterpreter.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libpcsxcore\psxmem.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\r3000a.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -198,6 +195,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\ppc\pR3000A_wiisx.c">
       <Filter>ppc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libpcsxcore\psxvm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libpcsxcore\psxmem.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

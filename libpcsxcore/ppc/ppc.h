@@ -7,15 +7,11 @@
 #ifndef __PPC_H__
 #define __PPC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // include basic types
-#include "../psxcommon.h"
+#include "../PsxCommon.h"
 #include "ppc_mnemonics.h"
 
-#define NUM_HW_REGISTERS 29
+#define NUM_HW_REGISTERS	28
 
 /* general defines */
 #define write8(val)  *(u8 *)ppcPtr = val; ppcPtr++;
@@ -23,10 +19,11 @@ extern "C" {
 #define write32(val) *(u32*)ppcPtr = val; ppcPtr+=4;
 #define write64(val) *(u64*)ppcPtr = val; ppcPtr+=8;
 
+#if 0
+
 #define CALLFunc(FUNC) \
 { \
     u32 _func = (FUNC); \
-    ReleaseArgs(); \
     if ((_func & 0x1fffffc) == _func) { \
         BLA(_func); \
     } else { \
@@ -35,6 +32,25 @@ extern "C" {
         BCTRL(); \
     } \
 }
+
+#else
+
+#define CALLFunc(FUNC) \
+{ \
+    u32 * _func = (u32*)(FUNC); \
+    u32 * _cur = ppcPtr; \
+	s32 _off = _func-_cur-1; \
+	if (abs(_off)<0x7fffff) { \
+		BL(_off); \
+	} else { \
+        LIW(0, (u32)_func); \
+        MTCTR(0); \
+        BCTRL(); \
+		printf("!!!!!!!! bctrl\n"); \
+	} \
+}
+
+#endif
 
 extern int cpuHWRegisters[NUM_HW_REGISTERS];
 
@@ -54,7 +70,25 @@ u16 dynMemRead16(u32 mem);
 u32 dynMemRead32(u32 mem);
 void dynMemWrite32(u32 mem, u32 val);
 
-#ifdef __cplusplus
-}
-#endif
-#endif
+#endif /* __PPC_H__ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

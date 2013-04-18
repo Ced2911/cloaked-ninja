@@ -128,6 +128,7 @@ extern s8 *psxH;
 #define psxHu32ref(mem)	(*(u32 *)&psxH[(mem) & 0xffff])
 
 // NEW
+#define _USE_VM 1
 #define VM_SIZE	0x20000000
 #define VM_MASK 0x1fffffff
 
@@ -146,9 +147,8 @@ extern s8 *psxVM;
 #define psxVMu16ref(mem)	(*(u16 *)&psxVM[(mem) & VM_MASK])
 #define psxVMu32ref(mem)	(*(u32 *)&psxVM[(mem) & VM_MASK])
 
+#ifdef _USE_VM
 #define PSXM(mem)		(u8*)(&psxVM[(mem) & VM_MASK])
-//#define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
-//#define PSXM(mem)		((u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 
 #define PSXMs8(mem)		(*(s8 *)PSXM(mem))
 #define PSXMs16(mem)	(SWAP16(*(s16 *)PSXM(mem)))
@@ -158,6 +158,18 @@ extern s8 *psxVM;
 #define PSXMu32(mem)	(SWAP32(*(u32 *)PSXM(mem)))
 
 #define PSXMu32ref(mem)	(*(u32 *)PSXM(mem))
+#else
+extern u8 **psxMemWLUT;
+extern u8 **psxMemRLUT;
+
+#define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
+#define PSXMs8(mem)		(*(s8 *)PSXM(mem))
+#define PSXMs16(mem)	(SWAP16(*(s16 *)PSXM(mem)))
+#define PSXMs32(mem)	(SWAP32(*(s32 *)PSXM(mem)))
+#define PSXMu8(mem)		(*(u8 *)PSXM(mem))
+#define PSXMu16(mem)	(SWAP16(*(u16 *)PSXM(mem)))
+#define PSXMu32(mem)	(SWAP32(*(u32 *)PSXM(mem)))
+#endif
 
 #if !defined(PSXREC) && (defined(__x86_64__) || defined(__i386__) || defined(__ppc__)) && !defined(NOPSXREC)
 #define PSXREC

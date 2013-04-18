@@ -132,7 +132,7 @@ void gpuDmaChain(uint32_t addr)
 
 static volatile	uint32_t dma_thread_running = 0;
 static volatile uint32_t dma_addr;
-static volatile uint32_t dma_thread_exit = 0;
+static volatile uint32_t gpu_thread_exit = 0;
 
 static __inline void WaitForGpuThread() {
     while(dma_thread_running) {
@@ -146,21 +146,21 @@ static __inline void WaitForGpuThread() {
 }
 
 void gpuWriteData(uint32_t v) {
-	if(!dma_thread_exit) {
+	if(!gpu_thread_exit) {
 		WaitForGpuThread();
 	} 
 	GPU_writeData(v);
 }
 
 void gpuUpdateLace() {
-	if(!dma_thread_exit) {
+	if(!gpu_thread_exit) {
 		WaitForGpuThread();
 	} 
 	GPU_updateLace();
 }
 
-static void gpuDmaThread() {
-	while(!dma_thread_exit) {
+static void gpuThread() {
+	while(!gpu_thread_exit) {
 		if (dma_thread_running) {
 			uint32_t addr = dma_addr;
 			uint32_t dmaMem;
@@ -184,8 +184,9 @@ static void gpuDmaThread() {
 
 				dmaMem=addr+4;
 
-				if(count>0) 
+				if(count>0) {
 					GPU_writeDataMem(&baseAddrL[dmaMem>>2],count);
+				}
 
 				addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
 				//addr = psxMu32( addr >> 2 ) & 0xffffff;
@@ -207,7 +208,7 @@ void gpuDmaChainThread(uint32_t addr)
 }
 
 void gpuDmaThreadInit() {
-	HANDLE gpuHandle = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)gpuDmaThread, NULL, CREATE_SUSPENDED, NULL);
+	HANDLE gpuHandle = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)gpuThread, NULL, CREATE_SUSPENDED, NULL);
 
 	XSetThreadProcessor(gpuHandle, 2);
 	//SetThreadPriority(threadid ,THREAD_PRIORITY_HIGHEST);
@@ -253,6 +254,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 			// BA blocks * BS words (word = 32-bits)
 			size = (bcr >> 16) * (bcr & 0xffff);
 			GPU_writeDataMem(ptr, size);
+			//gpuWriteDataMemThread(ptr, size);
 
 			// already 32-bit word size ((size * 4) / 4)
 			GPUDMA_INT(size);

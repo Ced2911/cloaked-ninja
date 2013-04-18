@@ -39,7 +39,7 @@
 #elif HW_RVL
 #define RECMEM_SIZE		(7*1024*1024)
 #elif _XBOX
-#define RECMEM_SIZE		(12*1024*1024)
+#define RECMEM_SIZE		(6*1024*1024)
 #endif
 
 #define NUM_REGISTERS	34
