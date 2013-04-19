@@ -8,7 +8,7 @@ mci [cOz]
 Register R3-R10: Parameters
 Register R3-R4: Results 
 */
-#if 0
+#if 1
 void __declspec(naked) recRun(register void (*func)(), register u32 hw1, register u32 hw2)
 {
 	/* prologue code */
@@ -32,7 +32,7 @@ void __declspec(naked) recRun(register void (*func)(), register u32 hw1, registe
 		std     r29, -0x20(sp)
 		std     r30, -0x18(sp)
 		std     r31, -0x10(sp)
-		stw     r12, -0x8(sp)
+		std     r12, -0x8(sp)
 		stwu	r1, -0x110(r1)			// increments stack frame
 
 		/* execute code */
@@ -66,13 +66,13 @@ void __declspec(naked) returnPC()
 		ld		r29, -0x20(sp)
 		ld		r30, -0x18(sp)
 		ld		r31, -0x10(sp)
-		lwz     r12, -0x8(sp)		//recover and branch to lik register
+		ld      r12, -0x8(sp)		//recover and branch to lik register
 		mtlr	r12
 		blr
 	}
 }
 
-#elif 0
+#elif 1
 
 /*
 Register R3-R10: Parameters
@@ -84,9 +84,9 @@ void __declspec(naked) recRun(register void (*func)(), register u32 hw1, registe
 	__asm{
 		/* prologue code */
 		mflr	r0
-		stmw	r14, -72(r1) // -(32-14)*4
+		stmw	r13, -76(r1) // -(32-14)*4
 		stw		r0, 4(r1)
-		stwu	r1, -80(r1) // -((32-14)*4+8)
+		stwu	r1, -84(r1) // -((32-14)*4+8)
 
 		/* execute code */
 		mtctr	r3			// load Count Register with address of func
@@ -99,10 +99,10 @@ void __declspec(naked) recRun(register void (*func)(), register u32 hw1, registe
 void __declspec(naked) returnPC()
 {
 	__asm{
-		lwz		r0, 84(r1) // (32-14)*4+8+4
-		addi	r1, r1, 80 //(32-14)*4+8
+		lwz		r0, 88(r1) // (32-14)*4+8+4
+		addi	r1, r1, 84 //(32-14)*4+8
 		mtlr	r0
-		lmw		r14, -72(r1) // -(32-14)*4
+		lmw		r13, -76(r1) // -(32-14)*4
 		blr
 	}
 }

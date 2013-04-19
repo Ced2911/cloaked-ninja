@@ -97,45 +97,19 @@ int gpuReadStatus() {
 	return hard;
 }
 
-void gpuDmaChain(uint32_t addr)
-{
-	uint32_t dmaMem;
-	unsigned char * baseAddrB;
-	short count;
-	unsigned int DMACommandCounter = 0;
-	uint32_t * baseAddrL = (u32 *)psxM;
+// Select the good one !
+//#define THREAD_GPU_DMA
+#define THREAD_GPU_WRITE
 
-
-	lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
-
-	baseAddrB = (unsigned char*) baseAddrL;
-
-	// Must be in a thread ?!
-	do
-	{
-		addr&=0x1FFFFC;
-		if(DMACommandCounter++ > 2000000) break;
-		if(CheckForEndlessLoop(addr)) break;
-
-		count = baseAddrB[addr+3];
-
-		dmaMem=addr+4;
-
-		if(count>0) 
-			GPU_writeDataMem(&baseAddrL[dmaMem>>2],count);
-
-		addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
-		//addr = psxMu32( addr >> 2 ) & 0xffffff;
-	}
-	while (addr != 0xffffff);
-}
-
-static volatile	uint32_t dma_thread_running = 0;
-static volatile uint32_t dma_addr;
+static volatile	uint32_t gpu_thread_running = 0;
 static volatile uint32_t gpu_thread_exit = 0;
+static volatile uint32_t dma_addr;
+
+
+#ifdef THREAD_GPU_DMA
 
 static __inline void WaitForGpuThread() {
-    while(dma_thread_running) {
+    while(gpu_thread_running) {
 		YieldProcessor(); // or r31, r31, r31
 	}
 
@@ -145,23 +119,9 @@ static __inline void WaitForGpuThread() {
 	};
 }
 
-void gpuWriteData(uint32_t v) {
-	if(!gpu_thread_exit) {
-		WaitForGpuThread();
-	} 
-	GPU_writeData(v);
-}
-
-void gpuUpdateLace() {
-	if(!gpu_thread_exit) {
-		WaitForGpuThread();
-	} 
-	GPU_updateLace();
-}
-
 static void gpuThread() {
 	while(!gpu_thread_exit) {
-		if (dma_thread_running) {
+		if (gpu_thread_running) {
 			uint32_t addr = dma_addr;
 			uint32_t dmaMem;
 			unsigned char * baseAddrB;
@@ -185,6 +145,7 @@ static void gpuThread() {
 				dmaMem=addr+4;
 
 				if(count>0) {
+					// Call real gpu ptr func
 					GPU_writeDataMem(&baseAddrL[dmaMem>>2],count);
 				}
 
@@ -193,18 +154,170 @@ static void gpuThread() {
 			}
 			while (addr != 0xffffff);
 
-			dma_thread_running = 0;
+			gpu_thread_running = 0;
 		}
 	}
 }
 
-void gpuDmaChainThread(uint32_t addr)
+void gpuDmaChain(uint32_t addr)
 {
 	WaitForGpuThread();
 	
 	dma_addr = addr;
 
-	dma_thread_running = 1;
+	gpu_thread_running = 1;
+}
+
+void gpuWriteDataMem(uint32_t * addr, int size) {
+	GPU_writeDataMem(addr ,size);
+}
+
+#endif
+
+#ifdef THREAD_GPU_WRITE
+
+#define TW_RING_MAX_COUNT (128*1024)
+
+#define tw_ring_count(str) ((u32)labs((str[1]%TW_RING_MAX_COUNT)-(str[0]%TW_RING_MAX_COUNT)))
+#define tw_read_idx tw_idx[0]
+#define tw_write_idx tw_idx[1]
+
+static __declspec(align(128)) uint32_t tw_ring[TW_RING_MAX_COUNT];
+
+static volatile  __declspec(align(128))  uint64_t tw_idx[2] = {0,0};
+
+static __inline void WaitForGpuThread() {
+    while(gpu_thread_running||tw_ring_count(tw_idx)>0) {
+		YieldProcessor(); // or r31, r31, r31
+	}
+
+	// High priority
+	__asm{
+		or r3, r3, r3
+	};
+}
+
+static void gpuThread() {
+	uint64_t  __declspec(align(128)) lidx[2];
+	__vector4 vt;
+
+	while(!gpu_thread_exit) {
+
+		// atomic ...
+		vt = __lvx((void*)tw_idx, 0);
+		__stvx(vt, lidx, 0);
+
+		if(tw_ring_count(lidx)!=0)
+        {
+            uint32_t ri=lidx[0]%TW_RING_MAX_COUNT;
+            uint32_t rc=tw_ring_count(lidx);
+            
+            uint32_t chunk=min(rc,(TW_RING_MAX_COUNT-ri));
+            uint32_t * chunk_start=&tw_ring[ri];
+
+            gpu_thread_running = 1;
+
+			GPU_writeDataMem(chunk_start, chunk);
+            
+            tw_read_idx+=chunk;
+            
+            gpu_thread_running = 0;
+        }
+	}
+}
+
+// Queue write
+void gpuWriteDataMem(uint32_t * pMem, int size) {
+	u32 * lda=pMem;
+    u32 wi=tw_write_idx;
+
+    while(size>TW_RING_MAX_COUNT-tw_ring_count(tw_idx)) 
+		YieldProcessor(); // or r31, r31, r31
+    
+    while((lda-pMem)<size)
+    {
+		// Copy data ...
+        u32 * d =&tw_ring[wi%TW_RING_MAX_COUNT];
+
+		*d=*lda;
+
+        ++wi;
+        ++lda;
+    }
+
+    tw_write_idx+=size;
+}
+
+// Classic call !
+void gpuDmaChain(uint32_t addr)
+{
+	uint32_t dmaMem;
+	unsigned char * baseAddrB;
+	short count;
+	unsigned int DMACommandCounter = 0;
+	uint32_t * baseAddrL = (u32 *)psxM;
+
+
+	lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
+
+	baseAddrB = (unsigned char*) baseAddrL;
+
+	do
+	{
+		addr&=0x1FFFFC;
+		if(DMACommandCounter++ > 2000000) break;
+		if(CheckForEndlessLoop(addr)) break;
+
+		count = baseAddrB[addr+3];
+
+		dmaMem=addr+4;
+
+		if(count>0) {
+			// Call threaded gpu func
+			gpuWriteDataMem(&baseAddrL[dmaMem>>2],count);
+		}
+
+		addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
+		//addr = psxMu32( addr >> 2 ) & 0xffffff;
+	}
+	while (addr != 0xffffff);
+}
+
+#endif
+
+void gpuWriteData(uint32_t v) {
+#ifdef THREAD_GPU_DMA
+	if(!gpu_thread_exit) {
+		WaitForGpuThread();
+	} 
+#endif
+	v = __loadwordbytereverse(0, &v);
+	gpuWriteDataMem(&v, 1);
+}
+
+void gpuUpdateLace() {
+	if(!gpu_thread_exit) {
+		WaitForGpuThread();
+	} 
+	GPU_updateLace();
+}
+
+void gpuWriteStatus(u32 data) {
+#ifdef THREAD_GPU_WRITE
+	if(!gpu_thread_exit) {
+		WaitForGpuThread();
+	} 
+#endif
+	GPU_writeStatus(data);
+}
+
+void gpuReadDataMem(uint32_t * addr, int size) {
+#ifdef THREAD_GPU_WRITE
+	if(!gpu_thread_exit) {
+		WaitForGpuThread();
+	} 
+#endif
+	GPU_readDataMem(addr, size);
 }
 
 void gpuDmaThreadInit() {
@@ -233,7 +346,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 			}
 			// BA blocks * BS words (word = 32-bits)
 			size = (bcr >> 16) * (bcr & 0xffff);
-			GPU_readDataMem(ptr, size);
+			gpuReadDataMem(ptr, size);
 			psxCpu->Clear(madr, size);
 
 			// already 32-bit word size ((size * 4) / 4)
@@ -267,11 +380,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 
 			size = gpuDmaChainSize(madr);
 
-			//GPU_dmaChain((u32 *)psxM, madr & 0x1fffff);
-
-			//__GPUdmaChain(madr & 0x1fffff);
-			//gpuDmaChain(madr & 0x1fffff);
-			gpuDmaChainThread(madr & 0x1fffff);
+			gpuDmaChain(madr & VM_MASK);
 			
 			// Tekken 3 = use 1.0 only (not 1.5x)
 

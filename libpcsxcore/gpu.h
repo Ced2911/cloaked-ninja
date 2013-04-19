@@ -12,6 +12,7 @@ extern "C"
 	void gpuUpdateLace();
 
 	int gpuReadStatus();
+	void gpuWriteStatus(u32 data);
 
 	void psxDma2(u32 madr, u32 bcr, u32 chcr);
 	void gpuInterrupt();

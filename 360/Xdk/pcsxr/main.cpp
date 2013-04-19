@@ -6,13 +6,11 @@
 #include "cdriso.h"
 #include "r3000a.h"
 
-
+char * game = "game:\\Tekken 3 (USA)\\Tekken 3 (USA) (Track 1).bin";
 //char * game = "game:\\Soul Blade (USA) (v1.0)\\Soul Blade (USA) (v1.0).bin";
-char * game = "game:\\Castlevanina - SOTN.bin";
+//char * game = "game:\\Castlevanina - SOTN.bin";
 
 extern "C" void gpuDmaThreadInit();
-
-
 
 
 int main() {
@@ -23,8 +21,8 @@ int main() {
 	int res, ret;
 	XMemSet(&Config, 0, sizeof(PcsxConfig));
 	
-	Config.Cpu = CPU_INTERPRETER;
-	//Config.Cpu = CPU_DYNAREC;
+	//Config.Cpu = CPU_INTERPRETER;
+	Config.Cpu = CPU_DYNAREC;
 
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
 	//strcpy(Config.Bios, "HLE"); // Use HLE

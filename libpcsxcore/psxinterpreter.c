@@ -1517,7 +1517,7 @@ enum {
 };
 
 // interpreter execution - is compiler generating a better code ? i'm not sure ...
-static void execI() { 
+void execI() { 
 	u32 pc = psxRegs.pc + 4;
 	u32 cycle = psxRegs.cycle + BIAS;
 

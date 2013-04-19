@@ -28,6 +28,7 @@
 
 #ifdef _USE_VM
 
+s8 *psxVM = NULL; // PSX Virtual Memory (no mirrors use mask)
 s8 *psxM = NULL; // Kernel & User Memory (2 Meg)
 s8 *psxP = NULL; // Parallel Port (64K)
 s8 *psxR = NULL; // BIOS ROM (512K)
@@ -52,47 +53,33 @@ s8 *psxH = NULL; // Scratch Pad (1K) & Hardware Registers (8K)
 0xbfc0_0000-0xbfc7_ffff		BIOS Mirror (512K) Uncached
 */
 
-u8 * virtual_memory = NULL;
-s8 *psxVM = NULL;
-
-LONG WINAPI MemCrashHandler(EXCEPTION_POINTERS * ExceptionInfo)
-{
-	printf("MemCrashHandler %8x\n", ExceptionInfo);
-
-    return EXCEPTION_CONTINUE_EXECUTION;
-}
 
 int psxMemInit() {
 	// Create 0x20000000 (512M) virtual memory
-	virtual_memory = (unsigned char *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
+	psxVM = (s8 *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
 
-	psxVM = (s8 *)virtual_memory;
-
-#if 0
+#if 1
 	// Create Mapping ...
-	psxM = (s8 *)VirtualAlloc(virtual_memory, 0x00400000, MEM_COMMIT, PAGE_READWRITE);
+	psxM = (s8 *)VirtualAlloc(psxVM, 0x00400000, MEM_COMMIT, PAGE_READWRITE);
 	// Parallel Port
-	psxP = (s8 *)VirtualAlloc(virtual_memory+0x1f000000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
+	psxP = (s8 *)VirtualAlloc(psxVM+0x1f000000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
 	// Hardware Regs + Scratch Pad
-	psxH = (s8 *)VirtualAlloc(virtual_memory+0x1f800000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
+	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
 	// Bios
-	psxR = (s8 *)VirtualAlloc(virtual_memory+0x1fc00000, 0x00080000, MEM_COMMIT, PAGE_READWRITE);
+	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000, 0x00080000, MEM_COMMIT, PAGE_READWRITE);
 #else // A bit more ... less crash
 	// Create Mapping ...
-	psxM = (s8 *)VirtualAlloc(virtual_memory,				0x00400000, MEM_COMMIT, PAGE_READWRITE);
+	psxM = (s8 *)VirtualAlloc(psxVM,				0x00400000, MEM_COMMIT, PAGE_READWRITE);
 	// Safer ... (dr issues)
-	VirtualAlloc(virtual_memory+0x10000000,	0x1f000000 - 0x10000000, MEM_COMMIT, PAGE_READWRITE);
+	VirtualAlloc(psxVM+0x10000000,	0x1f000000 - 0x10000000, MEM_COMMIT, PAGE_READWRITE);
 
 	// Parallel Port
-	psxP = (s8 *)VirtualAlloc(virtual_memory+0x1f000000,	0x1f800000 - 0x1f000000, MEM_COMMIT, PAGE_READWRITE);
+	psxP = (s8 *)VirtualAlloc(psxVM+0x1f000000,	0x1f800000 - 0x1f000000, MEM_COMMIT, PAGE_READWRITE);
 	// Hardware Regs + Scratch Pad
-	psxH = (s8 *)VirtualAlloc(virtual_memory+0x1f800000,	0x1fc00000 - 0x1f800000, MEM_COMMIT, PAGE_READWRITE);
+	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000,	0x1fc00000 - 0x1f800000, MEM_COMMIT, PAGE_READWRITE);
 	// Bios
-	psxR = (s8 *)VirtualAlloc(virtual_memory+0x1fc00000,	VM_SIZE - 0x1fc00000, MEM_COMMIT, PAGE_READWRITE);
+	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000,	VM_SIZE - 0x1fc00000, MEM_COMMIT, PAGE_READWRITE);
 #endif
-
-	// try !!!
-	SetUnhandledExceptionFilter(MemCrashHandler);
 	return 0;
 }
 
@@ -122,20 +109,13 @@ void psxMemReset() {
 }
 
 void psxMemShutdown() {
-	VirtualFree(psxM, 0x00200000, MEM_DECOMMIT);
-	VirtualFree(psxP, 0x00010000, MEM_DECOMMIT);
-	VirtualFree(psxH, 0x00003000, MEM_DECOMMIT);
-	VirtualFree(virtual_memory, VM_SIZE, MEM_RELEASE);
+	VirtualFree(psxVM, VM_SIZE, MEM_RELEASE|MEM_DECOMMIT);
 }
 
 static int writeok = 1;
 
-#define CHECK_VM_READ() {if(0) { return 0;} }
-#define CHECK_VM_WRITE() {if(0) { return;} }
-
 u8 psxMemRead8(u32 mem) {
 	psxRegs.cycle += 0;
-
 	
 	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
 		return psxHwRead8(mem);
@@ -156,7 +136,6 @@ u16 psxMemRead16(u32 mem) {
 
 u32 psxMemRead32(u32 mem) {
 	psxRegs.cycle += 1;
-
 		
 	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
 		return psxHwRead32(mem);
@@ -191,7 +170,10 @@ void psxMemWrite16(u32 mem, u16 value) {
 
 void psxMemWrite32(u32 mem, u32 value) {
 	psxRegs.cycle += 1;
-
+	/*
+	if( value)
+		printf("recSW : %08x %08x\n", mem, value);
+		*/
 	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
 		psxHwWrite32(mem, value);
 	} else {
@@ -221,7 +203,8 @@ void psxMemWrite32(u32 mem, u32 value) {
 	}
 }
 
+// is it used ?
 void * psxMemPointer(u32 mem) {
-	return (void *)virtual_memory[mem];
+	return (void *)&psxVM[mem];
 }
 #endif
