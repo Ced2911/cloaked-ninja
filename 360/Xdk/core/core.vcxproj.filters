@@ -193,9 +193,6 @@
     <ClCompile Include="..\..\..\libpcsxcore\spu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libpcsxcore\ppc\pR3000A_wiisx.c">
-      <Filter>ppc</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\psxvm.c">
       <Filter>Source Files</Filter>
     </ClCompile>

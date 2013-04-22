@@ -145,7 +145,8 @@ void psxMemWrite8(u32 mem, u8 value) {
 	} else {
 		if (writeok) {
 			psxVM[(mem) & VM_MASK] = value;
-			//psxCpu->Clear((mem & (~3)), 1);
+			
+			psxCpu->Clear((mem & (~3)), 1);
 		}
 	}
 }
@@ -164,7 +165,8 @@ void psxMemWrite16(u32 mem, u16 value) {
 	} else {
 		if ( writeok ) {		
 			psxVMu16ref(mem) = SWAPu16(value);
-			//psxCpu->Clear((mem & (~3)), 1);
+			
+			psxCpu->Clear((mem & (~3)), 1);
 		}
 	}
 }

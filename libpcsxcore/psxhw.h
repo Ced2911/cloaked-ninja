@@ -72,6 +72,27 @@ void psxHwWrite16(u32 add, u16 value);
 void psxHwWrite32(u32 add, u32 value);
 int psxHwFreeze(gzFile f, int Mode);
 
+
+
+/******************************************************************** 
+*	IO MAPPING
+********************************************************************/
+typedef u8	(*hw_read8_t)	(u32 add); 
+typedef u16	(*hw_read16_t)	(u32 add); 
+typedef u32	(*hw_read32_t)	(u32 add); 
+
+typedef void	(*hw_write8_t)	(u32 add, u8 value); 
+typedef void	(*hw_write16_t)	(u32 add, u16 value); 
+typedef void	(*hw_write32_t)	(u32 add, u32 value); 
+
+extern hw_read8_t *		hw_read8_handler;
+extern hw_read16_t *	hw_read16_handler;
+extern hw_read32_t *	hw_read32_handler;
+
+extern hw_write8_t *	hw_write8_handler;
+extern hw_write16_t *	hw_write16_handler;
+extern hw_write32_t *	hw_write32_handler;
+
 #ifdef __cplusplus
 }
 #endif

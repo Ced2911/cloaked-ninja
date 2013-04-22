@@ -207,13 +207,6 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 
 extern time_t tStart;
 
-/* compute the position and the size of output screen
-* The aspect of the psx output mode is preserved.
-* Note: dest dx,dy,dw,dh are both input and output variables
-*/
-__inline void MaintainAspect(uint32_t * dx, uint32_t * dy, uint32_t * dw, uint32_t * dh)
-{
-}
 
 void DoBufferSwap(void)
 {

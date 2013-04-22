@@ -9,9 +9,9 @@
 //char * game = "game:\\Tekken 3 (USA)\\Tekken 3 (USA) (Track 1).bin";
 //char * game = "game:\\Bushido Blade [U] [SCUS-94180]\\bushido_blade.bin";
 //char * game = "game:\\Soul Blade (USA) (v1.0)\\Soul Blade (USA) (v1.0).bin";
-//char * game = "game:\\Castlevanina - SOTN.bin";
+char * game = "game:\\Castlevanina - SOTN.bin";
 
-char * game = "game:\\Legend of Mana (USA)\\Legend of Mana (USA).bin";
+//char * game = "game:\\Legend of Mana (USA)\\Legend of Mana (USA).bin";
 
 extern "C" void gpuDmaThreadInit();
 
@@ -24,8 +24,8 @@ int main() {
 	int res, ret;
 	XMemSet(&Config, 0, sizeof(PcsxConfig));
 	
-	Config.Cpu = CPU_INTERPRETER;
-	//Config.Cpu = CPU_DYNAREC;
+	//Config.Cpu = CPU_INTERPRETER;
+	Config.Cpu = CPU_DYNAREC;
 
 	//strcpy(Config.Bios, "PSX-XBOO.ROM"); // No$ bios - not working
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS

@@ -47,27 +47,6 @@
 		} \
 	} \
 
-DmaExec(0);
-DmaExec(1);
-DmaExec(2);
-DmaExec(3);
-DmaExec(4);
-DmaExec(6);
-
-/******************************************************************** 
-*
-*							IO MAPPING
-*
-********************************************************************/
-
-
-typedef u8	(*hw_read8_t)	(u32 add); 
-typedef u16	(*hw_read16_t)	(u32 add); 
-typedef u32	(*hw_read32_t)	(u32 add); 
-
-typedef void	(*hw_write8_t)	(u32 add, u8 value); 
-typedef void	(*hw_write16_t)	(u32 add, u16 value); 
-typedef void	(*hw_write32_t)	(u32 add, u32 value); 
 
 hw_read8_t *	hw_read8_handler;
 hw_read16_t *	hw_read16_handler;
@@ -77,6 +56,16 @@ hw_write8_t *	hw_write8_handler;
 hw_write16_t *	hw_write16_handler;
 hw_write32_t *	hw_write32_handler;
 
+/******************************************************************** 
+*							IO MAPPING
+********************************************************************/
+
+DmaExec(0);
+DmaExec(1);
+DmaExec(2);
+DmaExec(3);
+DmaExec(4);
+DmaExec(6);
 
 static void DmaIcr(u32 add, u32 value) {
 	u32 tmp = (~value) & SWAPu32(HW_DMA_ICR);
@@ -135,31 +124,15 @@ _WF(u16, sioWriteBaud16);
 /**
 * Cdrom
 */
-static u8 _cdrRead0(u32 add) {
-	return cdrRead0();
-}
-static u8 _cdrRead1(u32 add) {
-	return cdrRead1();
-}
-static u8 _cdrRead2(u32 add) {
-	return cdrRead2();
-}
-static u8 _cdrRead3(u32 add) {
-	return cdrRead3();
-}
+_RF(u8, cdrRead0);
+_RF(u8, cdrRead1);
+_RF(u8, cdrRead2);
+_RF(u8, cdrRead3);
 
-static void _cdrWrite0(u32 add, u8 value) {
-	cdrWrite0(value);
-}
-static void _cdrWrite1(u32 add, u8 value) {
-	cdrWrite1(value);
-}
-static void _cdrWrite2(u32 add, u8 value) {
-	cdrWrite2(value);
-}
-static void _cdrWrite3(u32 add, u8 value) {
-	cdrWrite3(value);
-}
+_WF(u8, cdrWrite0);
+_WF(u8, cdrWrite1);
+_WF(u8, cdrWrite2);
+_WF(u8, cdrWrite3);
 
 /**
 * Counter
@@ -228,13 +201,13 @@ static void psxWtgt2(u32 add, u32 v) {
 static void psxWiReg16(u32 add, u16 value) {
 	if (Config.Sio) psxHu16ref(0x1070) |= SWAPu16(0x80);
 	if (Config.SpuIrq) psxHu16ref(0x1070) |= SWAPu16(0x200);
-	psxHu16ref(0x1070) &= SWAPu16((psxHu16(0x1074) & value));
+	psxHu16ref(0x1070) &= SWAPu16(value);
 }
 
 static void psxWiReg32(u32 add, u32 value) {
-	if (Config.Sio) psxHu16ref(0x1070) |= SWAPu32(0x80);
-	if (Config.SpuIrq) psxHu16ref(0x1070) |= SWAPu32(0x200);
-	psxHu32ref(0x1070) &= SWAPu32((psxHu32(0x1074) & value));
+	if (Config.Sio) psxHu32ref(0x1070) |= SWAPu32(0x80);
+	if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAPu32(0x200);
+	psxHu32ref(0x1070) &= SWAPu32(value);
 }
 
 /**
@@ -265,11 +238,11 @@ static void SpuWriteRegister16(u32 add, u16 value) {
 static void SpuWriteRegister32(u32 add, u32 value) {
 	SPU_writeRegister(add, value&0xffff);
 
+	// next 16bit
 	add += 2;
 	value >>= 16;
 
-	if (add < 0x1f801e00)
-		SPU_writeRegister(add, value&0xffff);
+	SPU_writeRegister(add, value&0xffff);
 }
 
 
@@ -279,27 +252,51 @@ static void SpuWriteRegister32(u32 add, u32 value) {
 */
 
 static u8 _psxHwMemRead8(u32 add) {
+#ifdef _USE_VM
+	return PSXMu8(add);
+#else
 	return psxHu8(add); 
+#endif
 }
 
 static u16 _psxHwMemRead16(u32 add) {
+#ifdef _USE_VM
+	return PSXMu16(add);
+#else
 	return psxHu16(add); 
+#endif
 }
 
 static u32 _psxHwMemRead32(u32 add) {
+#ifdef _USE_VM
+	return PSXMu32(add);
+#else
 	return psxHu32(add); 
+#endif
 }
 
 static void _psxHwMemWrite8(u32 add, u8 value) {
+#ifdef _USE_VM
+	psxVMu8ref(add) = value;
+#else
 	psxHu8ref(add) = value;
+#endif
 }
 
 static void _psxHwMemWrite16(u32 add, u16 value) {
+#ifdef _USE_VM
+	psxVMu16ref(add) = SWAPu16(value);
+#else
 	psxHu16ref(add) = SWAPu16(value);
+#endif
 }
 
 static void _psxHwMemWrite32(u32 add, u32 value) {
+#ifdef _USE_VM
+	psxVMu32ref(add) = SWAPu32(value);
+#else
 	psxHu32ref(add) = SWAPu32(value);
+#endif
 }
 
 /**

@@ -36,6 +36,7 @@ void   __cdecl bfree(_Inout_opt_ void * _Memory);
 #include "reguse.h"
 #include "../r3000a.h"
 #include "../psxhle.h"
+#include "../psxhw.h"
 
 #define malloc balloc
 #define free bfree
@@ -1783,7 +1784,7 @@ static void preMemWrite(int size)
 }
 
 static void recLB() {
-#if 0
+#ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
@@ -1792,7 +1793,12 @@ static void recLB() {
 		}
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
-		//return psxHwRead8(addr);
+			// direct call ?
+			DisposeHWReg(iRegs[_Rt_].reg);
+            InvalidateCPURegs();
+            CALLFunc((u32) hw_read8_handler[addr&0xFFFF]);
+            MR(PutHWReg32(_Rt_),3);
+			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 		} else {
 			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
 			LBZ(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
@@ -1811,7 +1817,7 @@ static void recLB() {
 }
 
 static void recLBU() {
-#if 0
+#ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
@@ -1820,7 +1826,11 @@ static void recLBU() {
 		}
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
-		//return psxHwRead8(addr);
+			// direct call ?
+			DisposeHWReg(iRegs[_Rt_].reg);
+            InvalidateCPURegs();
+            CALLFunc((u32) hw_read8_handler[addr&0xFFFF]);
+            MR(PutHWReg32(_Rt_),3);
 		} else {
 			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
 			LBZ(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
@@ -1838,7 +1848,7 @@ static void recLBU() {
 }
 
 static void recLH() {
-#if 0
+#ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
@@ -1847,7 +1857,12 @@ static void recLH() {
 		}
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
-		//return psxHwRead8(addr);
+			// direct call ?
+			DisposeHWReg(iRegs[_Rt_].reg);
+            InvalidateCPURegs();
+            CALLFunc((u32) hw_read16_handler[addr&0xFFFF]);
+            MR(PutHWReg32(_Rt_),3);
+			EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 		} else {
 			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
 			LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
@@ -1865,7 +1880,7 @@ static void recLH() {
 }
 
 static void recLHU() {
-#if 0
+#ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
@@ -1874,7 +1889,12 @@ static void recLHU() {
 		}
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
-		//return psxHwRead8(addr);
+			// direct call ?
+			DisposeHWReg(iRegs[_Rt_].reg);
+            InvalidateCPURegs();
+            CALLFunc((u32) hw_read16_handler[addr&0xFFFF]);
+            MR(PutHWReg32(_Rt_),3);
+			return;
 		} else {
 			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
 			LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
@@ -1891,8 +1911,7 @@ static void recLHU() {
 }
 
 static void recLW() {
-
-#if 0
+#ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
@@ -1901,7 +1920,12 @@ static void recLW() {
 		}
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
-		//return psxHwRead8(addr);
+			// direct call ?
+			DisposeHWReg(iRegs[_Rt_].reg);
+            InvalidateCPURegs();
+            CALLFunc((u32) hw_read32_handler[addr&0xFFFF]);
+            MR(PutHWReg32(_Rt_),3);
+			return;
 		} else {
 			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
 			LWBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
@@ -1917,16 +1941,25 @@ static void recLW() {
 	}
 }
 static void recSB() {
+#ifdef _USE_VM
+	// Todo 
+#endif
 	preMemWrite(1);
 	CALLFunc((u32) psxMemWrite8);
 }
 
 static void recSH() {
+#ifdef _USE_VM
+	// Todo 
+#endif
 	preMemWrite(2);
 	CALLFunc((u32) psxMemWrite16);
 }
 
 static void recSW() {
+#ifdef _USE_VM
+	// Todo 
+#endif
 	preMemWrite(4);
 	CALLFunc((u32) psxMemWrite32);
 }
