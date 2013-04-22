@@ -293,13 +293,16 @@ void psxMemWrite32(u32 mem, u32 value) {
 		if (p != NULL) {
 			*(u32 *)(p + (mem & 0xffff)) = SWAPu32(value);
 #ifdef PSXREC
+			//printf("Clear32 %08x\n", mem);
 			psxCpu->Clear(mem, 1);
 #endif
 		} else {
 			if (mem != 0xfffe0130) {
 #ifdef PSXREC
-				if (!writeok)
+				if (!writeok) {
+					//printf("Clear32 %08x\n", mem);
 					psxCpu->Clear(mem, 1);
+				}
 #endif
 
 #ifdef PSXMEM_LOG

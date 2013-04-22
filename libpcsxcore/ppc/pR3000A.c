@@ -1117,7 +1117,9 @@ static int allocMem() {
 		SysMessage("Error allocating memory"); return -1;
 	}
 
-	for (i=0; i<0x80; i++) psxRecLUT[i + 0x0000] = (u32)&recRAM[(i & 0x1f) << 16];
+	for (i=0; i<0x80; i++) 
+		psxRecLUT[i + 0x0000] = (u32)&recRAM[(i & 0x1f) << 16];
+
 	memcpy(psxRecLUT + 0x8000, psxRecLUT, 0x80 * 4);
 	memcpy(psxRecLUT + 0xa000, psxRecLUT, 0x80 * 4);
 
@@ -1178,9 +1180,12 @@ void recExecuteBlock() {
     execute();
 }
 
-void recClear(u32 Addr, u32 Size) {
-    //printf("recClear\r\n");
-    memset((void*) PC_REC(Addr), 0, Size * 4);
+void recClear(u32 mem, u32 size) {
+	u32 ptr = psxRecLUT[mem >> 16];
+
+	if (ptr != NULL) {
+		memset((void*) (ptr + (mem & 0xFFFF)), 0, size * 4);
+	}
 }
 
 static void recNULL() {
@@ -1778,6 +1783,26 @@ static void preMemWrite(int size)
 }
 
 static void recLB() {
+#if 0
+	if (IsConst(_Rs_)) {
+		u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (!_Rt_) {
+			return;
+		}
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+		//return psxHwRead8(addr);
+		} else {
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+			LBZ(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+			return;
+		}
+	}
+#endif
+
+
 	preMemRead();
 	CALLFunc((u32) psxMemRead8);
 	if (_Rt_) {
@@ -1786,6 +1811,24 @@ static void recLB() {
 }
 
 static void recLBU() {
+#if 0
+	if (IsConst(_Rs_)) {
+		u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (!_Rt_) {
+			return;
+		}
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+		//return psxHwRead8(addr);
+		} else {
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+			LBZ(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+			return;
+		}
+	}
+#endif
+
 	preMemRead();
 	CALLFunc((u32) psxMemRead8);
 
@@ -1795,6 +1838,25 @@ static void recLBU() {
 }
 
 static void recLH() {
+#if 0
+	if (IsConst(_Rs_)) {
+		u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (!_Rt_) {
+			return;
+		}
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+		//return psxHwRead8(addr);
+		} else {
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+			LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+            EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+			return;
+		}
+	}
+#endif
+
 	preMemRead();
 	CALLFunc((u32) psxMemRead16);
 	if (_Rt_) {
@@ -1803,6 +1865,24 @@ static void recLH() {
 }
 
 static void recLHU() {
+#if 0
+	if (IsConst(_Rs_)) {
+		u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (!_Rt_) {
+			return;
+		}
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+		//return psxHwRead8(addr);
+		} else {
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+			LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+			return;
+		}
+	}
+#endif
+
 	preMemRead();
 	CALLFunc((u32) psxMemRead16);
 	if (_Rt_) {
@@ -1811,6 +1891,25 @@ static void recLHU() {
 }
 
 static void recLW() {
+
+#if 0
+	if (IsConst(_Rs_)) {
+		u32 addr = iRegs[_Rs_].k + _Imm_;
+
+		if (!_Rt_) {
+			return;
+		}
+
+		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
+		//return psxHwRead8(addr);
+		} else {
+			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
+			LWBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
+			return;
+		}
+	}
+#endif
+
 	preMemRead();
 	CALLFunc((u32) psxMemRead32);
 	if (_Rt_) {
@@ -2532,10 +2631,14 @@ static void recRecompile() {
 	
 	for (count=0; count<500;) {
 #if 1
+		u32 adr = pc & VM_MASK;
 		u32 op;
-
+		/*
+		if(!CHECK_ADR(adr)) {
+			recError();
+		}
+		*/
 		p = (char *)PSXM(pc);
-		if (p == NULL) recError();
 		psxRegs.code = SWAP32(*(u32 *)p);
 
 		pc+=4; 

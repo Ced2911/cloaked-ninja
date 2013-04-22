@@ -58,7 +58,6 @@ int psxMemInit() {
 	// Create 0x20000000 (512M) virtual memory
 	psxVM = (s8 *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
 
-#if 1
 	// Create Mapping ...
 	psxM = (s8 *)VirtualAlloc(psxVM, 0x00400000, MEM_COMMIT, PAGE_READWRITE);
 	// Parallel Port
@@ -67,19 +66,7 @@ int psxMemInit() {
 	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
 	// Bios
 	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000, 0x00080000, MEM_COMMIT, PAGE_READWRITE);
-#else // A bit more ... less crash
-	// Create Mapping ...
-	psxM = (s8 *)VirtualAlloc(psxVM,				0x00400000, MEM_COMMIT, PAGE_READWRITE);
-	// Safer ... (dr issues)
-	VirtualAlloc(psxVM+0x10000000,	0x1f000000 - 0x10000000, MEM_COMMIT, PAGE_READWRITE);
 
-	// Parallel Port
-	psxP = (s8 *)VirtualAlloc(psxVM+0x1f000000,	0x1f800000 - 0x1f000000, MEM_COMMIT, PAGE_READWRITE);
-	// Hardware Regs + Scratch Pad
-	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000,	0x1fc00000 - 0x1f800000, MEM_COMMIT, PAGE_READWRITE);
-	// Bios
-	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000,	VM_SIZE - 0x1fc00000, MEM_COMMIT, PAGE_READWRITE);
-#endif
 	return 0;
 }
 
@@ -145,49 +132,67 @@ u32 psxMemRead32(u32 mem) {
 }
 
 void psxMemWrite8(u32 mem, u8 value) {	
+	u32 t;
 	psxRegs.cycle += 1;
-	
-	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
-		psxHwWrite8(mem, value);
+
+	t = mem >> 16;
+
+	if (t == 0x1f80 || t == 0x9f80 || t == 0xbf80) {
+		if ((mem & 0xffff) < 0x400)
+			psxVM[(mem) & VM_MASK] = value;
+		else
+			psxHwWrite8(mem, value);
 	} else {
 		if (writeok) {
 			psxVM[(mem) & VM_MASK] = value;
+			//psxCpu->Clear((mem & (~3)), 1);
 		}
 	}
 }
 
 void psxMemWrite16(u32 mem, u16 value) {
+	u32 t;
 	psxRegs.cycle += 1;
 	
-	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
-		psxHwWrite16(mem, value);
-	} else {
-		if (writeok) {
+	t = mem >> 16;
+
+	if (t == 0x1f80 || t == 0x9f80 || t == 0xbf80) {
+		if ((mem & 0xffff) < 0x400)
 			psxVMu16ref(mem) = SWAPu16(value);
+		else
+			psxHwWrite16(mem, value);
+	} else {
+		if ( writeok ) {		
+			psxVMu16ref(mem) = SWAPu16(value);
+			//psxCpu->Clear((mem & (~3)), 1);
 		}
 	}
 }
 
 void psxMemWrite32(u32 mem, u32 value) {
+	u32 t;
 	psxRegs.cycle += 1;
-	/*
-	if( value)
-		printf("recSW : %08x %08x\n", mem, value);
-		*/
-	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
-		psxHwWrite32(mem, value);
+
+	t = mem >> 16;
+	
+	if (t == 0x1f80 || t == 0x9f80 || t == 0xbf80) {
+		if ((mem & 0xffff) < 0x400)
+			psxVMu32ref(mem) = SWAPu32(value);
+		else
+			psxHwWrite32(mem, value);
 	} else {
 		if (mem != 0xfffe0130) {
 			if (writeok) {
 				psxVMu32ref(mem) = SWAPu32(value);
 			}
+			//printf("Clear32 %08x\n", mem);
+			psxCpu->Clear(mem, 1);
 		} else {
 			// a0-44: used for cache flushing
 			switch (value) {
 				case 0x800: case 0x804:
 					if (writeok == 0) break;
 					writeok = 0;
-					psxRegs.ICache_valid = 0;
 					break;
 				case 0x00: case 0x1e988:
 					if (writeok == 1) break;

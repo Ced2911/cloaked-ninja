@@ -271,6 +271,7 @@ int useOfPsxReg(u32 code, int use, int psxreg)
 
 //#define NOREGUSE_FOLLOW
 
+
 static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr) __attribute__ ((__pure__, __unused__));
 static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr)
 {
@@ -278,9 +279,16 @@ static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr)
     int i, use, reguse = 0;
 
     for (i=0; i<numInstr; ) {
-        // load current instruction
+		u32 adr = pc & VM_MASK; 
+        // load current instruction - should be non vm compatible !
+			if(!(CHECK_ADR(adr))) {
+				// going nowhere... might as well assume a write, since we will hopefully never reach here
+				reguse = REGUSE_WRITE;
+				break;
+			}
 		  ptr = (u32*)PSXM(pc);
 		  if (ptr==NULL) {
+			  printf("_nextPsxRegUse err %08x\n", pc);
 				// going nowhere... might as well assume a write, since we will hopefully never reach here
 				reguse = REGUSE_WRITE;
 				break;

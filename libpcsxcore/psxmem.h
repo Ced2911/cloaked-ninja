@@ -128,9 +128,12 @@ extern s8 *psxH;
 #define psxHu32ref(mem)	(*(u32 *)&psxH[(mem) & 0xffff])
 
 // NEW
-//#define _USE_VM 1
+#define _USE_VM 1
 #define VM_SIZE	0x20000000
 #define VM_MASK 0x1fffffff
+
+// Use with mask !
+#define CHECK_ADR(adr) (adr>=0x00000000 && adr<0x00200000) || (adr>=0x1f000000 && adr<0x1fc80000)
 
 extern s8 *psxVM;
 #define psxVMs8(mem)	psxVM[(mem) & VM_MASK]
