@@ -277,7 +277,7 @@ extern D3DPRESENT_PARAMETERS			g_d3dpp;
 
 
 
-VOID __cdecl main()
+VOID __cdecl gui_main()
 {
 	InitD3D();
 

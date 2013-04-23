@@ -1784,6 +1784,7 @@ static void preMemWrite(int size)
 }
 
 static void recLB() {
+#if 0
 #ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1807,7 +1808,7 @@ static void recLB() {
 		}
 	}
 #endif
-
+#endif
 
 	preMemRead();
 	CALLFunc((u32) psxMemRead8);
@@ -1817,6 +1818,7 @@ static void recLB() {
 }
 
 static void recLBU() {
+#if 0
 #ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1838,7 +1840,7 @@ static void recLBU() {
 		}
 	}
 #endif
-
+#endif
 	preMemRead();
 	CALLFunc((u32) psxMemRead8);
 
@@ -1848,6 +1850,7 @@ static void recLBU() {
 }
 
 static void recLH() {
+#if 0
 #ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1871,7 +1874,7 @@ static void recLH() {
 		}
 	}
 #endif
-
+#endif
 	preMemRead();
 	CALLFunc((u32) psxMemRead16);
 	if (_Rt_) {
@@ -1880,6 +1883,7 @@ static void recLH() {
 }
 
 static void recLHU() {
+#if 0
 #ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1902,7 +1906,7 @@ static void recLHU() {
 		}
 	}
 #endif
-
+#endif
 	preMemRead();
 	CALLFunc((u32) psxMemRead16);
 	if (_Rt_) {
@@ -1911,6 +1915,7 @@ static void recLHU() {
 }
 
 static void recLW() {
+#if 0
 #ifdef _USE_VM
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1924,7 +1929,7 @@ static void recLW() {
 			DisposeHWReg(iRegs[_Rt_].reg);
             InvalidateCPURegs();
             CALLFunc((u32) hw_read32_handler[addr&0xFFFF]);
-            MR(PutHWReg32(_Rt_),3);
+            MR(PutHWReg32(_Rt_), 3);
 			return;
 		} else {
 			LIW(PutHWReg32(_Rt_), (u32) & psxVM[addr & VM_MASK]);
@@ -1933,7 +1938,7 @@ static void recLW() {
 		}
 	}
 #endif
-
+#endif
 	preMemRead();
 	CALLFunc((u32) psxMemRead32);
 	if (_Rt_) {
