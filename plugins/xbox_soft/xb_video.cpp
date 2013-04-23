@@ -57,14 +57,13 @@ const char*                                 g_strPixelShaderProgram =
 //--------------------------------------------------------------------------------------
 // Globals
 //-------------------------------------------------------------------------------------
-IDirect3D9*						g_pD3D = NULL; // Used to create the D3DDevice
-IDirect3DDevice9*				g_pd3dDevice = NULL; // the rendering device
-LPDIRECT3DTEXTURE9				g_PsxTexture = NULL; // PSX Texture
-IDirect3DPixelShader9*			pPixelShader;
-IDirect3DVertexShader9*			pVertexShader;
-IDirect3DVertexDeclaration9*	pVertexDecl;
+static IDirect3DDevice9*				g_pd3dDevice = NULL; // the rendering device
+static LPDIRECT3DTEXTURE9				g_PsxTexture = NULL; // PSX Texture
+static IDirect3DPixelShader9*			pPixelShader;
+static IDirect3DVertexShader9*			pVertexShader;
+static IDirect3DVertexDeclaration9*	pVertexDecl;
 
-XMMATRIX matWVP;
+static XMMATRIX matWVP;
 
 extern "C" unsigned char *pPsxScreen;
 extern "C" unsigned int g_pPitch;
@@ -94,36 +93,13 @@ static const D3DVERTEXELEMENT9 VertexElements[4] =
 	D3DDECL_END()
 };
 
+
+void PcsxSetD3D(IDirect3DDevice9* device) {
+	g_pd3dDevice = device;
+}
+
 extern "C" unsigned int  VideoInit()
 {
-	// Create the D3D object.
-	g_pD3D = Direct3DCreate9( D3D_SDK_VERSION );
-
-	// Set up the structure used to create the D3DDevice.
-	XVIDEO_MODE VideoMode;
-	ZeroMemory( &VideoMode, sizeof( VideoMode ) );
-	XGetVideoMode( &VideoMode );
-	BOOL bEnable720p = ( VideoMode.dwDisplayHeight >= 720 ) ? TRUE : FALSE;
-
-	// Set up the structure used to create the D3DDevice.
-	D3DPRESENT_PARAMETERS d3dpp;
-	ZeroMemory( &d3dpp, sizeof( d3dpp ) );
-	d3dpp.BackBufferWidth = bEnable720p ? 1280 : 640;
-	d3dpp.BackBufferHeight = bEnable720p ? 720  : 480;
-	d3dpp.BackBufferFormat =  ( D3DFORMAT )MAKESRGBFMT( D3DFMT_A8R8G8B8 );
-	d3dpp.FrontBufferFormat = ( D3DFORMAT )MAKESRGBFMT( D3DFMT_LE_X8R8G8B8 );
-	d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
-	d3dpp.MultiSampleQuality = 0;
-	d3dpp.BackBufferCount = 1;
-	d3dpp.EnableAutoDepthStencil = TRUE;
-	d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-
-	// Create the Direct3D device.
-	g_pD3D->CreateDevice( 0, D3DDEVTYPE_HAL, NULL, D3DCREATE_HARDWARE_VERTEXPROCESSING|D3DCREATE_BUFFER_2_FRAMES,
-		&d3dpp, &g_pd3dDevice );
-
 	// Buffers to hold compiled shaders and possible error messages
 	ID3DXBuffer* pShaderCode = NULL;
 	ID3DXBuffer* pErrorMsg = NULL;

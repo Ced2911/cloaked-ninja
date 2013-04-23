@@ -12,6 +12,12 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Source Files\gui">
+      <UniqueIdentifier>{d7100a80-507e-41df-8e63-11b4e3546a4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Media">
+      <UniqueIdentifier>{d6927e01-36d6-41f8-9c48-71b76754d770}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bram.cpp">
@@ -28,6 +34,12 @@
     </ClCompile>
     <ClCompile Include="..\..\common\sys\time.c">
       <Filter>Source Files\sys</Filter>
+    </ClCompile>
+    <ClCompile Include="gui.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="video.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,5 +64,16 @@
     <ClInclude Include="xbPlugins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="media\xui\xarialuni.ttf">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="media\xui\simple_scene_skin.xui">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="media\xui\scene.xui">
+      <Filter>Media</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

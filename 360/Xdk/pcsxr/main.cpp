@@ -15,17 +15,17 @@ char * game = "game:\\Castlevanina - SOTN.bin";
 
 extern "C" void gpuDmaThreadInit();
 
+extern void InitD3D();
 
-int main() {
-	
+void RunPcsx(char * game) {
 	// __SetHWThreadPriorityHigh();
 	SetIsoFile(game);
 
 	int res, ret;
 	XMemSet(&Config, 0, sizeof(PcsxConfig));
 	
-	//Config.Cpu = CPU_INTERPRETER;
-	Config.Cpu = CPU_DYNAREC;
+	Config.Cpu = CPU_INTERPRETER;
+	//Config.Cpu = CPU_DYNAREC;
 
 	//strcpy(Config.Bios, "PSX-XBOO.ROM"); // No$ bios - not working
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
@@ -48,19 +48,19 @@ int main() {
 	if (SysInit() == -1) 
 	{
 		printf("SysInit() Error!\n");
-		return E_FAIL;
+		return;
 	}
 
 	GPU_clearDynarec(clearDynarec);
 
 	ret = CDR_open();
-	if (ret < 0) { SysMessage (_("Error Opening CDR Plugin")); return -1; }
+	if (ret < 0) { SysMessage (_("Error Opening CDR Plugin")); return; }
 	ret = GPU_open(NULL);
-	if (ret < 0) { SysMessage (_("Error Opening GPU Plugin (%d)"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error Opening GPU Plugin (%d)"), ret); return; }
 	ret = SPU_open(NULL);
-	if (ret < 0) { SysMessage (_("Error Opening SPU Plugin (%d)"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error Opening SPU Plugin (%d)"), ret); return; }
 	ret = PAD1_open(NULL);
-	if (ret < 0) { SysMessage (_("Error Opening PAD1 Plugin (%d)"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error Opening PAD1 Plugin (%d)"), ret); return; }
 
 	CDR_init();
 	GPU_init();
@@ -81,4 +81,13 @@ int main() {
 	SysPrintf("Execute\r\n");
 	// SysReset();
 	psxCpu->Execute();
+}
+
+int dbg_main() {
+
+	InitD3D();
+	
+	RunPcsx(game);
+
+	return 0;
 }
