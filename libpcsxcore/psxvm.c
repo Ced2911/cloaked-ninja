@@ -54,7 +54,15 @@ s8 *psxH = NULL; // Scratch Pad (1K) & Hardware Registers (8K)
 */
 
 
+static int writeok = 1;
+
 int psxMemInit() {
+	static int initialised = 0;	
+	writeok = 1;
+
+	if (initialised) {
+		return 0;
+	}
 	// Create 0x20000000 (512M) virtual memory
 	psxVM = (s8 *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
 
@@ -67,16 +75,23 @@ int psxMemInit() {
 	// Bios
 	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000, 0x00080000, MEM_COMMIT, PAGE_READWRITE);
 
+	initialised++;
+
 	return 0;
 }
 
 void psxMemReset() {
 	FILE *f = NULL;
-	char bios[1024];
+	char bios[1024];	
 
-	memset(psxM, 0, 0x00200000);
+	writeok = 1;
+
+	//psxMemShutdown();
+	//psxMemInit();
+
+	memset(psxM, 0, 0x00400000);
 	memset(psxP, 0, 0x00010000);
-	memset(psxH, 0, 0x00003000);
+	memset(psxH, 0, 0x00010000);
 
 	// Load BIOS
 	if (strcmp(Config.Bios, "HLE") != 0) {
@@ -96,10 +111,10 @@ void psxMemReset() {
 }
 
 void psxMemShutdown() {
-	VirtualFree(psxVM, VM_SIZE, MEM_RELEASE|MEM_DECOMMIT);
+	if (psxVM) {
+		//VirtualFree(psxVM, VM_SIZE, MEM_RELEASE|MEM_DECOMMIT);
+	}
 }
-
-static int writeok = 1;
 
 u8 psxMemRead8(u32 mem) {
 	psxRegs.cycle += 0;

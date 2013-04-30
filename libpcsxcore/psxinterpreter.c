@@ -732,25 +732,36 @@ __inline void psxSLTU() 	{ if (!_Rd_) return; _rRd_ = _u32(_rRs_) < _u32(_rRt_);
 * Format:  OP rs, rt                                     *
 *********************************************************/
 __inline void psxDIV() {
-	if (_i32(_rRt_) != 0) {
-		_i32(_rLo_) = _i32(_rRs_) / _i32(_rRt_);
-		_i32(_rHi_) = _i32(_rRs_) % _i32(_rRt_);
-	}
-	else {
-		_i32(_rLo_) = 0xffffffff;
-		_i32(_rHi_) = _i32(_rRs_);
-	}
+	const s32 Rt = _i32(_rRt_);
+    const s32 Rs = _i32(_rRs_);
+
+    if( Rt == 0 )
+    {
+		_i32(_rHi_) = Rs;
+		_i32(_rLo_) = (Rs >= 0) ? -1 : 1;
+		return;
+    }
+    if( Rs == 0x80000000 && Rt == 0xffffffff )
+    {
+		_i32(_rHi_) = 0;
+		_i32(_rLo_) = Rs;
+		return;
+    }
+
+    _i32(_rHi_) = Rs % Rt;
+    _i32(_rLo_) = Rs / Rt;
 }
 
 __inline void psxDIVU() {
-	if (_rRt_ != 0) {
-		_rLo_ = _rRs_ / _rRt_;
-		_rHi_ = _rRs_ % _rRt_;
-	}
-	else {
-		_rLo_ = 0xffffffff;
+    if( _rRt_ == 0 )
+    {
 		_rHi_ = _rRs_;
-	}
+		_rLo_ = 0xffffffff;
+		return;
+    }
+
+    _rHi_ = _rRs_ % _rRt_;
+    _rLo_ = _rRs_ / _rRt_;
 }
 
 __inline void psxMULT() {
@@ -795,9 +806,15 @@ __inline void psxSRL() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> _Sa_; }
 * Shift arithmetic with variant register shift           *
 * Format:  OP rd, rt, rs                                 *
 *********************************************************/
-__inline void psxSLLV() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) << _u32(_rRs_); } // Rd = Rt << rs
-__inline void psxSRAV() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRt_) >> _u32(_rRs_); } // Rd = Rt >> rs (arithmetic)
-__inline void psxSRLV() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> _u32(_rRs_); } // Rd = Rt >> rs (logical)
+__inline u32 Shamt() {
+	int shamt = (_u32(_rRs_) & 0x1f);
+	if(shamt >= 0 && shamt < 32) return shamt;
+	return 0;
+}
+
+__inline void psxSLLV() { if (!_Rd_) return; _u32(_rRd_)  =  _u32(_rRt_)  << Shamt(); } // Rd = Rt << rs
+__inline void psxSRAV() { if (!_Rd_) return; _i32(_rRd_)  =  _i32(_rRt_)  >> Shamt(); } // Rd = Rt >> rs (arithmetic)
+__inline void psxSRLV() { if (!_Rd_) return; _u32(_rRd_)  =  _u32(_rRt_)  >> Shamt(); } // Rd = Rt >> rs (logical)
 
 /*********************************************************
 * Load higher 16 bits of the first word in GPR with imm  *
@@ -1414,6 +1431,8 @@ void (*psxCP2BSC[32])() = {
 ///////////////////////////////////////////
 
 static int intInit() {
+	Config.CpuRunning = 1;
+
 	return 0;
 }
 
@@ -1422,8 +1441,7 @@ static void intReset() {
 }
 
 static void intExecute() {
-	for (;;) 
-	{
+	while(Config.CpuRunning) {
 		execI();
 	}
 }

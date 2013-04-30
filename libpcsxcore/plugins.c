@@ -793,18 +793,15 @@ void ReleasePlugins() {
 		if (ret < 0) Config.UseNet = FALSE;
 	}
 	NetOpened = FALSE;
-/*
+
 	if (hCDRDriver != NULL || cdrIsoActive()) CDR_shutdown();
-*/
 	if (hGPUDriver != NULL) GPU_shutdown();
 	if (hSPUDriver != NULL) SPU_shutdown();
 	if (hPAD1Driver != NULL) PAD1_shutdown();
 	if (hPAD2Driver != NULL) PAD2_shutdown();
 
 	if (Config.UseNet && hNETDriver != NULL) NET_shutdown();
-/*
 	if (hCDRDriver != NULL) SysCloseLibrary(hCDRDriver); hCDRDriver = NULL;
-*/
 	if (hGPUDriver != NULL) SysCloseLibrary(hGPUDriver); hGPUDriver = NULL;
 	if (hSPUDriver != NULL) SysCloseLibrary(hSPUDriver); hSPUDriver = NULL;
 	if (hPAD1Driver != NULL) SysCloseLibrary(hPAD1Driver); hPAD1Driver = NULL;

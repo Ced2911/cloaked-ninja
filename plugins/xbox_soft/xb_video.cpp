@@ -2,6 +2,8 @@
 #include <xboxmath.h>
 #include "xb_video.h"
 
+#if 0 // only in no gui mode
+
 //--------------------------------------------------------------------------------------
 // Vertex shader
 // We use the register semantic here to directly define the input register
@@ -180,16 +182,8 @@ extern "C" void UpdateScrenRes(int x,int y){
 	Vertices[2].TextureUV[1] = (float) y / (float) PSX_HEIGHT;
 }
 
-extern "C" void UnlockLockDisplay(){
-	D3DLOCKED_RECT texture_info;
 
-	g_pd3dDevice->SetTexture(0, NULL);
-
-	g_PsxTexture->LockRect( 0,  &texture_info, NULL, NULL );
-	g_PsxTexture->UnlockRect(0);
-};
-
-extern "C" void XbDispUpdate()
+extern "C" void DisplayUpdate()
 {
 	// Clear the backbuffer.
 	g_pd3dDevice->Clear( 0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
@@ -200,3 +194,6 @@ extern "C" void XbDispUpdate()
 	// Present the backbuffer contents to the display.
 	g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
 }
+
+
+#endif

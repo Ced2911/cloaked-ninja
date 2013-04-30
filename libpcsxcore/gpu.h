@@ -7,12 +7,18 @@ extern "C"
 #endif
 	// New !
 	void gpuDmaThreadInit();
-	void gpuWriteDataMem(uint32_t *, int);
-	void gpuWriteData(uint32_t);
-	void gpuUpdateLace();
+	void gpuDmaThreadShutdown();
 
-	int gpuReadStatus();
+	void gpuWriteDataMem(uint32_t *, int);
 	void gpuWriteStatus(u32 data);
+	void gpuWriteData(uint32_t);
+
+	uint32_t gpuReadStatus(void);
+	uint32_t gpuReadData(void);
+	void gpuReadDataMem(uint32_t *, int);
+
+	void gpuUpdateLace();
+	
 
 	void psxDma2(u32 madr, u32 bcr, u32 chcr);
 	void gpuInterrupt();

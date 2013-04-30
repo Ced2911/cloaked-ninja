@@ -41,6 +41,15 @@
     <ClCompile Include="video.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gui_video.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui_main.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui_tools.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="xb_sys.h">
@@ -64,6 +73,12 @@
     <ClInclude Include="xbPlugins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="gui.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui_class.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="media\xui\xarialuni.ttf">
@@ -73,6 +88,9 @@
       <Filter>Media</Filter>
     </CustomBuild>
     <CustomBuild Include="media\xui\scene.xui">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="media\xui\osdmenu.xui">
       <Filter>Media</Filter>
     </CustomBuild>
   </ItemGroup>

@@ -199,7 +199,8 @@ void ReadConfig(void)
 	iColDepth=32;
 	iWindowMode=1;
 	iMaintainAspect=0;
-	UseFrameLimit=0;
+	//UseFrameLimit=1;
+	//UseFrameLimit=0;
 	UseFrameSkip=0;
 	iFrameLimit=2;
 	fFrameRate=200.0f;

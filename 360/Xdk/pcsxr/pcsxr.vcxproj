@@ -283,7 +283,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilibd.lib;d3d9d.lib;d3dx9d.lib;xgraphicsd.lib;xboxkrnl.lib;xnetd.lib;xaudiod2.lib;xactd3.lib;x3daudiod.lib;xmcored.lib;xbdm.lib;vcompd.lib;core.lib;video.lib;audio.lib;zlib.lib;input.lib;xuirund.lib;xuirenderd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../core/Debug/;../video/Debug/;../input/Debug/;../cdrom/Debug/;../audio/Debug/;../zlib/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../core/Debug/;../video/Debug/;../input/Debug/;../cdrom/Debug/;../audio/Debug/;../zlib/Debug;../peopsspu110/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -469,6 +469,9 @@
   <ItemGroup>
     <ClCompile Include="bram.cpp" />
     <ClCompile Include="gui.cpp" />
+    <ClCompile Include="gui_main.cpp" />
+    <ClCompile Include="gui_tools.cpp" />
+    <ClCompile Include="gui_video.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ppc_dyn.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>
@@ -501,6 +504,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gui.h" />
+    <ClInclude Include="gui_class.h" />
     <ClInclude Include="xb_sys.h" />
     <ClInclude Include="..\..\common\sys\mman.h" />
     <ClInclude Include="..\..\common\sys\time.h" />
@@ -613,6 +618,35 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Copy file %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="media\xui\osdmenu.xui">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">Copy file %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Copy file %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
     </CustomBuild>
   </ItemGroup>

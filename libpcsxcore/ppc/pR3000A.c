@@ -1105,7 +1105,7 @@ static void freeMem(int all)
 static int allocMem() {
 	int i;
 
-	freeMem(0);
+	freeMem(1);
         
 	if (psxRecLUT==NULL)
 		psxRecLUT = (u32*) malloc(0x010000 * 4);
@@ -1130,6 +1130,8 @@ static int allocMem() {
 }
 
 static int recInit() {
+	Config.CpuRunning = 1;
+
 	return allocMem();
 }
 
@@ -1173,8 +1175,9 @@ __inline static void execute() {
 }
 
 void recExecute() {
-    while (1) 
+    while(Config.CpuRunning) {
         execute();
+	}
 }
 
 void recExecuteBlock() {

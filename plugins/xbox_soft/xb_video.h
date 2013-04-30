@@ -4,9 +4,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	void XbDispUpdate();
 	unsigned int VideoInit();
-	void UnlockLockDisplay();
+	void DisplayUpdate();
 	void UpdateScrenRes(int x,int y);
 #ifdef __cplusplus
 }

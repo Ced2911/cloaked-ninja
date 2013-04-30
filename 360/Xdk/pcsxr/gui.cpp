@@ -1,151 +1,22 @@
-#include <xtl.h>
-#include <xui.h>
-#include <xuiapp.h>
-#include <string>
-#include <vector>
+#include "gui.h"
+#include "gui_class.h"
 
-void RunPcsx(char * game);
-
-// Global string table for this application.
-CXuiStringTable StringTable;
-
-std::string get_string(const std::wstring & s, std::string & d)
-{
-	char buffer[256];
-	const wchar_t * cs = s.c_str();
-	wcstombs ( buffer, cs, sizeof(buffer) );
-
-	d = buffer;
-
-	return d;
-}
-
-std::wstring get_wstring(const std::string & s, std::wstring & d)
-{
-	wchar_t buffer[256];
-	const char * cs = s.c_str();
-	mbstowcs ( buffer, cs, sizeof(buffer) );
-
-	d = buffer;
-
-	return d;
-}
-
-
-class FileBrowserProvider {
-protected:
-	struct _FILE_INFO {
-		std::wstring filename;
-		std::wstring displayname;
-		bool isDir;
-	};
-
-	std::wstring currentDir;
-	std::vector<_FILE_INFO> fileList;
-	 
-protected:
-	
-public:
-	void Init() {
-		currentDir = L"game:";
-	}
-
-	void AddParentEntry(std::wstring currentDir) {
-		_FILE_INFO finfo;
-		unsigned int p = currentDir.rfind(L"\\");
-		currentDir = currentDir.substr(0,  p);
-
-		finfo.isDir = true;
-		finfo.displayname = L"..";
-		finfo.filename = currentDir;
-
-		fileList.push_back(finfo);
-	}
-
-	HRESULT UpdateDirList(std::wstring currentDir = L"game:") {
-		WIN32_FIND_DATA ffd;
-		LARGE_INTEGER filesize;
-		std::string szDir;
-		size_t length_of_arg;
-		HANDLE hFind = INVALID_HANDLE_VALUE;
-		DWORD dwError=0;		
-		
-		// Free file list
-		fileList.clear();
-
-		AddParentEntry(currentDir);
-
-		get_string(currentDir, szDir);
-		szDir = szDir + "\\*";
-
-		// Look for files in current directory
-		hFind = FindFirstFile(szDir.c_str(), &ffd);
-
-		if (INVALID_HANDLE_VALUE == hFind) 
-		{
-			return dwError;
-		} 
-
-		// List all the files in the directory with some info about them.
-		do
-		{
-			_FILE_INFO finfo;
-			finfo.isDir = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-			get_wstring(ffd.cFileName, finfo.displayname);
-			finfo.filename = currentDir + L"\\" + finfo.displayname;
-
-			fileList.push_back(finfo);
-
-		}
-		while (FindNextFile(hFind, &ffd) != 0);
-
-		dwError = GetLastError();
-
-		FindClose(hFind);
-
-		return S_OK;
-	}
-
-	DWORD Size() {
-		return this->fileList.size();
-	}
-
-	LPCWSTR At(int i) {
-		if (i >= 0 & i < Size()) {
-			return this->fileList[i].displayname.c_str();
-		} else {
-			return L"";
-		}
-	}
-
-	LPCWSTR Filename(int i) {
-		if (i >= 0 & i < Size()) {
-			return this->fileList[i].filename.c_str();
-		} else {
-			return L"";
-		}
-	}
-
-	bool IsDir(int i) {
-		if (i >= 0 & i < Size()) {
-			return this->fileList[i].isDir;
-		} else {
-			return false;
-		}
-	}
-};
+CMyApp app;
+XboxConfig xboxConfig;
 
 
 FileBrowserProvider fileList;
+FileBrowserProvider saveStateList;
+FileBrowserProvider effectList;
 
 
-//--------------------------------------------------------------------------------------
-// Name: class CLanguageList
-// Desc: List implementation class.
-//--------------------------------------------------------------------------------------
-class CFileBrowserList : public CXuiListImpl
+class CXuiFileBrowser : public CXuiListImpl
 {
-    // Message map. Here we tie messages to message handlers.
+protected:
+	FileBrowserProvider * fileBrowser;
+
+public:
+	// Message map. Here we tie messages to message handlers.
     XUI_BEGIN_MSG_MAP()
         XUI_ON_XM_GET_SOURCE_TEXT( OnGetSourceText )
         XUI_ON_XM_GET_ITEMCOUNT_ALL( OnGetItemCountAll )
@@ -158,8 +29,8 @@ class CFileBrowserList : public CXuiListImpl
     //----------------------------------------------------------------------------------
     HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
     {
-        fileList.Init();
-		fileList.UpdateDirList();
+        fileBrowser->Init();
+		fileBrowser->UpdateDirList();
 
         return S_OK;
     }
@@ -169,7 +40,7 @@ class CFileBrowserList : public CXuiListImpl
     //----------------------------------------------------------------------------------
     HRESULT OnGetItemCountAll( XUIMessageGetItemCount* pGetItemCountData, BOOL& bHandled )
     {
-		pGetItemCountData->cItems = fileList.Size();
+		pGetItemCountData->cItems = fileBrowser->Size();
         bHandled = TRUE;
         return S_OK;
     }
@@ -181,7 +52,7 @@ class CFileBrowserList : public CXuiListImpl
     {
         if( pGetSourceTextData->bItemData && pGetSourceTextData->iItem >= 0 )
         {
-			pGetSourceTextData->szText = fileList.At(pGetSourceTextData->iItem);
+			pGetSourceTextData->szText = fileBrowser->At(pGetSourceTextData->iItem);
             bHandled = TRUE;
         }
         return S_OK;
@@ -193,22 +64,120 @@ class CFileBrowserList : public CXuiListImpl
 		int nIndex;
 
 		// Change the current dir
-		if (fileList.IsDir(GetCurSel())) {
-			fileList.UpdateDirList(fileList.Filename(GetCurSel()));
+		if (fileBrowser->IsDir(GetCurSel())) {
+			// Delete old item count
+			DeleteItems(0, fileBrowser->Size());
+
+			// Update filelist
+			fileBrowser->UpdateDirList(fileBrowser->Filename(GetCurSel()));
+
+			// Insert item count
+			InsertItems(0, fileBrowser->Size());
+
 			// Move to top
-			SetCurSel(0);
-		} else {
-			std::string game;			
-			get_string(fileList.Filename(GetCurSel()), game);
-			char * cgame = (char*)game.c_str();
-			RunPcsx(cgame);
+			SetCurSel(0);			
+			
+			// Don't Notify parent
+			bHandled = TRUE;
+
+		} else {		
+			get_string(fileBrowser->Filename(GetCurSel()), xboxConfig.game);
+
+			// scene must done some work
+			bHandled = FALSE;
 		}
-		
-		bHandled = TRUE;
 		return S_OK;
 	}
+};
 
-protected:
+
+
+//--------------------------------------------------------------------------------------
+class CLoadStateBrowser : public CXuiFileBrowser
+{
+public:
+	CLoadStateBrowser() {
+		fileBrowser = &saveStateList;
+	}
+
+
+	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, 
+		BOOL& bHandled )
+	{
+		int nIndex;
+
+		// Change the current dir
+		if (fileBrowser->IsDir(GetCurSel())) {
+			// Delete old item count
+			DeleteItems(0, fileBrowser->Size());
+
+			// Update filelist
+			fileBrowser->UpdateDirList(fileBrowser->Filename(GetCurSel()));
+
+			// Insert item count
+			InsertItems(0, fileBrowser->Size());
+
+			// Move to top
+			SetCurSel(0);			
+			
+			// Don't Notify parent
+			bHandled = TRUE;
+
+		} else {		
+			get_string(fileBrowser->Filename(GetCurSel()), xboxConfig.game);
+
+			// scene must done some work
+			bHandled = FALSE;
+		}
+		return S_OK;
+	}
+	
+public:
+
+    // Define the class. The class name must match the ClassOverride property
+    // set for the scene in the UI Authoring tool.
+    XUI_IMPLEMENT_CLASS( CLoadStateBrowser, L"LoadStateBrowser", XUI_CLASS_LIST )
+};
+
+//--------------------------------------------------------------------------------------
+class CFileBrowserList : public CXuiFileBrowser
+{
+public:
+	CFileBrowserList() {
+		fileBrowser = &fileList;
+	}
+
+
+   HRESULT OnNotifyPress( HXUIOBJ hObjPressed, 
+		BOOL& bHandled )
+	{
+		int nIndex;
+
+		// Change the current dir
+		if (fileBrowser->IsDir(GetCurSel())) {
+			// Delete old item count
+			DeleteItems(0, fileBrowser->Size());
+
+			// Update filelist
+			fileBrowser->UpdateDirList(fileBrowser->Filename(GetCurSel()));
+
+			// Insert item count
+			InsertItems(0, fileBrowser->Size());
+
+			// Move to top
+			SetCurSel(0);			
+			
+			// Don't Notify parent
+			bHandled = TRUE;
+
+		} else {		
+			get_string(fileBrowser->Filename(GetCurSel()), xboxConfig.game);
+
+			// scene must done some work
+			bHandled = FALSE;
+		}
+		return S_OK;
+	}
 	
 public:
 
@@ -218,13 +187,226 @@ public:
 };
 
 
-class CMyMainScene : public CXuiSceneImpl
+class COsdMenuScene: public CXuiSceneImpl
 {
-    CXuiList FileBrowser;
+	std::string game;
+	std::wstring wgame;
 
+	CXuiControl BackBtn;
+	CXuiControl ResetBtn;
+	CXuiControl SelectBtn;
+	
+	CXuiControl SaveStateBtn;
+	CXuiControl LoadStateBtn;
+
+	CXuiList LoadStateBrowser;
+	CXuiControl LoadStateOkBtn;
+	CXuiControl LoadStateCancelBtn;
+
+	
+	CXuiControl SaveStateFilename;
+	CXuiControl SaveKeyboardBtn;
+	CXuiControl SaveStateCancelBtn;
+	CXuiControl SaveStateOkBtn;
+
+	COsdMenuScene() {
+		m_pszName = NULL;
+	}
+
+	~COsdMenuScene() {
+		if( NULL != m_hEvent )
+        {
+            CloseHandle( m_hEvent );
+            m_hEvent = NULL;
+        }
+        delete []m_pszName;
+        m_pszName = NULL;
+	}
+
+	LPWSTR m_pszName;			// Used by XShowKeyboardUI().
+    XOVERLAPPED m_Overlapped;	// Used by XShowKeyboardUI().
+    HANDLE m_hEvent;			// Used by XShowKeyboardUI().
+	BOOL m_bKeyboardActive;
+
+	 XUI_BEGIN_MSG_MAP()
+        XUI_ON_XM_INIT( OnInit )
+		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
+    XUI_END_MSG_MAP()
+
+	//----------------------------------------------------------------------------------
+    // Performs initialization tasks - retrieves controls.
+    //----------------------------------------------------------------------------------
+    HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
+    {
+		GetChildById( L"BackBtn", &BackBtn );
+		GetChildById( L"ResetBtn", &ResetBtn );
+		GetChildById( L"SelectBtn", &SelectBtn );
+
+		GetChildById( L"SaveStateBtn", &SaveStateBtn );
+		GetChildById( L"LoadStateBtn", &LoadStateBtn );
+
+		GetChildById( L"LoadStateBrowser", &LoadStateBrowser );
+		GetChildById( L"LoadStateOkBtn", &LoadStateOkBtn );
+		GetChildById( L"LoadStateCancelBtn", &LoadStateCancelBtn );
+
+		GetChildById( L"SaveStateFilename", &SaveStateFilename );
+		GetChildById( L"SaveStateCancelBtn", &SaveStateCancelBtn );
+		GetChildById( L"SaveStateOkBtn", &SaveStateOkBtn );
+		GetChildById( L"SaveKeyboardBtn", &SaveKeyboardBtn );
+
+
+		ShowLoad(false);
+		ShowSave(false);
+
+		m_hEvent = CreateEvent( NULL, FALSE, FALSE, NULL );
+		m_bKeyboardActive = false;
+
+        return S_OK;
+    }
+
+	 void ShowLoad(bool visible)
+	 {
+		 LoadStateBrowser.SetShow(visible);
+		 LoadStateOkBtn.SetShow(visible);
+		 LoadStateCancelBtn.SetShow(visible);
+
+		 if (visible) {
+			 std::wstring wg;
+			 get_wstring(xboxConfig.saveStateDir, wgame);
+			 saveStateList.UpdateDirList(wgame);
+
+			 LoadStateBrowser.SetFocus();
+		 }
+	 }
+
+	 void ShowSave(bool visible)
+	 {
+		 SaveStateFilename.SetShow(visible);
+		 SaveStateCancelBtn.SetShow(visible);
+		 SaveStateOkBtn.SetShow(visible);
+
+		  if (visible) {
+			 SaveKeyboardBtn.SetFocus();
+		 }
+	 }
+
+	 HRESULT OnNotifyPress( HXUIOBJ hObjPressed, 
+		BOOL& bHandled )
+	{
+
+		if (hObjPressed == BackBtn) {
+			ResumePcsx();
+		}
+
+		if (hObjPressed == ResetBtn) {
+			ResetPcsx();
+		}
+
+		if (hObjPressed == SelectBtn) {
+			xboxConfig.game.clear();
+			ShutdownPcsx();
+			xboxConfig.Running = false;
+			NavigateBackToFirst();
+		}
+
+		// show
+		if (hObjPressed == SaveStateBtn) {
+			ShowSave(true);
+			game = xboxConfig.game;
+			game.erase(0, game.rfind('\\')+1);
+			game.append(".sgz");
+
+			get_wstring(game, wgame);
+
+			SaveStateFilename.SetText(wgame.c_str());
+		}
+
+		if (hObjPressed == LoadStateBtn) {			
+			ShowLoad(true);
+		}
+
+
+		// work
+		if (hObjPressed == SaveKeyboardBtn){
+			ZeroMemory( &m_Overlapped, sizeof( XOVERLAPPED ) );
+			m_Overlapped.hEvent = m_hEvent;
+			app.m_waitlist.RegisterWaitHandle(
+				m_Overlapped.hEvent,
+				m_hObj,
+				XM_USER,
+				TRUE
+				);
+			m_pszName = new wchar_t[ 256 ];
+			DWORD dwResult = XShowKeyboardUI(
+				XUSER_INDEX_ANY,
+				0,
+				SaveStateFilename.GetText(),
+				L"Character Name",
+				L"Enter the name of your character:",
+				m_pszName,
+				256,
+				&m_Overlapped
+				);
+
+			if( ERROR_IO_PENDING != dwResult )
+			{
+				return E_UNEXPECTED;
+			}
+			m_bKeyboardActive = TRUE;
+			// Disable input to the scene until the virtual keyboard closes.
+			// This is to close the window of opportunity for the user to
+			// send input to the scene while the virtual keyboard opens or closes.
+			SetEnable( FALSE );
+			bHandled = TRUE;
+		}
+
+		if (hObjPressed == SaveStateOkBtn) {
+			ShowSave(false);
+
+
+
+			//SaveStatePcsx(-1);
+		}
+
+		if (hObjPressed == LoadStateOkBtn) {			
+			ShowLoad(false);
+			//LoadStatePcsx(-1);
+		}
+
+		// cancel
+		if (hObjPressed == SaveStateOkBtn) {
+			ShowSave(false);
+		}
+
+		if (hObjPressed == LoadStateOkBtn) {			
+			ShowLoad(false);
+		}
+
+		bHandled = TRUE;
+		return S_OK;
+	}
+
+public:
+
+    XUI_IMPLEMENT_CLASS( COsdMenuScene, L"InGameMenu", XUI_CLASS_SCENE )
+};
+
+class CMainMenuScene : public CXuiSceneImpl
+{
+	wchar_t fileBrowserInfoText[512];
+
+    CXuiList FileBrowser;
+	CXuiControl FileBrowserInfo;
+	CXuiNavButton OsdBtn;
+	CXuiCheckbox DynarecCbox;
+	CXuiCheckbox GpuThCbox;
+	CXuiCheckbox SpuIrqCbox;
+	CXuiCheckbox FrameLimitCbox;
 
     XUI_BEGIN_MSG_MAP()
         XUI_ON_XM_INIT( OnInit )
+		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
+		XUI_ON_XM_RENDER( OnRender )
     XUI_END_MSG_MAP()
 
 
@@ -234,29 +416,77 @@ class CMyMainScene : public CXuiSceneImpl
     HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
     {
 		GetChildById( L"FileBrowser", &FileBrowser );
+		GetChildById( L"OsdBtn", &OsdBtn );
+		GetChildById( L"FileBrowserInfo", &FileBrowserInfo );
+
+		GetChildById( L"DynarecCbox", &DynarecCbox );
+		GetChildById( L"GpuThCbox", &GpuThCbox );
+		GetChildById( L"SpuIrqCbox", &SpuIrqCbox );
+
+		GetChildById( L"FrameLimitCbox", &FrameLimitCbox );
+
+		// Init values from xbox config
+		DynarecCbox.SetCheck(xboxConfig.UseDynarec);
+		SpuIrqCbox.SetCheck(xboxConfig.UseSpuIrq);
+		FrameLimitCbox.SetCheck(xboxConfig.UseFrameLimiter);
+
         return S_OK;
     }
 
+	HRESULT OnRender(
+		XUIMessageRender *pInputData,
+        BOOL &bHandled
+	) {
+		swprintf(fileBrowserInfoText, L"%d/%d", FileBrowser.GetCurSel() + 1, FileBrowser.GetItemCount());
+		FileBrowserInfo.SetText(fileBrowserInfoText);
+
+		return S_OK;
+	}
+
+
+	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, 
+		BOOL& bHandled )
+	{
+
+		if (hObjPressed == FileBrowser) {
+			OsdBtn.Press();
+		}
+
+		if (hObjPressed == DynarecCbox) {
+			xboxConfig.UseDynarec = DynarecCbox.IsChecked();
+		}
+
+		if (hObjPressed == SpuIrqCbox) {
+			xboxConfig.UseSpuIrq = SpuIrqCbox.IsChecked();
+		}
+
+		if (hObjPressed == FrameLimitCbox) {
+			xboxConfig.UseFrameLimiter = FrameLimitCbox.IsChecked();
+		}
+
+		return S_OK;
+	}
 
 public:
-    XUI_IMPLEMENT_CLASS( CMyMainScene, L"MainMenu", XUI_CLASS_SCENE )
-};
-
-class CMyApp : public CXuiModule
-{
-protected:
-    virtual HRESULT RegisterXuiClasses();
-    virtual HRESULT UnregisterXuiClasses();
+    XUI_IMPLEMENT_CLASS( CMainMenuScene, L"MainMenu", XUI_CLASS_SCENE )
 };
 
 
 HRESULT CMyApp::RegisterXuiClasses()
 {
-    HRESULT hr = CMyMainScene::Register();
+    HRESULT hr = CMainMenuScene::Register();
     if( FAILED( hr ) )
         return hr;
 
 	hr = CFileBrowserList::Register();
+    if( FAILED( hr ) )
+        return hr;
+
+	hr = COsdMenuScene::Register();
+    if( FAILED( hr ) )
+        return hr;
+
+	hr = CLoadStateBrowser::Register();
     if( FAILED( hr ) )
         return hr;
 
@@ -265,56 +495,10 @@ HRESULT CMyApp::RegisterXuiClasses()
 
 HRESULT CMyApp::UnregisterXuiClasses()
 {
-    CMyMainScene::Unregister();
+    CMainMenuScene::Unregister();
+	CFileBrowserList::Unregister();
+	CLoadStateBrowser::Unregister();
+	COsdMenuScene::Unregister();
     return S_OK;
-}
-
-extern void InitD3D();
-
-extern IDirect3DDevice9*				g_pd3dDevice;
-extern D3DPRESENT_PARAMETERS			g_d3dpp;
-
-
-
-
-VOID __cdecl gui_main()
-{
-	InitD3D();
-
-
-    // Declare an instance of the XUI framework application.
-    CMyApp app;
-
-    // Initialize the application.    
-    // HRESULT hr = app.Init( XuiD3DXTextureLoader );
-	HRESULT hr = app.InitShared(g_pd3dDevice, &g_d3dpp, XuiD3DXTextureLoader, NULL);
-
-    // Register a default typeface
-    hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xui/xarialuni.ttf" );
-
-
-    // Load the skin file used for the scene. 
-    app.LoadSkin( L"file://game:/media/xui/simple_scene_skin.xur" );
-
-    // Load the scene.
-    app.LoadFirstScene( L"file://game:/media/xui/", L"scene.xur", NULL );
-
-    // Run the scene using the built-in loop.
-    //app.Run();
-
-	while(1) {
-		g_pd3dDevice->Clear( 0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
-		0xff00FF00, 1.0f, 0L );
-
-		app.RunFrame();
-		app.Render();
-		XuiTimersRun();
-
-		// Present the backbuffer contents to the display.
-		g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-	}
-
-    // Free resources, unregister custom classes, and exit.
-    app.Uninit();
 }
 

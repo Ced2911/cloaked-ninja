@@ -1,32 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <xtl.h>
+#include <sys/types.h>
 #include "psxcommon.h"
 #include "r3000a.h"
 #include "xbPlugins.h"
+#include "gpu.h"
 
 
 // Init mem and plugins
 int  SysInit(){
+	if (EmuInit() == -1) return -1;
 
-	SysPrintf("SysInit\r\n");
-	psxInit();
-
-	SysPrintf("LoadPlugins()\r\n");
-	if(LoadPlugins()==-1)
-		SysPrintf("ErrorLoadingPlugins()\r\n");
-
-	SysPrintf("LoadMcds\r\n");
+	while (LoadPlugins() == -1) {
+		SysPrintf("LoadPlugins err\r\n");
+	}
 	LoadMcds(Config.Mcd1, Config.Mcd2);
 
-	SysPrintf("InitComplete\r\n");
 	return 0;
 }
 
 // Resets mem
 void SysReset(){
 	SysPrintf("SysReset\r\n");
-	psxReset();
+	EmuReset();
 }						
 
 // Printf used by bios syscalls
@@ -64,14 +61,15 @@ void *SysLoadSym(void *lib, char *sym){
 #endif
 
 PluginTable plugins[] =
-{ PLUGIN_SLOT_0,
-PLUGIN_SLOT_1,
-PLUGIN_SLOT_2,
-PLUGIN_SLOT_3,
-PLUGIN_SLOT_4,
-PLUGIN_SLOT_5,
-PLUGIN_SLOT_6,
-PLUGIN_SLOT_7
+{ 
+	PLUGIN_SLOT_0,
+	PLUGIN_SLOT_1,
+	PLUGIN_SLOT_2,
+	PLUGIN_SLOT_3,
+	PLUGIN_SLOT_4,
+	PLUGIN_SLOT_5,
+	PLUGIN_SLOT_6,
+	PLUGIN_SLOT_7
 };
 
 void *SysLoadLibrary(char *lib) {
@@ -128,7 +126,11 @@ void SysRunGui(){
 // Close mem and plugins
 void SysClose(){
 	SysPrintf("psxShutdown\r\n");
-	psxShutdown();
+
+	// shutdown gpu 1st
+	gpuDmaThreadShutdown();
+
+	EmuShutdown();
 	ReleasePlugins();
 }
 

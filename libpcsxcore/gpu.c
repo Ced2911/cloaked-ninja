@@ -82,8 +82,8 @@ static u32 gpuDmaChainSize(u32 addr) {
 	
 	return size;
 }
-
-int gpuReadStatus() {
+	
+uint32_t gpuReadStatus(void) {
 	int hard;
 	
 	// GPU plugin
@@ -224,6 +224,9 @@ static void gpuThread() {
             gpu_thread_running = 0;
         }
 	}
+
+	// Exit thread
+	ExitThread(0);
 }
 
 // Queue write
@@ -320,11 +323,50 @@ void gpuReadDataMem(uint32_t * addr, int size) {
 	GPU_readDataMem(addr, size);
 }
 
+
+
+uint32_t gpuReadData(void) {
+#ifdef THREAD_GPU_WRITE
+	if(!gpu_thread_exit) {
+		WaitForGpuThread();
+	} 
+#endif
+	return GPU_readData();
+}
+
+static HANDLE gpuHandle = NULL;
+
+
+void gpuDmaThreadShutdown() {
+	// ask to shutdown thread
+	gpu_thread_exit = 1;
+
+	// wait for thread exit ...
+	WaitForSingleObject(gpuHandle, INFINITE);
+	
+	// close thread handle
+	CloseHandle(gpuHandle);
+	gpuHandle = NULL;
+}
+
 void gpuDmaThreadInit() {
-	HANDLE gpuHandle = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)gpuThread, NULL, CREATE_SUSPENDED, NULL);
+	// if thread running Shutdown it ...
+	if (gpuHandle) {
+		gpuDmaThreadShutdown();
+	}
+
+	// Reset thread variables
+	gpu_thread_exit = 0;
+	tw_write_idx = 0;
+	tw_read_idx = 0;
+
+	memset(tw_ring, 0, TW_RING_MAX_COUNT * sizeof(int));
+
+	// Create gpu thread on cpu 2
+	gpuHandle = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)gpuThread, NULL, CREATE_SUSPENDED, NULL);
 
 	XSetThreadProcessor(gpuHandle, 2);
-	//SetThreadPriority(threadid ,THREAD_PRIORITY_HIGHEST);
+
 	ResumeThread(gpuHandle);
 }
 
@@ -366,7 +408,8 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 			}
 			// BA blocks * BS words (word = 32-bits)
 			size = (bcr >> 16) * (bcr & 0xffff);
-			GPU_writeDataMem(ptr, size);
+			//GPU_writeDataMem(ptr, size);
+			gpuWriteDataMem(ptr, size);
 			//gpuWriteDataMemThread(ptr, size);
 
 			// already 32-bit word size ((size * 4) / 4)

@@ -20,15 +20,35 @@ extern "C" void gpuDmaThreadInit();
 
 extern void InitD3D();
 
+void PausePcsx() {
+	Config.CpuRunning = 0;
+}
+
+void ResumePcsx() {
+	Config.CpuRunning = 1;
+	// Restart emulation ...
+	psxCpu->Execute();
+}
+
+void ResetPcsx() {
+	Config.CpuRunning = 1;
+	SysReset();
+	ResumePcsx();
+}
+
+void ShutdownPcsx() {
+	Config.CpuRunning = 0;
+	SysClose();
+}
+
 void RunPcsx(char * game) {
 	// __SetHWThreadPriorityHigh();
-	SetIsoFile(game);
 
 	int res, ret;
 	XMemSet(&Config, 0, sizeof(PcsxConfig));
 	
-	//Config.Cpu = CPU_INTERPRETER;
-	Config.Cpu = CPU_DYNAREC;
+	Config.Cpu = CPU_INTERPRETER;
+	//Config.Cpu = CPU_DYNAREC;
 
 	//strcpy(Config.Bios, "PSX-XBOO.ROM"); // No$ bios - not working
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
@@ -44,9 +64,12 @@ void RunPcsx(char * game) {
 	Config.PsxAuto = 0; //Autodetect
 	// Config.SlowBoot = 1;
 	
-	cdrIsoInit();
 
 	gpuDmaThreadInit();
+
+
+	cdrIsoInit();	
+	SetIsoFile(game);
 
 	if (SysInit() == -1) 
 	{
@@ -86,7 +109,7 @@ void RunPcsx(char * game) {
 	psxCpu->Execute();
 }
 
-int main() {
+int __main() {
 
 	InitD3D();
 	

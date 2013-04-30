@@ -490,6 +490,12 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_audio.c" />
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_audiocvt.c" />
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_audiodev.c" />
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_audiotypecvt.c" />
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_xaudio2.c" />
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl_2.c" />
     <ClCompile Include="..\..\..\plugins\dfsound\spu.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>
@@ -516,6 +522,17 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\dfsound\xaudio_2.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">CompileAsCpp</CompileAs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\plugins\dfsound\adsr.h" />
@@ -528,6 +545,20 @@
     <ClInclude Include="..\..\..\plugins\dfsound\registers.h" />
     <ClInclude Include="..\..\..\plugins\dfsound\regs.h" />
     <ClInclude Include="..\..\..\plugins\dfsound\reverb.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\begin_code.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\close_code.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_audio.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_audiodev_c.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_audiomem.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_audio_c.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_config.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_endian.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_error.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_stdinc.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_sysaudio.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_types.h" />
+    <ClInclude Include="..\..\..\plugins\dfsound\sdl\SDL_wave.h" />
     <ClInclude Include="..\..\..\plugins\dfsound\spu.h" />
     <ClInclude Include="..\..\..\plugins\dfsound\stdafx.h" />
     <ClInclude Include="..\..\..\plugins\dfsound\xa.h" />

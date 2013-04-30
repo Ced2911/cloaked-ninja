@@ -92,6 +92,33 @@ unsigned short CALLBACK PEOPS_SPUreadRegister(unsigned long reg);
 //freeze.c
 long CALLBACK PEOPS_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t * pF);
 
+
+/* SPU PEOPS 1.9 */
+//dma.c
+unsigned short CALLBACK PEOPS110_SPUreadDMA(void);
+void CALLBACK PEOPS110_SPUreadDMAMem(unsigned short * pusPSXMem,int iSize);
+void CALLBACK PEOPS110_SPUwriteDMA(unsigned short val);
+void CALLBACK PEOPS110_SPUwriteDMAMem(unsigned short * pusPSXMem,int iSize);
+//PEOPSspu.c
+void CALLBACK PEOPS110_SPUasync(unsigned long cycle);
+void CALLBACK PEOPS110_SPUupdate(void);
+void CALLBACK PEOPS110_SPUplayADPCMchannel(xa_decode_t *xap);
+long CALLBACK PEOPS110_SPUinit(void);
+long PEOPS110_SPUopen(void);
+void PEOPS110_SPUsetConfigFile(char * pCfg);
+long CALLBACK PEOPS110_SPUclose(void);
+long CALLBACK PEOPS110_SPUshutdown(void);
+long CALLBACK PEOPS110_SPUtest(void);
+long CALLBACK PEOPS110_SPUconfigure(void);
+void CALLBACK PEOPS110_SPUabout(void);
+void CALLBACK PEOPS110_SPUregisterCallback(void (CALLBACK *callback)(void));
+void CALLBACK PEOPS110_SPUregisterCDDAVolume(void (CALLBACK *CDDAVcallback)(unsigned short,unsigned short));
+//registers.c
+void CALLBACK PEOPS110_SPUwriteRegister(unsigned long reg, unsigned short val);
+unsigned short CALLBACK PEOPS110_SPUreadRegister(unsigned long reg);
+//freeze.c
+long CALLBACK PEOPS110_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t * pF);
+
 /* CDR */
 long ISOopen(void);
 long ISOinit(void);
@@ -272,6 +299,49 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	      PEOPS_SPUasync} \
 	       } }
       
+#if 0
+#define SPU_PEOPS_PLUGIN \
+	{ "SPU",      \
+	  18,         \
+	  { { "SPUinit",  \
+	      PEOPS110_SPUinit }, \
+	    { "SPUshutdown",	\
+	      PEOPS110_SPUshutdown}, \
+	    { "SPUopen", \
+	      PEOPS110_SPUopen}, \
+	    { "SPUclose", \
+	      PEOPS110_SPUclose}, \
+	    { "SPUconfigure", \
+	      PEOPS110_SPUconfigure}, \
+	    { "SPUabout", \
+	      PEOPS110_SPUabout}, \
+	    { "SPUtest", \
+	      PEOPS110_SPUtest}, \
+	    { "SPUwriteRegister", \
+	      PEOPS110_SPUwriteRegister}, \
+	    { "SPUreadRegister", \
+	      PEOPS110_SPUreadRegister}, \
+	    { "SPUwriteDMA", \
+	      PEOPS110_SPUwriteDMA}, \
+	    { "SPUreadDMA", \
+	      PEOPS110_SPUreadDMA}, \
+	    { "SPUwriteDMAMem", \
+	      PEOPS110_SPUwriteDMAMem}, \
+	    { "SPUreadDMAMem", \
+	      PEOPS110_SPUreadDMAMem}, \
+	    { "SPUplayADPCMchannel", \
+	      PEOPS110_SPUplayADPCMchannel}, \
+	    { "SPUfreeze", \
+	      PEOPS110_SPUfreeze}, \
+	    { "SPUregisterCallback", \
+	      PEOPS110_SPUregisterCallback}, \
+	    { "SPUregisterCDDAVolume", \
+	      PEOPS110_SPUregisterCDDAVolume}, \
+	    { "SPUasync", \
+	      PEOPS110_SPUasync} \
+	       } }
+#endif
+
 #define GPU_NULL_PLUGIN \
 	{ "GPU",      \
 	  10,         \

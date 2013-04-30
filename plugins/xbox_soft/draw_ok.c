@@ -218,9 +218,7 @@ void DoBufferSwap(void)
 	//A faire dans un thread
 	BlitScreen32((unsigned char *)pPsxScreen, PSXDisplay.DisplayPosition.x, PSXDisplay.DisplayPosition.y);
 
-	XbDispUpdate();
-
-	UnlockLockDisplay();
+	DisplayUpdate();
 }
 
 void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER

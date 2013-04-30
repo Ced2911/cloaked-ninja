@@ -213,7 +213,7 @@ static void psxWiReg32(u32 add, u32 value) {
 /**
 * Gpu
 **/
-_RF(u32, GPU_readData);
+_RF(u32, gpuReadData);
 _RF(u32, gpuReadStatus);
 
 _WF(u32, gpuWriteData);
@@ -368,7 +368,7 @@ void psxHwInit() {
 
 	// read32 handler
 	hw_read32_handler[0x1040] = _sioRead32;
-	hw_read32_handler[0x1810] = (hw_read32_t)_GPU_readData;
+	hw_read32_handler[0x1810] = (hw_read32_t)_gpuReadData;
 	hw_read32_handler[0x1814] = (hw_read32_t)_gpuReadStatus;
 	hw_read32_handler[0x1820] = _mdecRead0;
 	hw_read32_handler[0x1824] = _mdecRead1;
@@ -478,6 +478,7 @@ void psxHwReset() {
 	cdrReset();
 	psxRcntInit();
 
+	psxHwShutdown();
 	psxHwInit();
 }
 
