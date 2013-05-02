@@ -8,6 +8,7 @@ extern "C"
 	// New !
 	void gpuDmaThreadInit();
 	void gpuDmaThreadShutdown();
+	void gpuThreadEnable(int enable);
 
 	void gpuWriteDataMem(uint32_t *, int);
 	void gpuWriteStatus(u32 data);

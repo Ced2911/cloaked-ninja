@@ -203,7 +203,7 @@ void ReadConfig(void)
 	//UseFrameLimit=0;
 	UseFrameSkip=0;
 	iFrameLimit=2;
-	fFrameRate=200.0f;
+	fFrameRate=62.0f;
 	dwCfgFixes=0;
 	iUseFixes=0;
 	iUseNoStretchBlt=0;
@@ -217,6 +217,8 @@ void ReadConfig(void)
 	if(!iColDepth)       iColDepth=32;
 	if(iUseFixes)        dwActFixes=dwCfgFixes;
 	SetFixes();
+
+	//dwActFixes = 32;
 }
 
 void WriteConfig(void) {

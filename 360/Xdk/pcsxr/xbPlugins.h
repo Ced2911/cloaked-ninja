@@ -159,6 +159,7 @@ long PEOPS_GPUdmaChain(unsigned long *,unsigned long);
 void PEOPS_GPUupdateLace(void);
 void PEOPS_GPUdisplayText(char *);
 long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
+void PEOPS_GPUvBlank( int val );
 
 #define EMPTY_PLUGIN \
 	{ NULL,      \
@@ -369,7 +370,7 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 
 #define GPU_PEOPS_PLUGIN \
 	{ "GPU",      \
-	  14,         \
+	  15,         \
 	  { { "GPUinit",  \
 	      PEOPS_GPUinit }, \
 	    { "GPUshutdown",	\
@@ -396,6 +397,8 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	      PEOPS_GPUdisplayText}, \
 	    { "GPUfreeze", \
 	      PEOPS_GPUfreeze}, \
+		{ "GPUvBlank", \
+			PEOPS_GPUvBlank}, \
 	    { "GPUupdateLace", \
 	      PEOPS_GPUupdateLace} \
 	       } }

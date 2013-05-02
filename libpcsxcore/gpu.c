@@ -82,20 +82,6 @@ static u32 gpuDmaChainSize(u32 addr) {
 	
 	return size;
 }
-	
-uint32_t gpuReadStatus(void) {
-	int hard;
-	
-	// GPU plugin
-	hard = GPU_readStatus();
-
-	// Gameshark Lite - wants to see VRAM busy
-	// - Must enable GPU 'Fake Busy States' hack
-	if( (hard & GPUSTATUS_IDLE) == 0 )
-		hard &= ~GPUSTATUS_READYFORVRAM;
-
-	return hard;
-}
 
 // Select the good one !
 //#define THREAD_GPU_DMA
@@ -234,6 +220,12 @@ void gpuWriteDataMem(uint32_t * pMem, int size) {
 	u32 * lda=pMem;
     u32 wi=tw_write_idx;
 
+	if (gpu_thread_exit) {
+		GPU_writeDataMem(pMem, size);
+		return;
+	}
+
+
     while(size>TW_RING_MAX_COUNT-tw_ring_count(tw_idx)) 
 		YieldProcessor(); // or r31, r31, r31
     
@@ -251,6 +243,13 @@ void gpuWriteDataMem(uint32_t * pMem, int size) {
     tw_write_idx+=size;
 }
 
+#else
+
+void gpuWriteDataMem(uint32_t * pMem, int size) {
+	GPU_writeDataMem(pMem, size);
+}          
+
+#endif
 // Classic call !
 void gpuDmaChain(uint32_t addr)
 {
@@ -286,8 +285,6 @@ void gpuDmaChain(uint32_t addr)
 	while (addr != 0xffffff);
 }
 
-#endif
-
 void gpuWriteData(uint32_t v) {
 #ifdef THREAD_GPU_DMA
 	if(!gpu_thread_exit) {
@@ -299,9 +296,11 @@ void gpuWriteData(uint32_t v) {
 }
 
 void gpuUpdateLace() {
+#ifdef THREAD_GPU_WRITE
 	if(!gpu_thread_exit) {
 		WaitForGpuThread();
 	} 
+#endif
 	GPU_updateLace();
 }
 
@@ -334,10 +333,33 @@ uint32_t gpuReadData(void) {
 	return GPU_readData();
 }
 
+
+	
+uint32_t gpuReadStatus(void) {
+	int hard;
+
+#ifdef THREAD_GPU_WRITE
+	if(!gpu_thread_exit) {
+		// WaitForGpuThread();
+	} 
+#endif
+	
+	// GPU plugin
+	hard = GPU_readStatus();
+
+	// Gameshark Lite - wants to see VRAM busy
+	// - Must enable GPU 'Fake Busy States' hack
+	if( (hard & GPUSTATUS_IDLE) == 0 )
+		hard &= ~GPUSTATUS_READYFORVRAM;
+
+	return hard;
+}
+
 static HANDLE gpuHandle = NULL;
 
 
 void gpuDmaThreadShutdown() {
+#ifdef THREAD_GPU_WRITE
 	// ask to shutdown thread
 	gpu_thread_exit = 1;
 
@@ -347,9 +369,11 @@ void gpuDmaThreadShutdown() {
 	// close thread handle
 	CloseHandle(gpuHandle);
 	gpuHandle = NULL;
+#endif
 }
 
 void gpuDmaThreadInit() {
+#ifdef THREAD_GPU_WRITE
 	// if thread running Shutdown it ...
 	if (gpuHandle) {
 		gpuDmaThreadShutdown();
@@ -368,6 +392,11 @@ void gpuDmaThreadInit() {
 	XSetThreadProcessor(gpuHandle, 2);
 
 	ResumeThread(gpuHandle);
+#endif
+}
+
+void gpuThreadEnable(int enable) {
+	gpu_thread_exit = !enable;
 }
 
 void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU

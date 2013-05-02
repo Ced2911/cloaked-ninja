@@ -83,6 +83,7 @@ void           SetFixes(void);
 #define GPUfreeze			PEOPS_GPUfreeze
 #define GPUgetScreenPic		PEOPS_GPUgetScreenPic
 #define GPUshowScreenPic	PEOPS_GPUshowScreenPic
+#define GPUvBlank			PEOPS_GPUvBlank
 #endif
 
 #endif // _GPU_INTERNALS_H

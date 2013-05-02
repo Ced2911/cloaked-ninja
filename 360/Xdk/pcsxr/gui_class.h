@@ -81,6 +81,11 @@ public:
 			get_wstring(ffd.cFileName, finfo.displayname);
 			finfo.filename = currentDir + L"\\" + finfo.displayname;
 
+			// :s
+			if (finfo.isDir) {
+				finfo.displayname = L"["+finfo.displayname+L"]";
+			}
+
 			fileList.push_back(finfo);
 
 		}

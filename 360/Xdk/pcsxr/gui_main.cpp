@@ -3,184 +3,9 @@
 #include "psxcommon.h"
 #include "cdriso.h"
 #include "r3000a.h"
-
-extern "C" void gpuDmaThreadInit();
+#include "gpu.h"
 
 void RenderXui();
-
-//----------------------------------------------------------------------------------
-// Name: RunFrame
-// Desc: Overrides CXuiModule::RunFrame() to additionally poll the event handlers.
-//----------------------------------------------------------------------------------
-void CMyApp::RunFrame()
-{
-    m_waitlist.ProcessWaitHandles();
-    CXuiModule::RunFrame();
-}
-
-
-//----------------------------------------------------------------------------------
-// Name: RegisterWaitHandle
-// Desc: Registers a handle for async operations.
-//       When the specified handle is signaled, the application will send the 
-//       specified message to hObj.  If bRemoveAfterSignaled, the handle is 
-//       unregistered before the message is sent.  If the caller needs the handle 
-//       to persist, then it must be registered again.
-//----------------------------------------------------------------------------------
-BOOL CXuiWaitList::RegisterWaitHandle( HANDLE hWait, HXUIOBJ hObj, DWORD dwMessageId, BOOL bRemoveAfterSignaled )
-{
-    ASSERT( m_nNumWaitHandles < MAXIMUM_WAIT_OBJECTS );
-    if( m_nNumWaitHandles >= MAXIMUM_WAIT_OBJECTS )
-        return FALSE;
-
-    // Append to the wait handle array.
-    m_WaitHandles[ m_nNumWaitHandles ] = hWait;
-
-    memset( &m_WaitEntries[ m_nNumWaitHandles ], 0x00, sizeof( m_WaitEntries[ 0 ] ) );
-    m_WaitEntries[ m_nNumWaitHandles ].hObj = hObj;
-    m_WaitEntries[ m_nNumWaitHandles ].dwMessageId = dwMessageId;
-    if( bRemoveAfterSignaled )
-    {
-        m_WaitEntries[ m_nNumWaitHandles ].dwFlags = WAIT_HANDLE_F_NONE;
-    }
-    else
-    {
-        m_WaitEntries[ m_nNumWaitHandles ].dwFlags = WAIT_HANDLE_F_NOREMOVE;
-    }
-
-    ++m_nNumWaitHandles;
-    return TRUE;
-}
-
-
-//----------------------------------------------------------------------------------
-// Name: RegisterWaitHandleFunc
-// Desc: Registers a callback for when the given event fires.
-//----------------------------------------------------------------------------------
-BOOL CXuiWaitList::RegisterWaitHandleFunc( HANDLE hWait, PFN_WAITCOMPLETION pfnCompletion, void* pvContext,
-                                           BOOL bRemoveAfterSignaled )
-{
-    ASSERT( m_nNumWaitHandles < MAXIMUM_WAIT_OBJECTS );
-    if( m_nNumWaitHandles >= MAXIMUM_WAIT_OBJECTS )
-        return FALSE;
-
-    // Append to the wait handle array.
-    m_WaitHandles[ m_nNumWaitHandles ] = hWait;
-
-    memset( &m_WaitEntries[ m_nNumWaitHandles ], 0x00, sizeof( m_WaitEntries[ 0 ] ) );
-    m_WaitEntries[ m_nNumWaitHandles ].pfnCompletionRoutine = pfnCompletion;
-    m_WaitEntries[ m_nNumWaitHandles ].pvContext = pvContext;
-    if( bRemoveAfterSignaled )
-    {
-        m_WaitEntries[ m_nNumWaitHandles ].dwFlags = WAIT_HANDLE_F_NONE;
-    }
-    else
-    {
-        m_WaitEntries[ m_nNumWaitHandles ].dwFlags = WAIT_HANDLE_F_NOREMOVE;
-    }
-
-    ++m_nNumWaitHandles;
-    return TRUE;
-}
-
-
-//----------------------------------------------------------------------------------
-// Name: ProcessWaitHandles
-// Desc: Checks the list of registered wait handles.  If a handle is signaled, the 
-//       message that was passed to RegisterWaitHandle is sent to the associated 
-//       object.
-//----------------------------------------------------------------------------------
-void CXuiWaitList::ProcessWaitHandles()
-{
-    if( m_nNumWaitHandles < 1 )
-        return;
-
-    DWORD dwRet = WaitForMultipleObjects( m_nNumWaitHandles, m_WaitHandles, FALSE, 0 );
-    if( dwRet >= WAIT_OBJECT_0 && dwRet <= WAIT_OBJECT_0 + ( DWORD )m_nNumWaitHandles )
-    {
-        DispatchWaitEntry( dwRet - WAIT_OBJECT_0 );
-    }
-    else if( dwRet >= WAIT_ABANDONED_0 && dwRet <= WAIT_ABANDONED_0 + ( DWORD )m_nNumWaitHandles )
-    {
-        DispatchWaitEntry( dwRet - WAIT_ABANDONED_0 );
-    }
-    else
-    {
-        ASSERT( dwRet == WAIT_TIMEOUT );
-    }
-}
-
-
-//----------------------------------------------------------------------------------
-// Name: DispatchWaitEntry
-// Desc: Dispatches the registered entry at the specified index.
-//       This will send the message and remove the handle from the list.
-//----------------------------------------------------------------------------------
-void CXuiWaitList::DispatchWaitEntry( int nIndex )
-{
-    ASSERT( nIndex >= 0 && nIndex < m_nNumWaitHandles );
-    if( nIndex < 0 || nIndex >= m_nNumWaitHandles )
-        return;
-
-    HXUIOBJ hObj = m_WaitEntries[ nIndex ].hObj;
-    DWORD dwMessage = m_WaitEntries[ nIndex ].dwMessageId;
-
-    // Now remove the entry from the wait arrays.
-    if( ( m_WaitEntries[ nIndex ].dwFlags & WAIT_HANDLE_F_NOREMOVE ) == 0 )
-        RemoveWaitEntry( nIndex );
-
-    if( m_WaitEntries[ nIndex ].hObj != NULL )
-    {
-        // Now send the message.
-        XUIMessage msg;
-        XuiMessage( &msg, dwMessage );
-        XuiSendMessage( hObj, &msg );
-    }
-    else
-    {
-        m_WaitEntries[ nIndex ].pfnCompletionRoutine( m_WaitEntries[ nIndex ].pvContext );
-    }
-}
-
-
-//----------------------------------------------------------------------------------
-// Name: RemoveWaitEntry
-// Desc: Removes the specified index from the wait list.
-//----------------------------------------------------------------------------------
-void CXuiWaitList::RemoveWaitEntry( int nIndex )
-{
-    if( nIndex < m_nNumWaitHandles - 1 )
-    {
-        memmove( &m_WaitHandles[ nIndex ], &m_WaitHandles[ nIndex + 1 ], sizeof( HANDLE ) *
-                 ( m_nNumWaitHandles - nIndex - 1 ) );
-        memmove( &m_WaitEntries[ nIndex ], &m_WaitEntries[ nIndex + 1 ], sizeof( WaitEntry ) *
-                 ( m_nNumWaitHandles - nIndex - 1 ) );
-    }
-    --m_nNumWaitHandles;
-}
-
-
-//----------------------------------------------------------------------------------
-// Name: UnregisterWaitHandle
-// Desc: Removes the specified handle from the wait list.
-//----------------------------------------------------------------------------------
-void CXuiWaitList::UnregisterWaitHandle( HANDLE hWait )
-{
-    int nEntryIndex = -1;
-    for( int i = 0; i < m_nNumWaitHandles; ++i )
-    {
-        if( m_WaitHandles[ i ] == hWait )
-        {
-            nEntryIndex = i;
-            break;
-        }
-    }
-    ASSERT( nEntryIndex >= 0 );
-    if( nEntryIndex < 0 )
-        return;
-
-    RemoveWaitEntry( nEntryIndex );
-}
 
 DWORD * InGameThread() {
 	while(1) {
@@ -200,46 +25,59 @@ DWORD * InGameThread() {
 	return NULL;
 }
 
-void SaveStatePcsx(int n) {
-#if 0
-	std::string game = xboxConfig.game;
-	std::wstring wgame;
-	wchar_t result[30];
-	XOVERLAPPED xOl;
-	DWORD KeyBoard;
-	int ooo;
+HRESULT ShowKeyboard(std::wstring & resultText, std::wstring titleText, std::wstring descriptionText, std::wstring defaultText) {
+	wchar_t result[256];
+	
+	XOVERLAPPED Overlapped;
+	ZeroMemory( &Overlapped, sizeof( XOVERLAPPED ) );
 
-	ZeroMemory( &xOl, sizeof( XOVERLAPPED ) );
+	DWORD dwResult = XShowKeyboardUI(
+		XUSER_INDEX_ANY,
+		0,
+		defaultText.c_str(),
+		titleText.c_str(),
+		descriptionText.c_str(),
+		result,
+		256,
+		&Overlapped
+	);
 
-
-	game.erase(0, game.rfind('\\')+1);
-	game.append(".sgz");
-
-	get_wstring(game, wgame);
-
-	// Show keyboard
-	//KeyBoard = XShowKeyboardUI(0, VKBD_DEFAULT, wgame.c_str(), NULL, NULL, result, 30 * sizeof(wchar_t), &xOl);
-
-	KeyBoard = XShowMessageBoxUI( 0,
-            L"Title",                   // Message box title
-            L"Your message goes here",  // Message string
-            0,// Number of buttons
-            0,             // Button captions
-            0,                          // Button that gets focus
-            XMB_ERRORICON,              // Icon to display
-            &ooo,                  // Button pressed result
-            &xOl );
-
-	// Wait ...
-	while(!XHasOverlappedIoCompleted(&xOl)) {
+	while(!XHasOverlappedIoCompleted(&Overlapped)) {
 		RenderXui();
 	}
 
-	if (xOl.dwExtendedError == ERROR_SUCCESS) {
+	resultText = result;
 
-		game.insert(0, xboxConfig.saveStateDir);
+	return (dwResult == ERROR_SUCCESS)? S_OK : E_FAIL;
+}
 
-		SaveState(game.c_str());
+void SaveStatePcsx(int n) {
+#if 1
+	std::string game = xboxConfig.game;
+	std::wstring wgame;
+	std::wstring result;
+
+	// Get basename of current game
+	game.erase(0, game.rfind('\\')+1);
+
+	get_wstring(game, wgame);
+
+	//if (SUCCEEDED(ShowKeyboard(result, L"", L"", wgame.c_str()))) {
+	ShowKeyboard(result, L"", L"", wgame.c_str());
+	{
+		std::string save_path;
+		std::string save_filename;
+		save_path = xboxConfig.saveStateDir + "\\" + game;
+
+		// Create save dir
+		CreateDirectoryA(save_path.c_str(), NULL);
+
+		// Save state
+		get_string(result, save_filename);
+
+		save_path += "\\" + save_filename;
+
+		SaveState(save_path.c_str());
 	}
 #else
 	std::string game = xboxConfig.game + ".sgz";
@@ -292,6 +130,8 @@ static void DoPcsx(char * game) {
 
 	gpuDmaThreadInit();
 
+	gpuThreadEnable(xboxConfig.UseThreadedGpu);
+
 	ret = CDR_open();
 	if (ret < 0) { SysMessage (_("Error Opening CDR Plugin")); return; }
 	ret = GPU_open(NULL);
@@ -342,6 +182,7 @@ void LoadSettings() {
 	xboxConfig.UseSpuIrq = 0;
 	xboxConfig.UseFrameLimiter = 1;
 	xboxConfig.saveStateDir = "game:\\states";
+	xboxConfig.UseThreadedGpu = 1;
 
 	// Merge cfg file
 }
