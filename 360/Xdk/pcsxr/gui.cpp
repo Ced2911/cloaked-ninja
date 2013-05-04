@@ -90,7 +90,52 @@ public:
 	}
 };
 
+//--------------------------------------------------------------------------------------
+class CEffectBrowser : public CXuiFileBrowser
+{
+public:
+	CEffectBrowser() {
+		fileBrowser = &effectList;
+	}
 
+	virtual HRESULT OnNotifyPress( HXUIOBJ hObjPressed, 
+		BOOL& bHandled )
+	{
+		int nIndex;
+
+		// Change the current dir
+		if (fileBrowser->IsDir(GetCurSel())) {
+			// Delete old item count
+			DeleteItems(0, fileBrowser->Size());
+
+			// Update filelist
+			fileBrowser->UpdateDirList(fileBrowser->Filename(GetCurSel()));
+
+			// Insert item count
+			InsertItems(0, fileBrowser->Size());
+
+			// Move to top
+			SetCurSel(0);			
+
+			// Don't Notify parent
+			bHandled = TRUE;
+
+		} else {	
+			std::string path;
+			get_string(fileBrowser->Filename(GetCurSel()), path);
+
+			LoadShaderFromFile(path.c_str());
+			bHandled = FALSE;
+		}
+		return S_OK;
+	}
+
+public:
+
+	// Define the class. The class name must match the ClassOverride property
+	// set for the scene in the UI Authoring tool.
+	XUI_IMPLEMENT_CLASS( CEffectBrowser, L"EffectBrowser", XUI_CLASS_LIST )
+};
 
 //--------------------------------------------------------------------------------------
 class CLoadStateBrowser : public CXuiFileBrowser
@@ -264,6 +309,8 @@ class COsdMenuScene: public CXuiSceneImpl
 
 
 		m_pszName = new wchar_t[ 256 ];
+
+		effectList.UpdateDirList(L"game:\\hlsl");
 
 		return S_OK;
 	}
@@ -479,6 +526,10 @@ HRESULT CMyApp::RegisterXuiClasses()
 	if( FAILED( hr ) )
 		return hr;
 
+	hr = CEffectBrowser::Register();
+	if( FAILED( hr ) )
+		return hr;
+
 	return S_OK;
 }
 
@@ -488,6 +539,7 @@ HRESULT CMyApp::UnregisterXuiClasses()
 	CFileBrowserList::Unregister();
 	CLoadStateBrowser::Unregister();
 	COsdMenuScene::Unregister();
+	CEffectBrowser::Unregister();
 	return S_OK;
 }
 

@@ -38,6 +38,28 @@
 #include <locale.h>
 #define _(x)  gettext(x)
 #define N_(x) (x)
+
+//If running under Mac OS X, use the Localizable.strings file instead.
+#elif defined(_MACOSX)
+#ifdef PCSXRCORE
+extern char* Pcsxr_locale_text(char* toloc);
+#define _(String) Pcsxr_locale_text(String)
+#define N_(String) String
+#else
+#ifndef PCSXRPLUG
+#warning please define the plug being built to use Mac OS X localization!
+#define _(msgid) msgid
+#define N_(msgid) msgid
+#else
+//Kludge to get the preprocessor to accept PCSXRPLUG as a variable.
+#define PLUGLOC_x(x,y) x ## y
+#define PLUGLOC_y(x,y) PLUGLOC_x(x,y)
+#define PLUGLOC PLUGLOC_y(PCSXRPLUG,_locale_text)
+extern char* PLUGLOC(char* toloc);
+#define _(String) PLUGLOC(String)
+#define N_(String) String
+#endif
+#endif
 #else
 #define _(x)  (x)
 #define N_(x) (x)
@@ -294,9 +316,9 @@ static void DoTextSnapShot(int iNum)
  char *pB;
 
 #ifdef _WINDOWS
- sprintf(szTxt,"snap\\pcsx%04d.txt",iNum);
+ sprintf(szTxt,"snap\\pcsxr%04d.txt",iNum);
 #else
- sprintf(szTxt,"%s/pcsx%04d.txt",getenv("HOME"),iNum);
+ sprintf(szTxt,"%s/pcsxr%04d.txt",getenv("HOME"),iNum);
 #endif
 
  if ((txtfile = fopen(szTxt, "wb")) == NULL)
@@ -356,9 +378,9 @@ void CALLBACK GPUmakeSnapshot(void)
   {
    snapshotnr++;
 #ifdef _WINDOWS
-   sprintf(filename,"snap\\pcsx%04ld.bmp",snapshotnr);
+   sprintf(filename,"snap\\pcsxr%04ld.bmp",snapshotnr);
 #else
-   sprintf(filename, "%s/pcsx%04ld.bmp", getenv("HOME"), snapshotnr);
+   sprintf(filename, "%s/pcsxr%04ld.bmp", getenv("HOME"), snapshotnr);
 #endif
 
    bmpfile = fopen(filename,"rb");
@@ -1240,7 +1262,7 @@ void CALLBACK GPUwriteStatus(uint32_t gdata)      // WRITE STATUS
 // vram read/write helpers, needed by LEWPY's optimized vram read/write :)
 ////////////////////////////////////////////////////////////////////////
 
-__inline void FinishedVRAMWrite(void)
+static __inline void FinishedVRAMWrite(void)
 {
 /*
 // NEWX
@@ -1267,7 +1289,7 @@ __inline void FinishedVRAMWrite(void)
  VRAMWrite.RowsRemaining = 0;
 }
 
-__inline void FinishedVRAMRead(void)
+static __inline void FinishedVRAMRead(void)
 {
  // Set register to NORMAL operation
  DataReadMode = DR_NORMAL;
@@ -1629,7 +1651,7 @@ void SetFixes(void)
 
 unsigned long lUsedAddr[3];
 
-__inline BOOL CheckForEndlessLoop(unsigned long laddr)
+static __inline BOOL CheckForEndlessLoop(unsigned long laddr)
 {
  if(laddr==lUsedAddr[1]) return TRUE;
  if(laddr==lUsedAddr[2]) return TRUE;

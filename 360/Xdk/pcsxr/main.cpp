@@ -109,8 +109,11 @@ void RunPcsx(char * game) {
 	psxCpu->Execute();
 }
 
+#ifdef NO_GUI
+int main() {
+#else
 int __main() {
-
+#endif
 	InitD3D();
 	
 	RunPcsx(game);

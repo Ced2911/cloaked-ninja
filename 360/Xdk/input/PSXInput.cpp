@@ -34,69 +34,70 @@ void PSxInputReadPort(PadDataS* pad, int port){
 
 	XINPUT_STATE InputState;
 	DWORD XInputErr=XInputGetState( port, &InputState );
-	if(	XInputErr != ERROR_SUCCESS)
-		return;
 
-	//Action
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_A )
-		pad_status &= PSX_BUTTON_CROSS;
+	if(	XInputErr == ERROR_SUCCESS) {
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_B )
-		pad_status &= PSX_BUTTON_CIRCLE;
+		//Action
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_A )
+			pad_status &= PSX_BUTTON_CROSS;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_X )
-		pad_status &= PSX_BUTTON_SQUARE;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_B )
+			pad_status &= PSX_BUTTON_CIRCLE;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_Y )
-		pad_status &= PSX_BUTTON_TRIANGLE;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_X )
+			pad_status &= PSX_BUTTON_SQUARE;
 
-	//back & start
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_BACK )
-		pad_status &= PSX_BUTTON_SELECT;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_Y )
+			pad_status &= PSX_BUTTON_TRIANGLE;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_START )
-		pad_status &= PSX_BUTTON_START;
+		//back & start
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_BACK )
+			pad_status &= PSX_BUTTON_SELECT;
 
-	//selection
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT )
-		pad_status &= PSX_BUTTON_DLEFT;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_START )
+			pad_status &= PSX_BUTTON_START;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT )
-		pad_status &= PSX_BUTTON_DRIGHT;
+		//selection
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT )
+			pad_status &= PSX_BUTTON_DLEFT;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN )
-		pad_status &= PSX_BUTTON_DDOWN;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT )
+			pad_status &= PSX_BUTTON_DRIGHT;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP )
-		pad_status &= PSX_BUTTON_DUP;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN )
+			pad_status &= PSX_BUTTON_DDOWN;
 
-	//L/R
-	//SHOULDER LB/RB
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER )
-		pad_status &= PSX_BUTTON_L1;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP )
+			pad_status &= PSX_BUTTON_DUP;
 
-	if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER )
-		pad_status &= PSX_BUTTON_R1;
+		//L/R
+		//SHOULDER LB/RB
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER )
+			pad_status &= PSX_BUTTON_L1;
 
-	//TRIGGER RT/RB
-	if(InputState.Gamepad.bLeftTrigger > XINPUT_GAMEPAD_TRIGGER_THRESHOLD )
-		pad_status &= PSX_BUTTON_L2;
+		if(InputState.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER )
+			pad_status &= PSX_BUTTON_R1;
 
-	if(InputState.Gamepad.bRightTrigger > XINPUT_GAMEPAD_TRIGGER_THRESHOLD )
-		pad_status &= PSX_BUTTON_R2;
+		//TRIGGER RT/RB
+		if(InputState.Gamepad.bLeftTrigger > XINPUT_GAMEPAD_TRIGGER_THRESHOLD )
+			pad_status &= PSX_BUTTON_L2;
 
-	//Analog	
-	ls_x= (int)(float(InputState.Gamepad.sThumbLX/0x500)*256)+128;
-	ls_y= (int)(float(InputState.Gamepad.sThumbLY/0x500)*256)+128;
+		if(InputState.Gamepad.bRightTrigger > XINPUT_GAMEPAD_TRIGGER_THRESHOLD )
+			pad_status &= PSX_BUTTON_R2;
 
-	rs_x= (int)(float(InputState.Gamepad.sThumbRX/0x500)*256)+128;
-	rs_y= (int)(float(InputState.Gamepad.sThumbRY/0x500)*256)+128;
+		//Analog	
+		ls_x= (int)(float(InputState.Gamepad.sThumbLX/0x500)*256)+128;
+		ls_y= (int)(float(InputState.Gamepad.sThumbLY/0x500)*256)+128;
 
-	pad->leftJoyX = ls_x;
-	pad->leftJoyY = ls_y;
+		rs_x= (int)(float(InputState.Gamepad.sThumbRX/0x500)*256)+128;
+		rs_y= (int)(float(InputState.Gamepad.sThumbRY/0x500)*256)+128;
 
-	pad->rightJoyX = rs_x;
-	pad->rightJoyY = rs_x;
+		pad->leftJoyX = ls_x;
+		pad->leftJoyY = ls_y;
+
+		pad->rightJoyX = rs_x;
+		pad->rightJoyY = rs_x;
+	}
 
 	pad->controllerType = PSE_PAD_TYPE_STANDARD; 	// Standard Pad
 	pad->buttonStatus = pad_status;					//Copy Buttons

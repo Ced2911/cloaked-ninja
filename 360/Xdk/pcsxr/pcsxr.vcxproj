@@ -297,7 +297,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;_XBOX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NO_GUI;_DEBUG;_XBOX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -468,9 +468,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bram.cpp" />
-    <ClCompile Include="gui.cpp" />
-    <ClCompile Include="gui_main.cpp" />
-    <ClCompile Include="gui_tools.cpp" />
+    <ClCompile Include="gui.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="gui_main.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="gui_tools.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="gui_video.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ppc_dyn.c">
@@ -504,8 +510,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gui.h" />
-    <ClInclude Include="gui_class.h" />
+    <ClInclude Include="gui.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="gui_class.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="xb_sys.h" />
     <ClInclude Include="..\..\common\sys\mman.h" />
     <ClInclude Include="..\..\common\sys\time.h" />

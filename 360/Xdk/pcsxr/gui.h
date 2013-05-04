@@ -23,7 +23,7 @@ extern void SaveStatePcsx(int n);
 extern void LoadStatePcsx(int n);
 extern void LoadStatePcsx(std::string save);
 
-
+extern  void LoadShaderFromFile(const char * filename);
 
 // Peops
 extern "C" int UseFrameLimit;

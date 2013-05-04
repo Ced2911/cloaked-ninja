@@ -50,11 +50,11 @@ BOOL           bDoVSyncUpdate=FALSE;
 #ifdef USE_NASM
 
 #define BGR24to16 i386_BGR24to16
-__inline unsigned short BGR24to16 (uint32_t BGR);
+extern __inline unsigned short BGR24to16 (uint32_t BGR);
 
 #else
 
-__inline unsigned short BGR24to16 (uint32_t BGR)
+static __inline unsigned short BGR24to16 (uint32_t BGR)
 {
  return (unsigned short)(((BGR>>3)&0x1f)|((BGR&0xf80000)>>9)|((BGR&0xf800)>>6));
 }
@@ -65,7 +65,7 @@ __inline unsigned short BGR24to16 (uint32_t BGR)
 // Update global TP infos
 ////////////////////////////////////////////////////////////////////////
 
-__inline void UpdateGlobalTP(unsigned short gdata)
+static __inline void UpdateGlobalTP(unsigned short gdata)
 {
  GlobalTextAddrX = (gdata << 6) & 0x3c0;               // texture addr
 
@@ -119,7 +119,7 @@ __inline void UpdateGlobalTP(unsigned short gdata)
 
 ////////////////////////////////////////////////////////////////////////
 
-__inline void SetRenderMode(uint32_t DrawAttributes)
+static __inline void SetRenderMode(uint32_t DrawAttributes)
 {
  DrawSemiTrans = (SEMITRANSBIT(DrawAttributes)) ? TRUE : FALSE;
 
@@ -155,7 +155,7 @@ __inline void SetRenderMode(uint32_t DrawAttributes)
 #define CHKMAX_X 1024
 #define CHKMAX_Y 512
 
-void AdjustCoord4()
+static void AdjustCoord4()
 {
  lx0=(short)(((int)lx0<<SIGNSHIFT)>>SIGNSHIFT);
  lx1=(short)(((int)lx1<<SIGNSHIFT)>>SIGNSHIFT);
@@ -167,7 +167,7 @@ void AdjustCoord4()
  ly3=(short)(((int)ly3<<SIGNSHIFT)>>SIGNSHIFT);
 }
 
-void AdjustCoord3()
+static void AdjustCoord3()
 {
  lx0=(short)(((int)lx0<<SIGNSHIFT)>>SIGNSHIFT);
  lx1=(short)(((int)lx1<<SIGNSHIFT)>>SIGNSHIFT);
@@ -177,7 +177,7 @@ void AdjustCoord3()
  ly2=(short)(((int)ly2<<SIGNSHIFT)>>SIGNSHIFT);
 }
 
-void AdjustCoord2()
+static void AdjustCoord2()
 {
  lx0=(short)(((int)lx0<<SIGNSHIFT)>>SIGNSHIFT);
  lx1=(short)(((int)lx1<<SIGNSHIFT)>>SIGNSHIFT);
@@ -185,7 +185,7 @@ void AdjustCoord2()
  ly1=(short)(((int)ly1<<SIGNSHIFT)>>SIGNSHIFT);
 }
 
-void AdjustCoord1()
+static void AdjustCoord1()
 {
  lx0=(short)(((int)lx0<<SIGNSHIFT)>>SIGNSHIFT);
  ly0=(short)(((int)ly0<<SIGNSHIFT)>>SIGNSHIFT);
@@ -211,7 +211,7 @@ void AdjustCoord1()
 //  \ / \ 
 //   2___3
 
-__inline BOOL CheckCoord4()
+static __inline BOOL CheckCoord4()
 {
  if(lx0<0)
   {
@@ -277,7 +277,7 @@ __inline BOOL CheckCoord4()
  return FALSE;
 }
 
-__inline BOOL CheckCoord3()
+static __inline BOOL CheckCoord3()
 {
  if(lx0<0)
   {
@@ -314,7 +314,7 @@ __inline BOOL CheckCoord3()
 }
 
 
-__inline BOOL CheckCoord2()
+static __inline BOOL CheckCoord2()
 {
  if(lx0<0)
   {
@@ -336,7 +336,7 @@ __inline BOOL CheckCoord2()
  return FALSE;
 }
 
-__inline BOOL CheckCoordL(short slx0,short sly0,short slx1,short sly1)
+static __inline BOOL CheckCoordL(short slx0,short sly0,short slx1,short sly1)
 {
  if(slx0<0)
   {
@@ -589,7 +589,7 @@ void primBlkFill(unsigned char * baseAddr)
  short sX = GETLEs16(&sgpuData[2]);
  short sY = GETLEs16(&sgpuData[3]);
  short sW = GETLEs16(&sgpuData[4]) & 0x3ff;
- short sH = GETLEs16(&sgpuData[5]) & 0x3ff;
+ short sH = GETLEs16(&sgpuData[5]) & iGPUHeightMask;
 
  sW = (sW+15) & ~15;
 

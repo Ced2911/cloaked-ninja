@@ -18,8 +18,6 @@
 #include "PSEmu_Plugin_Defs.h"
 #include "PSXInput.h"
 
-extern void SysPrintf(char *fmt, ...);
-
 /* Button Bits */
 #define PSX_BUTTON_TRIANGLE ~(1 << 12)
 #define PSX_BUTTON_SQUARE 	~(1 << 15)
@@ -62,13 +60,11 @@ long PAD__close(void) {
 }
 
 long PAD__readPort1(PadDataS* pad) {
-	PSxInputReadPort(pad,0);
+	PSxInputReadPort(pad, 0);
 	return PSE_PAD_ERR_SUCCESS;
 }
 
 long PAD__readPort2(PadDataS* pad) {
-	//PSxInputReadPort(pad,1);
-	pad->buttonStatus = 0xffff;
-	pad->controllerType = PSE_PAD_TYPE_STANDARD;
+	PSxInputReadPort(pad, 1);
 	return PSE_PAD_ERR_SUCCESS;
 }

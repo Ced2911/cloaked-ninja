@@ -135,8 +135,8 @@ static void gpuThread() {
 					GPU_writeDataMem(&baseAddrL[dmaMem>>2],count);
 				}
 
-				addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
-				//addr = psxMu32( addr >> 2 ) & 0xffffff;
+				//addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
+				addr = psxMu32( addr) & 0xffffff;
 			}
 			while (addr != 0xffffff);
 
@@ -279,8 +279,8 @@ void gpuDmaChain(uint32_t addr)
 			gpuWriteDataMem(&baseAddrL[dmaMem>>2],count);
 		}
 
-		addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
-		//addr = psxMu32( addr >> 2 ) & 0xffffff;
+		//addr = __loadwordbytereverse(0, &baseAddrL[addr>>2])&0xffffff;
+		addr = psxMu32( addr & ~0x3 ) & 0xffffff;
 	}
 	while (addr != 0xffffff);
 }
