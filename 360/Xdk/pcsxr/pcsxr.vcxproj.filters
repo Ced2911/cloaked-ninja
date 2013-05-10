@@ -93,5 +93,11 @@
     <CustomBuild Include="media\xui\osdmenu.xui">
       <Filter>Media</Filter>
     </CustomBuild>
+    <CustomBuild Include="media\xui\filter.xui">
+      <Filter>Media</Filter>
+    </CustomBuild>
+    <CustomBuild Include="media\xui\loadstates.xui">
+      <Filter>Media</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

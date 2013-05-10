@@ -53,8 +53,8 @@ s8 *psxH = NULL; // Scratch Pad (1K) & Hardware Registers (8K)
 0xbfc0_0000-0xbfc7_ffff		BIOS Mirror (512K) Uncached
 */
 
-
-static int writeok = 1;
+// also used in dr
+int writeok = 1;
 
 int psxMemInit() {
 	static int initialised = 0;	

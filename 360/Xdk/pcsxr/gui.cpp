@@ -232,6 +232,63 @@ public:
 	XUI_IMPLEMENT_CLASS( CFileBrowserList, L"FileBrowserList", XUI_CLASS_LIST )
 };
 
+class CLoadStates: public CXuiSceneImpl 
+{
+	CXuiList LoadStateBrowser;
+
+	XUI_BEGIN_MSG_MAP()
+		XUI_ON_XM_INIT( OnInit )
+	XUI_END_MSG_MAP()
+
+	//----------------------------------------------------------------------------------
+	// Performs initialization tasks - retrieves controls.
+	//----------------------------------------------------------------------------------
+	HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
+	{
+
+		GetChildById( L"LoadStateBrowser", &LoadStateBrowser );
+
+		 // path
+		 std::string path = xboxConfig.game;
+		 path.erase(0, path.rfind('\\')+1);
+
+		 std::string saveStateDir = xboxConfig.saveStateDir + "\\" + path;
+		 std::wstring wg;
+		 get_wstring(saveStateDir, wg);
+		 saveStateList.UpdateDirList(wg);
+
+		return S_OK;
+	}
+public:
+
+	XUI_IMPLEMENT_CLASS( CLoadStates, L"LoadStates", XUI_CLASS_SCENE )
+};
+
+
+class CSelectFilter: public CXuiSceneImpl 
+{
+	CXuiList EffectList;
+
+	XUI_BEGIN_MSG_MAP()
+		XUI_ON_XM_INIT( OnInit )
+	XUI_END_MSG_MAP()
+
+	//----------------------------------------------------------------------------------
+	// Performs initialization tasks - retrieves controls.
+	//----------------------------------------------------------------------------------
+	HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
+	{
+
+		GetChildById( L"EffectList", &EffectList );
+
+		effectList.UpdateDirList(L"game:\\hlsl");
+
+		return S_OK;
+	}
+public:
+
+	XUI_IMPLEMENT_CLASS( CSelectFilter, L"SelectFilter", XUI_CLASS_SCENE )
+};
 
 class COsdMenuScene: public CXuiSceneImpl
 {
@@ -243,41 +300,17 @@ class COsdMenuScene: public CXuiSceneImpl
 	CXuiControl SelectBtn;
 
 	CXuiControl SaveStateBtn;
-	CXuiControl LoadStateBtn;
-
-	CXuiList LoadStateBrowser;
-	CXuiControl LoadStateOkBtn;
-	CXuiControl LoadStateCancelBtn;
-
-
-	CXuiControl SaveStateFilename;
-	CXuiControl SaveKeyboardBtn;
-	CXuiControl SaveStateCancelBtn;
-	CXuiControl SaveStateOkBtn;
 
 	COsdMenuScene() {
-		m_pszName = NULL;
 	}
 
 	~COsdMenuScene() {
-		if( NULL != m_hEvent )
-		{
-			CloseHandle( m_hEvent );
-			m_hEvent = NULL;
-		}
-		delete []m_pszName;
-		m_pszName = NULL;
 	}
-
-	LPWSTR m_pszName;			// Used by XShowKeyboardUI().
-	XOVERLAPPED m_Overlapped;	// Used by XShowKeyboardUI().
-	HANDLE m_hEvent;			// Used by XShowKeyboardUI().
-	BOOL m_bKeyboardActive;
 
 	XUI_BEGIN_MSG_MAP()
 		XUI_ON_XM_INIT( OnInit )
 		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
-		XUI_END_MSG_MAP()
+	XUI_END_MSG_MAP()
 
 		//----------------------------------------------------------------------------------
 		// Performs initialization tasks - retrieves controls.
@@ -289,66 +322,12 @@ class COsdMenuScene: public CXuiSceneImpl
 		GetChildById( L"SelectBtn", &SelectBtn );
 
 		GetChildById( L"SaveStateBtn", &SaveStateBtn );
-		GetChildById( L"LoadStateBtn", &LoadStateBtn );
-
-		GetChildById( L"LoadStateBrowser", &LoadStateBrowser );
-		GetChildById( L"LoadStateOkBtn", &LoadStateOkBtn );
-		GetChildById( L"LoadStateCancelBtn", &LoadStateCancelBtn );
-
-		GetChildById( L"SaveStateFilename", &SaveStateFilename );
-		GetChildById( L"SaveStateCancelBtn", &SaveStateCancelBtn );
-		GetChildById( L"SaveStateOkBtn", &SaveStateOkBtn );
-		GetChildById( L"SaveKeyboardBtn", &SaveKeyboardBtn );
-
-
-		ShowLoad(false);
-		ShowSave(false);
-
-		m_hEvent = CreateEvent( NULL, FALSE, FALSE, NULL );
-		m_bKeyboardActive = false;
-
-
-		m_pszName = new wchar_t[ 256 ];
 
 		effectList.UpdateDirList(L"game:\\hlsl");
 
 		return S_OK;
 	}
 
-	void ShowLoad(bool visible)
-	{
-		LoadStateBrowser.SetShow(visible);
-		LoadStateOkBtn.SetShow(visible);
-		LoadStateCancelBtn.SetShow(visible);
-
-		if (visible) {
-			// path
-			std::string path = xboxConfig.game;
-			path.erase(0, path.rfind('\\')+1);
-
-			std::string saveStateDir = xboxConfig.saveStateDir + "\\" + path;
-			std::wstring wg;
-			get_wstring(saveStateDir, wgame);
-			saveStateList.UpdateDirList(wgame);
-
-			LoadStateBrowser.SetFocus();
-		} else {
-			BackBtn.SetFocus();
-		}
-	}
-
-	void ShowSave(bool visible)
-	{
-		SaveStateFilename.SetShow(visible);
-		SaveStateCancelBtn.SetShow(visible);
-		SaveStateOkBtn.SetShow(visible);
-
-		if (visible) {
-			SaveKeyboardBtn.SetFocus();
-		} else {
-			BackBtn.SetFocus();
-		}
-	}
 
 	HRESULT OnNotifyPress( HXUIOBJ hObjPressed, 
 		BOOL& bHandled )
@@ -367,54 +346,16 @@ class COsdMenuScene: public CXuiSceneImpl
 			ShutdownPcsx();
 			xboxConfig.Running = false;
 			NavigateBackToFirst();
+
+			bHandled = TRUE;
 		}
 
 		// show
-		if (hObjPressed == SaveStateBtn) {
-			ShowSave(true);
-			game = xboxConfig.game;
-			game.erase(0, game.rfind('\\')+1);
-			game.append(".sgz");
-
-			get_wstring(game, wgame);
-
-			SaveStateFilename.SetText(wgame.c_str());
-		}
-
-		if (hObjPressed == LoadStateBtn) {			
-			ShowLoad(true);
-		}
-
-		if (hObjPressed == SaveStateOkBtn) {
-			ShowSave(false);
+		if (hObjPressed == SaveStateBtn) {			
 			SaveStatePcsx(-1);
-		}
 
-		if (hObjPressed == LoadStateOkBtn) {			
-			ShowLoad(false);
-			//LoadStatePcsx(-1);
+			bHandled = TRUE;
 		}
-
-		if (hObjPressed == LoadStateCancelBtn) {			
-			ShowLoad(false);
-			//LoadStatePcsx(-1);
-		}
-
-		if (hObjPressed == LoadStateBrowser) {			
-			ShowLoad(false);
-			//LoadStatePcsx(-1);
-		}
-
-		// cancel
-		if (hObjPressed == SaveStateOkBtn) {
-			ShowSave(false);
-		}
-
-		if (hObjPressed == LoadStateOkBtn) {			
-			ShowLoad(false);
-		}
-
-		bHandled = TRUE;
 		return S_OK;
 	}
 public:
@@ -530,6 +471,14 @@ HRESULT CMyApp::RegisterXuiClasses()
 	if( FAILED( hr ) )
 		return hr;
 
+	hr = CSelectFilter::Register();
+	if( FAILED( hr ) )
+		return hr;
+
+	hr = CLoadStates::Register();
+	if( FAILED( hr ) )
+		return hr;
+
 	return S_OK;
 }
 
@@ -540,6 +489,8 @@ HRESULT CMyApp::UnregisterXuiClasses()
 	CLoadStateBrowser::Unregister();
 	COsdMenuScene::Unregister();
 	CEffectBrowser::Unregister();
+	CSelectFilter::Unregister();
+	CLoadStates::Unregister();
 	return S_OK;
 }
 

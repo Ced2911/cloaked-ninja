@@ -291,6 +291,10 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <AdditionalOptions>/privilege:0 %(AdditionalOptions)</AdditionalOptions>
+      <TitleID>0x1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">
     <ClCompile>
@@ -319,6 +323,9 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <TitleID>1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">
     <ClCompile>
@@ -346,6 +353,9 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <TitleID>1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">
     <ClCompile>
@@ -367,6 +377,9 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <TitleID>1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">
     <ClCompile>
@@ -392,6 +405,9 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <TitleID>1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">
     <ClCompile>
@@ -416,6 +432,9 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <TitleID>1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
     <ClCompile>
@@ -440,6 +459,9 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <TitleID>1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
     <ClCompile>
@@ -465,6 +487,10 @@
       <DeploymentType>CopyToHardDrive</DeploymentType>
       <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
     </Deploy>
+    <ImageXex>
+      <OpticalDiscDriveMapping>false</OpticalDiscDriveMapping>
+      <TitleID>0x1CED2911</TitleID>
+    </ImageXex>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bram.cpp" />
@@ -654,6 +680,46 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="media\xui\filter.xui">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="media\xui\loadstates.xui">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>

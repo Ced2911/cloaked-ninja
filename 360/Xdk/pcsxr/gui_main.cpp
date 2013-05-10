@@ -25,8 +25,10 @@ DWORD * InGameThread() {
 	return NULL;
 }
 
+#define MAX_FILENAME 256
+
 HRESULT ShowKeyboard(std::wstring & resultText, std::wstring titleText, std::wstring descriptionText, std::wstring defaultText) {
-	wchar_t result[256];
+	wchar_t result[MAX_FILENAME];
 	
 	XOVERLAPPED Overlapped;
 	ZeroMemory( &Overlapped, sizeof( XOVERLAPPED ) );
@@ -38,7 +40,7 @@ HRESULT ShowKeyboard(std::wstring & resultText, std::wstring titleText, std::wst
 		titleText.c_str(),
 		descriptionText.c_str(),
 		result,
-		256,
+		MAX_FILENAME,
 		&Overlapped
 	);
 
@@ -63,7 +65,7 @@ void SaveStatePcsx(int n) {
 	get_wstring(game, wgame);
 
 	//if (SUCCEEDED(ShowKeyboard(result, L"", L"", wgame.c_str()))) {
-	ShowKeyboard(result, L"", L"", wgame.c_str());
+	ShowKeyboard(result, L"Enter the filename of the save states", L"If a file with the same name exists it will overwriten", wgame.c_str());
 	{
 		std::string save_path;
 		std::string save_filename;

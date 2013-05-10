@@ -483,8 +483,8 @@ extern "C" unsigned int  VideoInit()
 	retro_arch_shader_input.texture_size[0] = PSX_WIDTH;
 	retro_arch_shader_input.texture_size[1] = PSX_HEIGHT;
 
-	retro_arch_shader_input.output_size[0] = 1280;
-	retro_arch_shader_input.output_size[1] = 720;
+	retro_arch_shader_input.output_size[0] = g_d3dpp.BackBufferWidth;
+	retro_arch_shader_input.output_size[1] = g_d3dpp.BackBufferHeight;
 #if 0
 	// Compile vertex shader.
 	HRESULT hr = D3DXCompileShaderFromFileA( effect_file_name,
