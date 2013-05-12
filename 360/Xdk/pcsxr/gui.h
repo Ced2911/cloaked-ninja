@@ -57,6 +57,7 @@ public:
 	bool UseThreadedGpu;
 	bool UseFrameLimiter;
 	// 
+	int region;
 	std::string saveStateDir;
 };
 

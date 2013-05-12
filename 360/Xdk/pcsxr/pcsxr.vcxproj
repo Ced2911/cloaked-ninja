@@ -542,6 +542,7 @@
     <ClInclude Include="gui_class.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xb_sys.h" />
     <ClInclude Include="..\..\common\sys\mman.h" />
     <ClInclude Include="..\..\common\sys\time.h" />

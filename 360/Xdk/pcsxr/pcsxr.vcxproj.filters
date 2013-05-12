@@ -18,6 +18,9 @@
     <Filter Include="Media">
       <UniqueIdentifier>{d6927e01-36d6-41f8-9c48-71b76754d770}</UniqueIdentifier>
     </Filter>
+    <Filter Include="simpleini">
+      <UniqueIdentifier>{86fa7ba3-0642-4560-b250-9e7dc86bc317}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bram.cpp">
@@ -78,6 +81,9 @@
     </ClInclude>
     <ClInclude Include="gui_class.h">
       <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="simpleini\SimpleIni.h">
+      <Filter>simpleini</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,6 +5,8 @@
 #include "r3000a.h"
 #include "gpu.h"
 
+#include "simpleini\SimpleIni.h"
+
 void RenderXui();
 
 DWORD * InGameThread() {
@@ -167,14 +169,42 @@ static void DoPcsx(char * game) {
 }
 
 
+CSimpleIniA ini;
+
 void ApplySettings() {
 	Config.Cpu = xboxConfig.UseDynarec ? CPU_DYNAREC : CPU_INTERPRETER;
 	Config.SpuIrq = xboxConfig.UseSpuIrq;
 
+	if (xboxConfig.region == 0)
+		Config.PsxAuto = 0;
+	else {
+		if (xboxConfig.region == 1) {
+			Config.PsxType = PSX_TYPE_NTSC;
+		} else if (xboxConfig.region == 2) {
+			Config.PsxType = PSX_TYPE_PAL;
+		}
+		Config.PsxAuto = 1;
+	}
+
 	UseFrameLimit = xboxConfig.UseFrameLimiter;
+
+	ini.SetLongValue("pcsx", "UseDynarec", xboxConfig.UseDynarec);
+	ini.SetLongValue("pcsx", "UseSpuIrq", xboxConfig.UseSpuIrq);
+	ini.SetLongValue("pcsx", "UseFrameLimiter", xboxConfig.UseFrameLimiter);
+	ini.SetLongValue("pcsx", "UseThreadedGpu", xboxConfig.UseThreadedGpu);
+	ini.SetLongValue("pcsx", "Region", xboxConfig.region);
+
+	ini.SetValue("pcsx", "saveStateDir", xboxConfig.saveStateDir.c_str());
+	ini.SetValue("pcsx", "Bios", Config.Bios);	
+	ini.SetValue("pcsx", "BiosDir", Config.BiosDir);
+	ini.SetValue("pcsx", "Mcd1", Config.Mcd1);
+	ini.SetValue("pcsx", "Mcd2", Config.Mcd2);
+
+	ini.SaveFile("game:\\pcsx.ini");
 }
 
 void LoadSettings() {
+	/// defalut
 	strcpy(Config.Bios, "SCPH1001.BIN");
 	strcpy(Config.BiosDir, "game:\\BIOS");
 	strcpy(Config.Mcd1,"game:\\memcards\\Memcard1.mcd");
@@ -185,8 +215,22 @@ void LoadSettings() {
 	xboxConfig.UseFrameLimiter = 1;
 	xboxConfig.saveStateDir = "game:\\states";
 	xboxConfig.UseThreadedGpu = 1;
+	xboxConfig.region = 0;// Auto
 
 	// Merge cfg file
+	ini.LoadFile("game:\\pcsx.ini");
+
+	xboxConfig.UseDynarec = ini.GetLongValue("pcsx", "UseDynarec", 1);
+	xboxConfig.UseSpuIrq = ini.GetLongValue("pcsx", "UseSpuIrq", 0);
+	xboxConfig.UseFrameLimiter = ini.GetLongValue("pcsx", "UseFrameLimiter", 1);
+	xboxConfig.UseThreadedGpu = ini.GetLongValue("pcsx", "UseThreadedGpu", 1);
+	xboxConfig.region = ini.GetLongValue("pcsx", "Region", 0);
+
+	xboxConfig.saveStateDir = strdup(ini.GetValue("pcsx", "saveStateDir", "game:\\states"));
+	strcpy(Config.Bios, strdup(ini.GetValue("pcsx", "Bios", "SCPH1001.BIN")));
+	strcpy(Config.BiosDir, strdup(ini.GetValue("pcsx", "BiosDir", "game:\\BIOS")));
+	strcpy(Config.Mcd1, strdup(ini.GetValue("pcsx", "Mcd1", "game:\\memcards\\Memcard1.mcd")));
+	strcpy(Config.Mcd2, strdup(ini.GetValue("pcsx", "Mcd2", "game:\\memcards\\Memcard2.mcd")));
 }
 
 static void InitPcsx() {

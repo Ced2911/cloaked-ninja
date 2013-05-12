@@ -301,6 +301,8 @@ class COsdMenuScene: public CXuiSceneImpl
 
 	CXuiControl SaveStateBtn;
 
+	CXuiList RegionList;
+
 	COsdMenuScene() {
 	}
 
@@ -310,20 +312,37 @@ class COsdMenuScene: public CXuiSceneImpl
 	XUI_BEGIN_MSG_MAP()
 		XUI_ON_XM_INIT( OnInit )
 		XUI_ON_XM_NOTIFY_PRESS( OnNotifyPress )
+		XUI_ON_XM_NOTIFY_KILL_FOCUS( OnNotifyKillFocus )
 	XUI_END_MSG_MAP()
 
-		//----------------------------------------------------------------------------------
-		// Performs initialization tasks - retrieves controls.
-		//----------------------------------------------------------------------------------
-		HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
+	//----------------------------------------------------------------------------------
+	// Performs initialization tasks - retrieves controls.
+	//----------------------------------------------------------------------------------
+	HRESULT OnInit( XUIMessageInit* pInitData, BOOL& bHandled )
 	{
 		GetChildById( L"BackBtn", &BackBtn );
 		GetChildById( L"ResetBtn", &ResetBtn );
 		GetChildById( L"SelectBtn", &SelectBtn );
 
 		GetChildById( L"SaveStateBtn", &SaveStateBtn );
+		GetChildById( L"RegionList", &RegionList);
 
 		effectList.UpdateDirList(L"game:\\hlsl");
+
+		RegionList.SetCurSel(xboxConfig.region);
+
+		return S_OK;
+	}
+
+	HRESULT OnNotifyKillFocus(
+         HXUIOBJ hObjSource,
+         XUINotifyFocus *pNotifyFocusData,
+         BOOL &bHandled
+	) {
+		if (hObjSource == RegionList) {
+			xboxConfig.region = RegionList.GetCurSel();
+		}
+
 
 		return S_OK;
 	}
