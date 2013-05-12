@@ -197,6 +197,7 @@
 <Width>256.000000</Width>
 <Height>240.000000</Height>
 <Position>544.000061,352.000031,0.000000</Position>
+<Show>false</Show>
 <SizeMode>16</SizeMode>
 <ImagePath>..\psx.jpg</ImagePath>
 </Properties>
@@ -207,6 +208,7 @@
 <Width>256.000000</Width>
 <Height>240.000000</Height>
 <Position>816.000061,352.000031,0.000000</Position>
+<Show>false</Show>
 <SizeMode>16</SizeMode>
 <ImagePath>..\psx.jpg</ImagePath>
 </Properties>
@@ -248,7 +250,7 @@
 <Properties>
 <Id>RegionList</Id>
 <Width>240.000000</Width>
-<Height>32.000000</Height>
+<Height>72.000000</Height>
 <Position>624.000061,240.000031,0.000000</Position>
 <Visual>XuiListHorizontal</Visual>
 <NavLeft>FileBrowser</NavLeft>

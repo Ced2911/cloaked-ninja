@@ -124,6 +124,7 @@ void RenderXui() {
 static void DoPcsx(char * game) {
 	int ret;
 
+	cdrIsoInit();
 	SetIsoFile(game);
 
 	if (SysInit() == -1) {
