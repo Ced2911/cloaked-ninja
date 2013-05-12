@@ -99,4 +99,7 @@
 #define ReadConfig				SPUReadConfig
 #define ReadConfigFile			SPUReadConfigFile
 #define iDebugMode				SPUiDebugMode
+
+#define SWAP16(x) __loadwordbytereverse(0 ,x)
+#else
 #endif

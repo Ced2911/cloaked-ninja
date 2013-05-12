@@ -181,7 +181,7 @@ void CALLBACK SPUwriteRegister(unsigned long reg, unsigned short val)
       break;
     //-------------------------------------------------//
     case H_SPUdata:
-      spuMem[spuAddr>>1] = val;
+      spuMem[spuAddr>>1] = SWAP16(val);
       spuAddr+=2;
       if(spuAddr>0x7ffff) spuAddr=0;
       break;
@@ -394,7 +394,7 @@ unsigned short CALLBACK SPUreadRegister(unsigned long reg)
 
     case H_SPUdata:
      {
-      unsigned short s=spuMem[spuAddr>>1];
+      unsigned short s= SWAP16(spuMem[spuAddr>>1]);
       spuAddr+=2;
       if(spuAddr>0x7ffff) spuAddr=0;
       return s;
