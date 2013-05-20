@@ -14,6 +14,7 @@ void __declspec(naked) recRun(register void (*func)(), register u32 hw1, registe
 	/* prologue code */
 	__asm{
 		mflr	r12
+		std     r13, -0x110(sp)
 		std     r14, -0x98(sp)
 		std     r15, -0x90(sp)			// save regs to stack frame
 		std     r16, -0x88(sp)
@@ -33,7 +34,7 @@ void __declspec(naked) recRun(register void (*func)(), register u32 hw1, registe
 		std     r30, -0x18(sp)
 		std     r31, -0x10(sp)
 		std     r12, -0x8(sp)
-		stwu	r1, -0x110(r1)			// increments stack frame
+		stwu	r1, -0x118(r1)			// increments stack frame
 
 		/* execute code */
 		mtctr   r3                      // load Count Register with address of func
@@ -47,7 +48,8 @@ void __declspec(naked) recRun(register void (*func)(), register u32 hw1, registe
 void __declspec(naked) returnPC()
 {
 	__asm{
-		addi	r1, r1, 0x110		//Free stack frame
+		addi	r1, r1, 0x118		//Free stack frame
+		ld		r13, -0x110(sp)
 		ld		r14, -0x98(sp)
 		ld		r15, -0x90(sp)		// restore regs from stack frame
 		ld		r16, -0x88(sp)

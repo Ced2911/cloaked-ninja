@@ -60,6 +60,11 @@ void SetupSound(void) {
 
 	InitSDL();
 
+	
+
+	iReadPos = 0;
+	iWritePos = 0;
+
 	spec.freq = 44100;
 	spec.format = AUDIO_S16SYS;
 	spec.channels = iDisStereo ? 1 : 2;
@@ -83,9 +88,6 @@ void SetupSound(void) {
 		return;
 	}
 
-	iReadPos = 0;
-	iWritePos = 0;
-
 	SDL_PauseAudio(0);
 }
 
@@ -98,6 +100,11 @@ void RemoveSound(void) {
 
 	free(pSndBuffer);
 	pSndBuffer = NULL;
+
+	
+
+	iReadPos = 0;
+	iWritePos = 0;
 }
 
 unsigned long SoundGetBytesBuffered(void) {

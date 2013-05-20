@@ -8,7 +8,7 @@
 #define __PPC_H__
 
 // include basic types
-#include "../PsxCommon.h"
+#include "../psxcommon.h"
 #include "ppc_mnemonics.h"
 
 #define NUM_HW_REGISTERS	28
@@ -19,7 +19,7 @@
 #define write32(val) *(u32*)ppcPtr = val; ppcPtr+=4;
 #define write64(val) *(u64*)ppcPtr = val; ppcPtr+=8;
 
-#if 0
+#if 1
 
 #define CALLFunc(FUNC) \
 { \

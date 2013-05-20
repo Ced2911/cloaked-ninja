@@ -560,9 +560,18 @@ extern "C" unsigned int  VideoInit()
 	D3DLOCKED_RECT texture_info;
 	g_PsxTexture->LockRect( 0,  &texture_info, NULL, NULL );
 	pPsxScreen = (unsigned char *)texture_info.pBits;
+
+	
+	// Memset fail :s => clear to black
+	unsigned int * s = (unsigned int*)pPsxScreen;
+	for(int i =0; i < PSX_WIDTH * PSX_HEIGHT; i++) {
+		s[i] = 0;
+	}
+
 	g_PsxTexture->UnlockRect(0);
 
 	g_pPitch = texture_info.Pitch;
+
 
 	// Clear psx surface
 	//XMemSet(pPsxScreen, 0, texture_info.Pitch * PSX_HEIGHT);
