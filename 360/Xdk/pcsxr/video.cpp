@@ -9,6 +9,13 @@ IDirect3DDevice9*				g_pd3dDevice = NULL; // the rendering device
 D3DPRESENT_PARAMETERS			g_d3dpp;
 
 
+#define MAX_FRONT_BUFFERS 3
+
+
+// Multiple front buffers
+static IDirect3DTexture9* pFrontBuffer[MAX_FRONT_BUFFERS];
+static int iFrontBufferSelected;
+
 // in gpu plugin
 void PcsxSetD3D(IDirect3DDevice9* device);
 
@@ -35,13 +42,45 @@ void InitD3D() {
 	g_d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
 	g_d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 	g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+
+	
+    // Required to support async swaps
+    g_d3dpp.DisableAutoFrontBuffer = TRUE;
+
 	//g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 	// Create the Direct3D device.
-	g_pD3D->CreateDevice( 0, D3DDEVTYPE_HAL, NULL, D3DCREATE_HARDWARE_VERTEXPROCESSING|D3DCREATE_BUFFER_2_FRAMES,
+	g_pD3D->CreateDevice( 0, D3DDEVTYPE_HAL, NULL, D3DCREATE_HARDWARE_VERTEXPROCESSING,
 		&g_d3dpp, &g_pd3dDevice );
 
+
+	
+    // Allocate front buffers
+    for( int i = 0; i < MAX_FRONT_BUFFERS; ++i )
+    {
+        g_pd3dDevice->CreateTexture( g_d3dpp.BackBufferWidth, 
+            g_d3dpp.BackBufferHeight, 
+            1, 
+            0, 
+            g_d3dpp.FrontBufferFormat, 
+            0, 
+            &pFrontBuffer[i], 
+            NULL );
+    }
+
+	iFrontBufferSelected = 0;
 
 	PcsxSetD3D(g_pd3dDevice);
 }
 
 
+void VideoPresent() {	
+    IDirect3DTexture9* pCurFrontBuffer = pFrontBuffer[iFrontBufferSelected];
+	g_pd3dDevice->Resolve( D3DRESOLVE_RENDERTARGET0, NULL, pCurFrontBuffer, NULL, 0, 0, NULL, 0.0f, 0, NULL );
+
+	g_pd3dDevice->SynchronizeToPresentationInterval();
+
+	g_pd3dDevice->Swap( pCurFrontBuffer, NULL );
+
+	iFrontBufferSelected++;
+	iFrontBufferSelected = iFrontBufferSelected % MAX_FRONT_BUFFERS;
+}

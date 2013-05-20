@@ -1786,7 +1786,7 @@ static void preMemWrite(int size)
 	//FlushAllHWReg();
 }
 
-#define DR_REWRITE_CALL 1
+#define DR_REWRITE_CALL 0
 #define DR_REWRITE_WRITE 0
 
 static void recLB() {

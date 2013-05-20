@@ -127,13 +127,13 @@ extern s8 *psxH;
 #define psxHu16ref(mem)	(*(u16 *)&psxH[(mem) & 0xffff])
 #define psxHu32ref(mem)	(*(u32 *)&psxH[(mem) & 0xffff])
 
-// NEW
-#define _USE_VM 1
+// NEW - Vm is broken ... need to find a way to have mirror :s
+#define _USE_VM 0 
 #define VM_SIZE	0x20000000
-#define VM_MASK 0x1fffffff
-
+#define VM_MASK (VM_SIZE - 1)
+//#define VM_MASK  0x101fffff
 // Use with mask !
-#define CHECK_ADR(adr) (adr>=0x00000000 && adr<0x00200000) || (adr>=0x1f000000 && adr<0x1fc80000)
+#define CHECK_ADR(adr) (adr>=0x00000000 && adr<(0x00200000)) || (adr>=0x1f000000 && adr<0x1fc80000)
 
 extern s8 *psxVM;
 #define psxVMs8(mem)	psxVM[(mem) & VM_MASK]

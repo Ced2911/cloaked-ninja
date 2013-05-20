@@ -67,13 +67,27 @@ int psxMemInit() {
 	psxVM = (s8 *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
 
 	// Create Mapping ...
-	psxM = (s8 *)VirtualAlloc(psxVM, 0x00400000, MEM_COMMIT, PAGE_READWRITE);
+	// 0x00200000 * 4 Mirrors
+	psxM = (s8 *)VirtualAlloc(psxVM, 0x00800000, MEM_COMMIT, PAGE_READWRITE);
 	// Parallel Port
 	psxP = (s8 *)VirtualAlloc(psxVM+0x1f000000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
 	// Hardware Regs + Scratch Pad
 	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
 	// Bios
 	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000, 0x00080000, MEM_COMMIT, PAGE_READWRITE);
+
+	/*
+	// Page guard (usefull for debuggin)
+	DWORD OldProtect;
+	// Mem to Pio
+	VirtualProtect(psxVM+0x00200000, 0x1f000000 - 0x00200000, PAGE_GUARD, &OldProtect);
+	// Pio to Hw+Scrath
+	VirtualProtect(psxVM+0x1f010000, 0x1f800000 - 0x1f010000, PAGE_GUARD, &OldProtect);
+	// Hw+Scrath to Bios
+	VirtualProtect(psxVM+0x1f803000, 0x1fc00000 - 0x1f803000, PAGE_GUARD, &OldProtect);
+	// Bios to end
+	VirtualProtect(psxVM+0x1fc80000, VM_SIZE - 0x1fc80000, PAGE_GUARD, &OldProtect);
+	*/
 
 	initialised++;
 
@@ -89,7 +103,7 @@ void psxMemReset() {
 	//psxMemShutdown();
 	//psxMemInit();
 
-	memset(psxM, 0, 0x00400000);
+	memset(psxM, 0, 0x00200000);
 	memset(psxP, 0, 0x00010000);
 	memset(psxH, 0, 0x00010000);
 
@@ -116,10 +130,17 @@ void psxMemShutdown() {
 	}
 }
 
+#define PSX_MEM_MIRROR			0x00800000
+#define VM_PSX_MEM_MASK			(0x00200000 - 1)
+
 u8 psxMemRead8(u32 mem) {
 	psxRegs.cycle += 0;
-	
-	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+
+	mem = mem & VM_MASK;
+
+	if ( mem < PSX_MEM_MIRROR ) {
+		return (*(u8 *)&psxVM[mem & VM_PSX_MEM_MASK]);
+	} else if (mem >= 0x1f801000 && mem <= 0x1f803000) {
 		return psxHwRead8(mem);
 	} else {
 		return psxVMu8(mem);
@@ -129,7 +150,11 @@ u8 psxMemRead8(u32 mem) {
 u16 psxMemRead16(u32 mem) {
 	psxRegs.cycle += 1;
 			
-	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+	mem = mem & VM_MASK;
+
+	if ( mem < PSX_MEM_MIRROR ) {
+		return SWAP16(*(u16 *)&psxVM[mem & VM_PSX_MEM_MASK]);
+	} else if (mem >= 0x1f801000 && mem <= 0x1f803000) {
 		return psxHwRead16(mem);
 	} else {
 		return psxVMu16(mem);
@@ -139,49 +164,67 @@ u16 psxMemRead16(u32 mem) {
 u32 psxMemRead32(u32 mem) {
 	psxRegs.cycle += 1;
 		
-	if (mem >= 0x1f801000 && mem <= 0x1f803000) {
+	mem = mem & VM_MASK;
+
+	if ( mem < PSX_MEM_MIRROR ) {
+		return SWAP32(*(u32 *)&psxVM[mem & VM_PSX_MEM_MASK]);
+	} else if (mem >= 0x1f801000 && mem <= 0x1f803000) {
 		return psxHwRead32(mem);
 	} else {
 		return psxVMu32(mem);
 	}
 }
 
-void psxMemWrite8(u32 mem, u8 value) {	
+void psxMemWrite8(u32 _mem, u8 value) {	
 	u32 t;
+	u32 mem;
 	psxRegs.cycle += 1;
+
+	mem = _mem & VM_MASK;
 
 	t = mem >> 16;
 
-	if (t == 0x1f80 || t == 0x9f80 || t == 0xbf80) {
+	if (t == 0x1f80) {
 		if ((mem & 0xffff) < 0x400)
-			psxVM[(mem) & VM_MASK] = value;
+			psxVM[mem & VM_MASK] = value;
 		else
 			psxHwWrite8(mem, value);
 	} else {
 		if (writeok) {
-			psxVM[(mem) & VM_MASK] = value;
+			if ( mem < PSX_MEM_MIRROR ) {
+				psxVM[mem & VM_PSX_MEM_MASK] = value;
+			} else {
+				psxVM[mem & VM_MASK] = value;
+			}
 			
-			psxCpu->Clear((mem & (~3)), 1);
+			psxCpu->Clear((_mem & (~3)), 1);
 		}
 	}
 }
 
-void psxMemWrite16(u32 mem, u16 value) {
-	u32 t;
+void psxMemWrite16(u32 _mem, u16 value) {
+	u32 t;	
+	u32 mem;
 	psxRegs.cycle += 1;
+
+	mem = _mem & VM_MASK;
 	
 	t = mem >> 16;
 
-	if (t == 0x1f80 || t == 0x9f80 || t == 0xbf80) {
+	if (t == 0x1f80) {
 		if ((mem & 0xffff) < 0x400)
 			psxVMu16ref(mem) = SWAPu16(value);
 		else
 			psxHwWrite16(mem, value);
 	} else {
-		if ( writeok ) {		
-			psxVMu16ref(mem) = SWAPu16(value);
+		if ( writeok ) {
+			if ( mem < PSX_MEM_MIRROR ) {
+				(*(u16 *)&psxVM[mem & VM_PSX_MEM_MASK]) = SWAPu16(value);
+			} else {
+				(*(u16 *)&psxVM[mem & VM_MASK]) = SWAPu16(value);
+			}
 			
-			psxCpu->Clear((mem & (~3)), 1);
+			psxCpu->Clear((_mem & (~3)), 1);
 		}
 	}
 }
@@ -200,7 +243,13 @@ void psxMemWrite32(u32 mem, u32 value) {
 	} else {
 		if (mem != 0xfffe0130) {
 			if (writeok) {
-				psxVMu32ref(mem) = SWAPu32(value);
+				// psxVMu32ref(mem) = SWAPu32(value);
+				mem = mem & VM_MASK;
+				if ( mem < PSX_MEM_MIRROR ) {
+					(*(u32 *)&psxVM[mem & VM_PSX_MEM_MASK]) = SWAPu32(value);
+				} else {
+					(*(u32 *)&psxVM[mem & VM_MASK]) = SWAPu32(value);
+				}
 			}
 			//printf("Clear32 %08x\n", mem);
 			psxCpu->Clear(mem, 1);

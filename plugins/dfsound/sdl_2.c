@@ -46,18 +46,17 @@ static void SOUND_FillAudio(void *unused, Uint8 *stream, int len) {
 	}
 }
 
+static void DestroySDL() {
+	SDL_AudioQuit();
+}
+
 static void InitSDL() {
 	SDL_AudioInit("xaudio2");
 }
 
-static void DestroySDL() {
-	
-}
 
 void SetupSound(void) {
 	SDL_AudioSpec				spec;
-
-	if (pSndBuffer != NULL) return;
 
 	InitSDL();
 
@@ -75,7 +74,10 @@ void SetupSound(void) {
 	iBufSize = BUFFER_SIZE;
 	if (iDisStereo) iBufSize /= 2;
 
-	pSndBuffer = (short *)malloc(iBufSize * sizeof(short));
+	if (pSndBuffer == NULL) {
+		pSndBuffer = (short *)malloc(iBufSize * sizeof(short));
+	}
+
 	if (pSndBuffer == NULL) {
 		SDL_CloseAudio();
 		return;
@@ -88,7 +90,8 @@ void SetupSound(void) {
 }
 
 void RemoveSound(void) {
-	if (pSndBuffer == NULL) return;
+	if (pSndBuffer == NULL) 
+		return;
 
 	SDL_CloseAudio();
 	DestroySDL();

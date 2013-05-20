@@ -117,7 +117,8 @@ void RenderXui() {
 	XuiTimersRun();
 
 	// Present the backbuffer contents to the display.
-	g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
+	// g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
+	VideoPresent();
 }
 
 

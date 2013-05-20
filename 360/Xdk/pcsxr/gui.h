@@ -8,6 +8,7 @@
 
 // D3d
 extern void InitD3D();
+extern void VideoPresent();
 extern IDirect3DDevice9*				g_pd3dDevice;
 extern D3DPRESENT_PARAMETERS			g_d3dpp;
 
