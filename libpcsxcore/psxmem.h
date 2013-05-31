@@ -128,9 +128,14 @@ extern s8 *psxH;
 #define psxHu32ref(mem)	(*(u32 *)&psxH[(mem) & 0xffff])
 
 // NEW - Vm is broken ... need to find a way to have mirror :s
-#define _USE_VM 0 
+#define _USE_VM 1
 #define VM_SIZE	0x20000000
 #define VM_MASK (VM_SIZE - 1)
+
+
+#define VM_PSX_MEM_MASK			(0x00200000 - 1)
+#define PSX_MEM_MIRROR			0x00800000
+
 //#define VM_MASK  0x101fffff
 // Use with mask !
 #define CHECK_ADR(adr) (adr>=0x00000000 && adr<(0x00200000)) || (adr>=0x1f000000 && adr<0x1fc80000)

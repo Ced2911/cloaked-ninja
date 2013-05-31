@@ -11,7 +11,7 @@
 #include "../psxcommon.h"
 #include "ppc_mnemonics.h"
 
-#define NUM_HW_REGISTERS	28
+#define NUM_HW_REGISTERS 28
 
 /* general defines */
 #define write8(val)  *(u8 *)ppcPtr = val; ppcPtr++;
@@ -19,11 +19,10 @@
 #define write32(val) *(u32*)ppcPtr = val; ppcPtr+=4;
 #define write64(val) *(u64*)ppcPtr = val; ppcPtr+=8;
 
-#if 1
-
 #define CALLFunc(FUNC) \
 { \
     u32 _func = (FUNC); \
+    ReleaseArgs(); \
     if ((_func & 0x1fffffc) == _func) { \
         BLA(_func); \
     } else { \
@@ -32,25 +31,6 @@
         BCTRL(); \
     } \
 }
-
-#else
-
-#define CALLFunc(FUNC) \
-{ \
-    u32 * _func = (u32*)(FUNC); \
-    u32 * _cur = ppcPtr; \
-	s32 _off = _func-_cur-1; \
-	if (abs(_off)<0x7fffff) { \
-		BL(_off); \
-	} else { \
-        LIW(0, (u32)_func); \
-        MTCTR(0); \
-        BCTRL(); \
-		printf("!!!!!!!! bctrl\n"); \
-	} \
-}
-
-#endif
 
 extern int cpuHWRegisters[NUM_HW_REGISTERS];
 

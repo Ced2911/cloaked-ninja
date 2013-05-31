@@ -74,10 +74,6 @@
 	{int _reg = (REG), _src=(REG_SRC); \
         INSTR = (0x90000000 | (_src << 21) | (_reg << 16) | ((OFFSET) & 0xffff));}
 
-#define STWX(REG_SRC, REG, REG_OFF) \
-	{int _reg = (REG), _src=(REG_SRC), _off = (REG_OFF); \
-        INSTR = (0x7C00012E | (_src << 21) | (_reg << 16) | (_off << 11));}
-
 #define STWBRX(REG_SRC, REG, REG_OFF) \
 	{int _reg = (REG), _src=(REG_SRC), _off = (REG_OFF); \
         INSTR = (0x7C00052C | (_src << 21) | (_reg << 16) | (_off << 11));}
@@ -179,11 +175,11 @@
 
 #define SUBCO_(REG_DST, REG1, REG2) \
 	{SUBFCO_(REG_DST, REG2, REG1)}
-/* Duplicate 
+
 #define SRAWI(REG_DST, REG_SRC, SHIFT) \
 	{int _src = (REG_SRC); int _dst=(REG_DST); \
         INSTR = (0x7C000670 | (_src << 21) | (_dst << 16) | (SHIFT << 11));}
-*/
+
 #define MULHW(REG_DST, REG1, REG2) \
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \
         INSTR = (0x7C000096 | (_dst << 21) | (_reg1 << 16) |  (_reg2 << 11));}
@@ -215,9 +211,6 @@
 
 #define B(DST) \
 	{INSTR = (0x48000000 | (((s32)(((DST)+1)<<2)) & 0x3fffffc));}
-
-#define BL(DST) \
-	{INSTR = (0x48000001 | (((s32)(((DST)+1)<<2)) & 0x3fffffc));}
 
 #define B_L(VAR) \
 	{B_FROM(VAR); INSTR = (0x48000000);}
@@ -355,12 +348,12 @@
 #define SLWI(REG_DST, REG_SRC, SHIFT) \
 	{int _shift = (SHIFT); \
         if (_shift==0) {MR(REG_DST, REG_SRC)} else \
-        {RLWINM(REG_DST, REG_SRC, _shift, 0, (31-_shift))}}
+        {RLWINM(REG_DST, REG_SRC, _shift, 0, 31-_shift)}}
 
 #define SRWI(REG_DST, REG_SRC, SHIFT) \
 	{int _shift = (SHIFT); \
         if (_shift==0) {MR(REG_DST, REG_SRC)} else \
-        RLWINM(REG_DST, REG_SRC, (32-_shift), _shift, 31)}
+        RLWINM(REG_DST, REG_SRC, 32-_shift, _shift, 31)}
 
 #define SLW(REG_DST, REG_SRC, REG_SHIFT) \
 	{int _src = (REG_SRC), _shift = (REG_SHIFT); int _dst = (REG_DST); \
@@ -504,8 +497,16 @@
 			LIS(__reg, (((u32)__imm)>>16)); \
 		} else { \
 			LI(__reg, __imm); \
-			ADDIS(__reg, __reg, ((u32)__imm+0x8000)>>16); \
+			if ((__imm & 0x8000) == 0) { \
+				ADDIS(__reg, __reg, ((u32)__imm)>>16); \
+			} else { \
+				ADDIS(__reg, __reg, ((((u32)__imm)>>16) & 0xffff) + 1); \
+			} \
 		} \
+		/*if ((((u32)__imm) & 0xffff) != 0) \
+		{ \
+			ORI(__reg, __reg, __imm); \
+		}*/ \
 	} \
 }
 #else

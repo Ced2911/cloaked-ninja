@@ -4,7 +4,7 @@
 #include "cdriso.h"
 #include "r3000a.h"
 #include "gpu.h"
-
+#include "sys\Mount.h"
 #include "simpleini\SimpleIni.h"
 
 void RenderXui();
@@ -276,8 +276,42 @@ static void InitXui() {
 
 }
 
+void Add(char * d, char * mountpoint){
+	Map(mountpoint,d);
+}
+
+HRESULT MountDevices(){
+
+	Add("\\Device\\Cdrom0","cdrom:");
+
+	Add("\\Device\\Flash","flash:");
+
+	//hdd
+	Add("\\Device\\Harddisk0\\SystemPartition\\","hddx:");
+	Add("\\Device\\Harddisk0\\Partition0","hdd0:");
+	Add("\\Device\\Harddisk0\\Partition1","hdd1:");
+	Add("\\Device\\Harddisk0\\Partition2","hdd2:");
+	Add("\\Device\\Harddisk0\\Partition3","hdd3:");
+
+	//mu
+	Add("\\Device\\Mu0","mu0:");
+	Add("\\Device\\Mu1","mu1:");
+	Add("\\Device\\Mass0PartitionFile\\Storage","usbmu0:");
+
+	//usb
+	Add("\\Device\\Mass0", "usb0:");
+	Add("\\Device\\Mass1", "usb1:");
+	Add("\\Device\\Mass2", "usb2:");
+
+	Add("\\Device\\BuiltInMuSfc","sfc:");
+
+	return S_OK;
+}
+
 VOID __cdecl main()
 {
+	MountDevices();
+
 	InitD3D();
 
 	InitPcsx();

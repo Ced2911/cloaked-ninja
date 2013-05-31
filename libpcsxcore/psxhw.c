@@ -239,10 +239,7 @@ static void SpuWriteRegister32(u32 add, u32 value) {
 	SPU_writeRegister(add, value&0xffff);
 
 	// next 16bit
-	add += 2;
-	value >>= 16;
-
-	SPU_writeRegister(add, value&0xffff);
+	SPU_writeRegister(add+2, (value>>16)&0xffff);
 }
 
 

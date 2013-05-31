@@ -10,6 +10,7 @@
 <Height>608.000000</Height>
 <Position>96.000008,56.000004,0.000000</Position>
 <ClassOverride>SelectFilter</ClassOverride>
+<Visual>XuiSceneRect</Visual>
 </Properties>
 <XuiList>
 <Properties>
@@ -41,6 +42,17 @@
 <Show>false</Show>
 <Visual>XuiButton</Visual>
 <InterItemSpacing>0.000000,10.000000,0.000000</InterItemSpacing>
+</Properties>
+</XuiListItem>
+<XuiListItem>
+<Properties>
+<Id>control_ListItem</Id>
+<Width>254.000000</Width>
+<Height>40.000000</Height>
+<Position>7.000000,26.000000,0.000000</Position>
+<Anchor>5</Anchor>
+<Show>false</Show>
+<Visual>XuiButton</Visual>
 </Properties>
 </XuiListItem>
 </XuiList>

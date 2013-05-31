@@ -130,9 +130,6 @@ void psxMemShutdown() {
 	}
 }
 
-#define PSX_MEM_MIRROR			0x00800000
-#define VM_PSX_MEM_MASK			(0x00200000 - 1)
-
 u8 psxMemRead8(u32 mem) {
 	psxRegs.cycle += 0;
 

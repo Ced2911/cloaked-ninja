@@ -955,7 +955,24 @@ static void iJump(u32 branchPC) {
 	  CALLFunc((u32)psxJumpTest);
 	*/
 	// always return for now...
+	// Return();
+	// maybe just happened an interruption, check so
+	LIW(0, branchPC);
+	CMPLW(GetHWRegSpecial(PSXPC), 0);
+	BNE_L(b1);
+
+	LIW(3, PC_REC(branchPC));
+	LWZ(3, 0, 3);
+	CMPLWI(3, 0);
+	BNE_L(b2);
+
+	B_DST(b1);
 	Return();
+
+	// next bit is already compiled - jump right to it
+	B_DST(b2);
+	MTCTR(3);
+	BCTR();
 }
 
 static void iBranch(u32 branchPC, int savectx) {
@@ -1010,7 +1027,22 @@ static void iBranch(u32 branchPC, int savectx) {
 	CALLFunc((u32)psxBranchTest);
 	
 	// always return for now...
+	// Return();
+	LIW(0, branchPC);
+	CMPLW(GetHWRegSpecial(PSXPC), 0);
+	BNE_L(b1);
+
+	LIW(3, PC_REC(branchPC));
+	LWZ(3, 0, 3);
+	CMPLWI(3, 0);
+	BNE_L(b2);
+
+	B_DST(b1);
 	Return();
+
+	B_DST(b2);
+	MTCTR(3);
+	BCTR();
 
 	pc-= 4;
 
@@ -2139,11 +2171,11 @@ static void recBEQ() {
     // Branch if Rs == Rt
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (_Rs_ == _Rt_) {
         iJump(bpc);
     } else {
@@ -2190,11 +2222,11 @@ static void recBNE() {
     // Branch if Rs != Rt
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (_Rs_ == _Rt_) {
         iJump(pc + 4);
     } else {
@@ -2243,11 +2275,11 @@ static void recBLTZ() {
     // Branch if Rs < 0
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (IsConst(_Rs_)) {
         if ((s32) iRegs[_Rs_].k < 0) {
             iJump(bpc);
@@ -2273,11 +2305,11 @@ static void recBGTZ() {
     // Branch if Rs > 0
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (IsConst(_Rs_)) {
         if ((s32) iRegs[_Rs_].k > 0) {
             iJump(bpc);
@@ -2303,11 +2335,11 @@ static void recBLTZAL() {
     // Branch if Rs < 0
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (IsConst(_Rs_)) {
         if ((s32) iRegs[_Rs_].k < 0) {
             MapConst(31, pc + 4);
@@ -2337,11 +2369,11 @@ static void recBGEZAL() {
     // Branch if Rs >= 0
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (IsConst(_Rs_)) {
         if ((s32) iRegs[_Rs_].k >= 0) {
             MapConst(31, pc + 4);
@@ -2413,11 +2445,11 @@ static void recBLEZ() {
     // Branch if Rs <= 0
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (IsConst(_Rs_)) {
         if ((s32) iRegs[_Rs_].k <= 0) {
             iJump(bpc);
@@ -2443,11 +2475,11 @@ static void recBGEZ() {
     // Branch if Rs >= 0
     u32 bpc = _Imm_ * 4 + pc;
     u32 *b;
-
+	/*
     if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
         return;
     }
-    
+    */
     if (IsConst(_Rs_)) {
         if ((s32) iRegs[_Rs_].k >= 0) {
             iJump(bpc);

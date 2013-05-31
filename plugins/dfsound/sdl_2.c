@@ -60,8 +60,9 @@ void SetupSound(void) {
 
 	InitSDL();
 
-	
+	Sleep(500);
 
+	
 	iReadPos = 0;
 	iWritePos = 0;
 
@@ -92,6 +93,9 @@ void SetupSound(void) {
 }
 
 void RemoveSound(void) {
+	iReadPos = 0;
+	iWritePos = 0;
+
 	if (pSndBuffer == NULL) 
 		return;
 
@@ -100,11 +104,6 @@ void RemoveSound(void) {
 
 	free(pSndBuffer);
 	pSndBuffer = NULL;
-
-	
-
-	iReadPos = 0;
-	iWritePos = 0;
 }
 
 unsigned long SoundGetBytesBuffered(void) {

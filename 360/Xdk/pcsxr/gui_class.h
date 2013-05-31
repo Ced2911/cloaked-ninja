@@ -40,6 +40,16 @@ public:
 
 	void AddParentEntry(std::wstring currentDir) {
 		_FILE_INFO finfo;
+		wchar_t lastLetter = currentDir[currentDir.length() - 1];
+		if (lastLetter == L':') {
+			finfo.isDir = true;
+			finfo.displayname = L"DeviceList";
+			finfo.filename = L"/";
+
+			fileList.push_back(finfo);
+			return;
+		}
+
 		unsigned int p = currentDir.rfind(L"\\");
 		currentDir = currentDir.substr(0,  p);
 
@@ -50,13 +60,55 @@ public:
 		fileList.push_back(finfo);
 	}
 
+	HRESULT AddDevicesList() {
+		// Free file list
+		fileList.clear();
+
+		_FILE_INFO finfo;
+		finfo.isDir = true;
+		
+		finfo.filename = L"game:";
+		finfo.displayname = L"[GAME]";
+		fileList.push_back(finfo);
+
+		finfo.filename = L"usb0:";
+		finfo.displayname = L"[USB0]";
+		fileList.push_back(finfo);
+
+		finfo.filename = L"hdd0:";
+		finfo.displayname = L"[HDD0]";
+		fileList.push_back(finfo);
+
+		finfo.filename = L"hdd1:";
+		finfo.displayname = L"[HDD1]";
+		fileList.push_back(finfo);
+		
+		finfo.filename = L"hdd2:";
+		finfo.displayname = L"[HDD2]";
+		fileList.push_back(finfo);
+		
+		finfo.filename = L"hdd3:";
+		finfo.displayname = L"[HDD3]";
+		fileList.push_back(finfo);
+		
+		finfo.filename = L"hddx:";
+		finfo.displayname = L"[HDDX]";
+		fileList.push_back(finfo);
+
+		return S_OK;
+	}
+
 	HRESULT UpdateDirList(std::wstring currentDir = L"game:") {
 		WIN32_FIND_DATA ffd;
 		std::string szDir;
 
 		HANDLE hFind = INVALID_HANDLE_VALUE;
 		DWORD dwError=0;		
-		
+
+		if(currentDir == L"/") {
+			AddDevicesList();
+			return S_OK;
+		}
 		// Free file list
 		fileList.clear();
 

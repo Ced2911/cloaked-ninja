@@ -10,6 +10,7 @@
 <Height>608.000000</Height>
 <Position>96.000008,56.000004,0.000000</Position>
 <ClassOverride>InGameMenu</ClassOverride>
+<Visual>XuiSceneRect</Visual>
 </Properties>
 <XuiButton>
 <Properties>

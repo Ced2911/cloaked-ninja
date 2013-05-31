@@ -90,6 +90,16 @@ void CreateDisplay(void){
 
 }
 
+
+// Memset fail :s => clear to black
+static void TexZero(void * buf, int len) {
+	int i;
+	unsigned char * s = (unsigned char*)buf;
+	for(i = 0; i < len; i++) {
+		s[i] = 0;
+	}
+}
+
 void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 {
 	//uint16_t * psxVr16 = psxVuw;
@@ -115,13 +125,13 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 
 	if (PreviousPSXDisplay.Range.y0) // centering needed?
 	{
-		XMemSet(surf, 0, (PreviousPSXDisplay.Range.y0 >> 1) * lPitch);
+		TexZero(surf, (PreviousPSXDisplay.Range.y0 >> 1) * lPitch);
 
 		dy -= PreviousPSXDisplay.Range.y0;
 		surf += (PreviousPSXDisplay.Range.y0 >> 1) * lPitch;
 
-		XMemSet(surf + dy * lPitch,
-			0, ((PreviousPSXDisplay.Range.y0 + 1) >> 1) * lPitch);
+		TexZero(surf + dy * lPitch,
+			((PreviousPSXDisplay.Range.y0 + 1) >> 1) * lPitch);
 	}
 
 	if (PreviousPSXDisplay.Range.x0)
@@ -129,7 +139,7 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 		for (column = 0; column < dy; column++)
 		{
 			destpix = (uint32_t *)(surf + (column * lPitch));
-			XMemSet(destpix, 0, PreviousPSXDisplay.Range.x0 << 2);
+			TexZero(destpix, PreviousPSXDisplay.Range.x0 << 2);
 		}
 		surf += PreviousPSXDisplay.Range.x0 << 2;
 	}

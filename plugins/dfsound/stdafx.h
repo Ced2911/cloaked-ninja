@@ -92,6 +92,7 @@
 #define SPUabout				PEOPS_SPUabout
 #define SPUregisterCallback		PEOPS_SPUregisterCallback
 #define SPUregisterCDDAVolume	PEOPS_SPUregisterCDDAVolume
+#define SPUplayCDDAchannel		PEOPS_SPUplayCDDAchannel
 #define SPUwriteRegister		PEOPS_SPUwriteRegister
 #define SPUreadRegister			PEOPS_SPUreadRegister
 #define SPUfreeze				PEOPS_SPUfreeze

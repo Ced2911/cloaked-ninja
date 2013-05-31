@@ -515,6 +515,7 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="sys\Mount.cpp" />
     <ClCompile Include="video.cpp" />
     <ClCompile Include="xb_sys.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>

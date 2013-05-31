@@ -86,6 +86,7 @@ long CALLBACK PEOPS_SPUconfigure(void);
 void CALLBACK PEOPS_SPUabout(void);
 void CALLBACK PEOPS_SPUregisterCallback(void (CALLBACK *callback)(void));
 void CALLBACK PEOPS_SPUregisterCDDAVolume(void (CALLBACK *CDDAVcallback)(unsigned short,unsigned short));
+void CALLBACK PEOPS_SPUplayCDDAchannel(short *pcm, int nbytes);
 //registers.c
 void CALLBACK PEOPS_SPUwriteRegister(unsigned long reg, unsigned short val);
 unsigned short CALLBACK PEOPS_SPUreadRegister(unsigned long reg);
@@ -261,7 +262,7 @@ void PEOPS_GPUvBlank( int val );
 
 #define SPU_PEOPS_PLUGIN \
 	{ "SPU",      \
-	  18,         \
+	  19,         \
 	  { { "SPUinit",  \
 	      PEOPS_SPUinit }, \
 	    { "SPUshutdown",	\
@@ -296,6 +297,8 @@ void PEOPS_GPUvBlank( int val );
 	      PEOPS_SPUregisterCallback}, \
 	    { "SPUregisterCDDAVolume", \
 	      PEOPS_SPUregisterCDDAVolume}, \
+		{ "SPUplayCDDAchannel", \
+	      PEOPS_SPUplayCDDAchannel}, \
 	    { "SPUasync", \
 	      PEOPS_SPUasync} \
 	       } }
