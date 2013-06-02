@@ -142,6 +142,17 @@
 <Visual>XuiButton</Visual>
 </Properties>
 </XuiListItem>
+<XuiListItem>
+<Properties>
+<Id>control_ListItem</Id>
+<Width>254.000000</Width>
+<Height>40.000000</Height>
+<Position>7.000000,26.000000,0.000000</Position>
+<Anchor>5</Anchor>
+<Show>false</Show>
+<Visual>XuiButton</Visual>
+</Properties>
+</XuiListItem>
 </XuiList>
 <XuiCheckbox>
 <Properties>
@@ -149,6 +160,7 @@
 <Width>165.000000</Width>
 <Height>48.000000</Height>
 <Position>624.000061,40.000008,0.000000</Position>
+<Visual>XuiCheckbox</Visual>
 <NavLeft>FileBrowser</NavLeft>
 <NavDown>GpuThCbox</NavDown>
 <Text>Use Dynarec</Text>
@@ -268,6 +280,17 @@ Pal
 <Visual>XuiButton</Visual>
 <Layout>1</Layout>
 <InterItemSpacing>5.000000,0.000000,0.000000</InterItemSpacing>
+</Properties>
+</XuiListItem>
+<XuiListItem>
+<Properties>
+<Id>control_ListItem</Id>
+<Width>254.000000</Width>
+<Height>40.000000</Height>
+<Position>7.000000,26.000000,0.000000</Position>
+<Anchor>5</Anchor>
+<Show>false</Show>
+<Visual>XuiButton</Visual>
 </Properties>
 </XuiListItem>
 <XuiListItem>
