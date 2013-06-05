@@ -1,21 +1,21 @@
 /***************************************************************************
-*   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
-*                                                                         *
-*   This program is free software; you can redistribute it and/or modify  *
-*   it under the terms of the GNU General Public License as published by  *
-*   the Free Software Foundation; either version 2 of the License, or     *
-*   (at your option) any later version.                                   *
-*                                                                         *
-*   This program is distributed in the hope that it will be useful,       *
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
-*   GNU General Public License for more details.                          *
-*                                                                         *
-*   You should have received a copy of the GNU General Public License     *
-*   along with this program; if not, write to the                         *
-*   Free Software Foundation, Inc.,                                       *
-*   51 Franklin Street, Fifth Floor, Boston, MA 02111-1307 USA.           *
-***************************************************************************/
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
+ ***************************************************************************/
 
 /*
 * Miscellaneous functions, including savestates and CD-ROM loading.
@@ -79,12 +79,12 @@ void mmssdd( char *b, char *p )
 	time[0] = btoi(time[0]); time[1] = btoi(time[1]); time[2] = btoi(time[2]); \
 	time[2]++; \
 	if(time[2] == 75) { \
-	time[2] = 0; \
-	time[1]++; \
-	if (time[1] == 60) { \
-	time[1] = 0; \
-	time[0]++; \
-	} \
+		time[2] = 0; \
+		time[1]++; \
+		if (time[1] == 60) { \
+			time[1] = 0; \
+			time[0]++; \
+		} \
 	} \
 	time[0] = itob(time[0]); time[1] = itob(time[1]); time[2] = itob(time[2]);
 
@@ -96,7 +96,7 @@ void mmssdd( char *b, char *p )
 #define READDIR(_dir) \
 	READTRACK(); \
 	memcpy(_dir, buf + 12, 2048); \
-	\
+ \
 	incTime(); \
 	READTRACK(); \
 	memcpy(_dir + 2048, buf + 12, 2048);
@@ -250,6 +250,10 @@ int LoadCdromFile(const char *filename, EXE_HEADER *head) {
 	size = head->t_size;
 	addr = head->t_addr;
 
+	// Cache clear/invalidate dynarec/int. Fixes startup of Casper/X-Files and possibly others.
+	psxCpu->Clear(addr, size / 4);
+	psxRegs.ICache_valid = FALSE;
+
 	while (size) {
 		incTime();
 		READTRACK();
@@ -307,7 +311,7 @@ int CheckCdrom() {
 					while (*ptr != '\0' && *ptr != '\r' && *ptr != '\n') ptr++;
 					*ptr = '\0';
 					if (GetCdromFile(mdir, time, exename) == -1)
-						return -1;		// main executable not found
+					 	return -1;		// main executable not found
 				} else
 					return -1;
 			}
@@ -332,8 +336,9 @@ int CheckCdrom() {
 
 	if (Config.PsxAuto) { // autodetect system (pal or ntsc)
 		if((CdromId[2] == 'e') || (CdromId[2] == 'E') ||
+			!strncmp(CdromId, "\0DTLS3035", 10) ||
 			!strncmp(CdromId, "PBPX95001", 10) || // according to redump.org, these PAL
-			!strncmp(CdromId, "PBPX95007", 10) || // demos have a non-standard ID;
+			!strncmp(CdromId, "PBPX95007", 10) || // discs have a non-standard ID;
 			!strncmp(CdromId, "PBPX95008", 10))   // add more serials if they are discovered.
 			Config.PsxType = PSX_TYPE_PAL; // pal
 		else Config.PsxType = PSX_TYPE_NTSC; // ntsc
@@ -346,7 +351,7 @@ int CheckCdrom() {
 	SysPrintf(_("CD-ROM ID: %.9s\n"), CdromId);
 
 	BuildPPFCache();
-	LoadSBI();
+	LoadSBI(NULL);
 
 	return 0;
 }
@@ -432,27 +437,27 @@ int Load(const char *ExePath) {
 				do {
 					fread(&opcode, 1, 1, tmpFile);
 					switch (opcode) {
-			case 1: /* Section loading */
-				fread(&section_address, 4, 1, tmpFile);
-				fread(&section_size, 4, 1, tmpFile);
-				section_address = SWAPu32(section_address);
-				section_size = SWAPu32(section_size);
+						case 1: /* Section loading */
+							fread(&section_address, 4, 1, tmpFile);
+							fread(&section_size, 4, 1, tmpFile);
+							section_address = SWAPu32(section_address);
+							section_size = SWAPu32(section_size);
 #ifdef EMU_LOG
-				EMU_LOG("Loading %08X bytes from %08X to %08X\n", section_size, ftell(tmpFile), section_address);
+							EMU_LOG("Loading %08X bytes from %08X to %08X\n", section_size, ftell(tmpFile), section_address);
 #endif
-				fread(PSXM(section_address), section_size, 1, tmpFile);
-				break;
-			case 3: /* register loading (PC only?) */
-				fseek(tmpFile, 2, SEEK_CUR); /* unknown field */
-				fread(&psxRegs.pc, 4, 1, tmpFile);
-				psxRegs.pc = SWAPu32(psxRegs.pc);
-				break;
-			case 0: /* End of file */
-				break;
-			default:
-				SysPrintf(_("Unknown CPE opcode %02x at position %08x.\n"), opcode, ftell(tmpFile) - 1);
-				retval = -1;
-				break;
+							fread(PSXM(section_address), section_size, 1, tmpFile);
+							break;
+						case 3: /* register loading (PC only?) */
+							fseek(tmpFile, 2, SEEK_CUR); /* unknown field */
+							fread(&psxRegs.pc, 4, 1, tmpFile);
+							psxRegs.pc = SWAPu32(psxRegs.pc);
+							break;
+						case 0: /* End of file */
+							break;
+						default:
+							SysPrintf(_("Unknown CPE opcode %02x at position %08x.\n"), opcode, ftell(tmpFile) - 1);
+							retval = -1;
+							break;
 					}
 				} while (opcode != 0 && retval == 0);
 				break;
@@ -494,11 +499,11 @@ int Load(const char *ExePath) {
 
 // STATES
 
-static const char PcsxHeader[32] = "STv4 PCSX v" PACKAGE_VERSION;
+static const char PcsxrHeader[32] = "STv4 PCSXR v" PACKAGE_VERSION;
 
 // Savestate Versioning!
 // If you make changes to the savestate version, please increment the value below.
-static const u32 SaveVersion = 0x8b410006;
+static const u32 SaveVersion = 0x8b410008;
 
 int SaveState(const char *file) {
 	gzFile f;
@@ -510,7 +515,7 @@ int SaveState(const char *file) {
 	f = gzopen(file, "wb");
 	if (f == NULL) return -1;
 
-	gzwrite(f, (void *)PcsxHeader, 32);
+	gzwrite(f, (void *)PcsxrHeader, 32);
 	gzwrite(f, (void *)&SaveVersion, sizeof(u32));
 	gzwrite(f, (void *)&Config.HLE, sizeof(boolean));
 
@@ -536,9 +541,11 @@ int SaveState(const char *file) {
 	free(gpufP);
 
 	// spu
-	spufP = (SPUFreeze_t *) malloc(16);
+	spufP = (SPUFreeze_t *) malloc(16); // only first 3 elements (up to Size)
 	SPU_freeze(2, spufP);
 	Size = spufP->Size; gzwrite(f, &Size, 4);
+	if (Size <= 0)
+		return 1; // error
 	free(spufP);
 	spufP = (SPUFreeze_t *) malloc(Size);
 	SPU_freeze(1, spufP);
@@ -572,7 +579,7 @@ int LoadState(const char *file) {
 	gzread(f, &version, sizeof(u32));
 	gzread(f, &hle, sizeof(boolean));
 
-	if (strncmp("STv4 PCSX", header, 9) != 0 || version != SaveVersion || hle != Config.HLE) {
+	if (strncmp("STv4 PCSXR", header, 10) != 0 || version != SaveVersion || hle != Config.HLE) {
 		gzclose(f);
 		return -1;
 	}
@@ -627,7 +634,7 @@ int CheckState(const char *file) {
 
 	gzclose(f);
 
-	if (strncmp("STv4 PCSX", header, 9) != 0 || version != SaveVersion || hle != Config.HLE)
+	if (strncmp("STv4 PCSXR", header, 10) != 0 || version != SaveVersion || hle != Config.HLE)
 		return -1;
 
 	return 0;
@@ -640,7 +647,7 @@ int SendPcsxInfo() {
 		return 0;
 
 	NET_sendData(&Config.Xa, sizeof(Config.Xa), PSE_NET_BLOCKING);
-	NET_sendData(&Config.Sio, sizeof(Config.Sio), PSE_NET_BLOCKING);
+//	NET_sendData(&Config.SioIrq, sizeof(Config.SioIrq), PSE_NET_BLOCKING);
 	NET_sendData(&Config.SpuIrq, sizeof(Config.SpuIrq), PSE_NET_BLOCKING);
 	NET_sendData(&Config.RCntFix, sizeof(Config.RCntFix), PSE_NET_BLOCKING);
 	NET_sendData(&Config.PsxType, sizeof(Config.PsxType), PSE_NET_BLOCKING);
@@ -656,7 +663,7 @@ int RecvPcsxInfo() {
 		return 0;
 
 	NET_recvData(&Config.Xa, sizeof(Config.Xa), PSE_NET_BLOCKING);
-	NET_recvData(&Config.Sio, sizeof(Config.Sio), PSE_NET_BLOCKING);
+	//NET_recvData(&Config.SioIrq, sizeof(Config.SioIrq), PSE_NET_BLOCKING);
 	NET_recvData(&Config.SpuIrq, sizeof(Config.SpuIrq), PSE_NET_BLOCKING);
 	NET_recvData(&Config.RCntFix, sizeof(Config.RCntFix), PSE_NET_BLOCKING);
 	NET_recvData(&Config.PsxType, sizeof(Config.PsxType), PSE_NET_BLOCKING);

@@ -17,7 +17,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02111-1307 USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 #include "psxcommon.h"
@@ -191,6 +191,8 @@ void BuildPPFCache() {
 
 	FreePPFCache();
 
+    if (CdromId[0] == '\0') return;
+
 	// Generate filename in the format of SLUS_123.45
 	buffer[0] = toupper(CdromId[0]);
 	buffer[1] = toupper(CdromId[1]);
@@ -205,7 +207,7 @@ void BuildPPFCache() {
 	buffer[10] = CdromId[8];
 	buffer[11] = '\0';
 
-	sprintf(szPPF, "%s%s", Config.PatchesDir, buffer);
+	sprintf(szPPF, "%s/%s", Config.PatchesDir, buffer);
 
 	ppffile = fopen(szPPF, "rb");
 	if (ppffile == NULL) return;
@@ -335,35 +337,40 @@ void BuildPPFCache() {
 // redump.org SBI files
 static u8 sbitime[256][3], sbicount;
 
-void LoadSBI() {
+int LoadSBI(const char *filename) {
 	FILE *sbihandle;
 	char buffer[16], sbifile[MAXPATHLEN];
 
-	// Generate filename in the format of SLUS_123.45.sbi
-	buffer[0] = toupper(CdromId[0]);
-	buffer[1] = toupper(CdromId[1]);
-	buffer[2] = toupper(CdromId[2]);
-	buffer[3] = toupper(CdromId[3]);
-	buffer[4] = '_';
-	buffer[5] = CdromId[4];
-	buffer[6] = CdromId[5];
-	buffer[7] = CdromId[6];
-	buffer[8] = '.';
-	buffer[9] = CdromId[7];
-	buffer[10] = CdromId[8];
-	buffer[11] = '.';
-	buffer[12] = 's';
-	buffer[13] = 'b';
-	buffer[14] = 'i';
-	buffer[15] = '\0';
+	if (filename == NULL) {
+		if (CdromId[0] == '\0') return -1;
 
-	sprintf(sbifile, "%s%s", Config.PatchesDir, buffer);
+		// Generate filename in the format of SLUS_123.45.sbi
+		buffer[0] = toupper(CdromId[0]);
+		buffer[1] = toupper(CdromId[1]);
+		buffer[2] = toupper(CdromId[2]);
+		buffer[3] = toupper(CdromId[3]);
+		buffer[4] = '_';
+		buffer[5] = CdromId[4];
+		buffer[6] = CdromId[5];
+		buffer[7] = CdromId[6];
+		buffer[8] = '.';
+		buffer[9] = CdromId[7];
+		buffer[10] = CdromId[8];
+		buffer[11] = '.';
+		buffer[12] = 's';
+		buffer[13] = 'b';
+		buffer[14] = 'i';
+		buffer[15] = '\0';
+
+		sprintf(sbifile, "%s%s", Config.PatchesDir, buffer);
+		filename = sbifile;
+	}
+
+	sbihandle = fopen(filename, "rb");
+	if (sbihandle == NULL) return -1;
 
 	// init
 	sbicount = 0;
-
-	sbihandle = fopen(sbifile, "rb");
-	if (sbihandle == NULL) return;
 
 	// 4-byte SBI header
 	fread(buffer, 1, 4, sbihandle);
@@ -374,7 +381,9 @@ void LoadSBI() {
 
 	fclose(sbihandle);
 
-	SysPrintf(_("Loaded SBI file: %s.\n"), sbifile);
+	SysPrintf(_("Loaded SBI file: %s.\n"), filename);
+
+	return 0;
 }
 
 boolean CheckSBI(const u8 *time) {
@@ -389,4 +398,8 @@ boolean CheckSBI(const u8 *time) {
 	}
 
 	return FALSE;
+}
+
+void UnloadSBI(void) {
+	sbicount = 0;
 }

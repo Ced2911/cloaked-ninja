@@ -113,6 +113,9 @@
     <ClInclude Include="..\..\..\libpcsxcore\ppc\pR3000A.h">
       <Filter>ppc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\libpcsxcore\fileio.wrapper.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\libpcsxcore\ppc\ppc.c">
@@ -197,6 +200,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\psxmem.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libpcsxcore\fileio.wrapper.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

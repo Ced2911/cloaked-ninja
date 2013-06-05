@@ -13,7 +13,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02111-1307 USA
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
 #ifndef __PPF_H__
@@ -27,8 +27,9 @@ void BuildPPFCache();
 void FreePPFCache();
 void CheckPPFCache(unsigned char *pB, unsigned char m, unsigned char s, unsigned char f);
 
-void LoadSBI();
+int LoadSBI(const char *filename);
 boolean CheckSBI(const u8 *time);
+void UnloadSBI(void);
 
 #ifdef __cplusplus
 }

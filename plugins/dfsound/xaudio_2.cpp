@@ -146,6 +146,9 @@ extern "C" unsigned long SoundGetBytesBuffered(void)
 
 extern "C" void SoundFeedStreamData( unsigned char* pSound, long lBytes )
 {	
+#ifdef _DEBUG
+	return;
+#endif
 	if(lBytes<0) {
 		return;
 	}

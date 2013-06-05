@@ -264,11 +264,14 @@ extern "C" void UpdateScrenRes(int x,int y) {
 	Vertices[2].TextureUV[1] = (float) y / (float) PSX_HEIGHT;
 }
 
+// Back buffer = 
+DWORD backbuffer_color = 0xff00FF00;
+
 extern "C" void DisplayUpdate()
 {
 	// Clear the backbuffer.
 	g_pd3dDevice->Clear( 0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
-		0xff00FF00, 1.0f, 0L );
+		backbuffer_color, 1.0f, 0L );
 
 	DrawPcsxSurface();
 	

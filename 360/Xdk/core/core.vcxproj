@@ -291,9 +291,9 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_XBOX;_LIB;__BIGENDIAN__;__ppc__;__BIGENDIAN__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
@@ -305,7 +305,7 @@
       <CallAttributedProfiling>Disabled</CallAttributedProfiling>
       <CompileAs>CompileAsC</CompileAs>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
@@ -423,6 +423,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\libpcsxcore\fileio.wrapper.h" />
     <ClInclude Include="..\..\..\libpcsxcore\ppc\pGte.h" />
     <ClInclude Include="..\..\..\libpcsxcore\ppc\ppc.h" />
     <ClInclude Include="..\..\..\libpcsxcore\ppc\ppc_mnemonics.h" />
@@ -457,6 +458,7 @@
     <ClInclude Include="..\..\..\libpcsxcore\system.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\libpcsxcore\fileio.wrapper.c" />
     <ClCompile Include="..\..\..\libpcsxcore\ppc\ppc.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsC</CompileAs>

@@ -6,6 +6,7 @@
 #include "gpu.h"
 #include "sys\Mount.h"
 #include "simpleini\SimpleIni.h"
+#include <xfilecache.h>
 
 void RenderXui();
 
@@ -121,23 +122,28 @@ void RenderXui() {
 	VideoPresent();
 }
 
-
+extern "C" void cdrThreadInit(void);
 static void DoPcsx(char * game) {
 	int ret;
 
 	cdrIsoInit();
+	//cdrThreadInit();
 	SetIsoFile(game);
+
+	
+	gpuDmaThreadInit();
+
 
 	if (SysInit() == -1) {
 		// Display an error ?
 		printf("SysInit() Error!\n");
 		return;
 	}
-
-	gpuDmaThreadInit();
-
+	
 	gpuThreadEnable(xboxConfig.UseThreadedGpu);
-
+	
+	GPU_clearDynarec(clearDynarec);
+	
 	ret = CDR_open();
 	if (ret < 0) { SysMessage (_("Error Opening CDR Plugin")); return; }
 	ret = GPU_open(NULL);
@@ -145,15 +151,15 @@ static void DoPcsx(char * game) {
 	ret = SPU_open(NULL);
 	if (ret < 0) { SysMessage (_("Error Opening SPU Plugin (%d)"), ret); return; }
 	ret = PAD1_open(NULL);
-	if (ret < 0) { SysMessage (_("Error Opening PAD1 Plugin (%d)"), ret); return; }
-
-	CDR_init();
-	GPU_init();
-	SPU_init();
-	PAD1_init(1);
-	PAD2_init(2);
+	if (ret < 0) { SysMessage (_("Error Opening PAD1 Plugin (%d)"), ret); return; }	
+	ret = PAD2_open(NULL);
+	if (ret < 0) { SysMessage (_("Error Opening PAD2 Plugin (%d)"), ret); return; }	
 	
-	GPU_clearDynarec(clearDynarec);
+	SysReset();
+
+	//Config.SlowBoot = 1;
+
+	// Execute bios
 
 	SysPrintf("CheckCdrom\r\n");
 	int res = CheckCdrom();
@@ -162,11 +168,15 @@ static void DoPcsx(char * game) {
 	res=LoadCdrom();
 	if(res)
 		SysPrintf("LoadCdrom: %08x\r\n",res);
-	
-	SysReset();
 
 	SysPrintf("Execute\r\n");
-	// SysReset();
+	
+	memset(&psxRegs, 0, sizeof(psxRegs));
+
+	// Start in bootstrap (only work with .cue)
+	psxRegs.pc = 0xbfc00000; 
+
+	//psxExecuteBios();
 	psxCpu->Execute();
 }
 
@@ -310,6 +320,12 @@ HRESULT MountDevices(){
 
 VOID __cdecl main()
 {
+	//if(ERROR_SUCCESS == XFileCacheInit( XFILECACHE_CLEAR_ALL, XFILECACHE_MAX_SIZE, XFILECACHE_DEFAULT_THREAD, 0, 1))
+	{
+		// Caching is enabled.
+	}
+
+
 	MountDevices();
 
 	InitD3D();

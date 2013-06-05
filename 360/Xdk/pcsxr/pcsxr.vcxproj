@@ -286,6 +286,7 @@
       <AdditionalLibraryDirectories>../core/Debug/;../video/Debug/;../input/Debug/;../cdrom/Debug/;../audio/Debug/;../zlib/Debug;../peopsspu110/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/BASE:0x92000000 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Deploy>
       <DeploymentType>CopyToHardDrive</DeploymentType>
@@ -557,6 +558,9 @@
     <ProjectReference Include="..\audio\audio.vcxproj">
       <Project>{041da0e5-636e-49ca-a0a1-07ef0edf5aff}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\cdrom\cdrom.vcxproj">
+      <Project>{bd5aeb5d-9ad7-46d2-a1f1-a0a2d66c5721}</Project>
     </ProjectReference>
     <ProjectReference Include="..\core\core.vcxproj">
       <Project>{d29fede6-fdb3-479a-931e-a6f9c155b764}</Project>

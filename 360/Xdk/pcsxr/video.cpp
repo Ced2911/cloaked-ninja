@@ -1,5 +1,5 @@
 #include <xtl.h>
-
+#include <stdio.h>
 
 //--------------------------------------------------------------------------------------
 // Globals
@@ -75,7 +75,8 @@ void InitD3D() {
 
 void VideoPresent() {	
     IDirect3DTexture9* pCurFrontBuffer = pFrontBuffer[iFrontBufferSelected];
-	g_pd3dDevice->Resolve( D3DRESOLVE_RENDERTARGET0, NULL, pCurFrontBuffer, NULL, 0, 0, NULL, 0.0f, 0, NULL );
+
+	g_pd3dDevice->Resolve( D3DRESOLVE_RENDERTARGET0|D3DRESOLVE_CLEARRENDERTARGET|D3DRESOLVE_CLEARDEPTHSTENCIL, NULL, pCurFrontBuffer, NULL, 0, 0, NULL, 0.0f, 0, NULL );
 
 	g_pd3dDevice->SynchronizeToPresentationInterval();
 

@@ -55,6 +55,7 @@
 #define __BLOCKS(x) ((x+__BLOCK_SIZE-1)/__BLOCK_SIZE)
 #define __BLOCKSIZE(x) ((x+__BLOCK_SIZE-1)&~(__BLOCK_SIZE-1))
 
+__declspec(align(128))
 static unsigned char memData[__MEM_SIZE+(__BLOCK_SIZE-1)];
 //#define __MEM_START 0x04000000 << replacing the PSP static VRAM location
 static unsigned long __MEM_START = (((unsigned long)memData)+(__BLOCK_SIZE-1))&~(__BLOCK_SIZE-1);
@@ -84,7 +85,7 @@ static unsigned long __MEM_START = (((unsigned long)memData)+(__BLOCK_SIZE-1))&~
 #define __BLOCK_GET_FREEBLOCK(x) ((x>>30) & 0x3)		// returns 11b if block is a starting block and free, 10b if block is a starting block and allocated, 0xb if it is a non-starting block (don't change)
 #define __BLOCK0 ((__MEM_BLOCKS) | (1<<31) | (1<<30))
 
-
+__declspec(align(128))
 unsigned int	__mem_blocks[__MEM_BLOCKS] = { 0 };
 
 
