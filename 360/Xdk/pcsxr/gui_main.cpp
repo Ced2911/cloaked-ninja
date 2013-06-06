@@ -123,10 +123,12 @@ void RenderXui() {
 }
 
 extern "C" void cdrThreadInit(void);
+extern "C" void POKOPOM_Init();
 static void DoPcsx(char * game) {
 	int ret;
 
 	cdrIsoInit();
+	POKOPOM_Init();
 	//cdrThreadInit();
 	SetIsoFile(game);
 

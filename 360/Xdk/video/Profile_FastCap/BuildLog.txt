@@ -1,0 +1,5 @@
+﻿La génération a démarré 4/23/2013 12:24:34 AM.
+
+La génération a réussi.
+
+Temps écoulé 00:00:00.01

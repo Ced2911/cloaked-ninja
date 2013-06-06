@@ -570,6 +570,9 @@
       <Project>{5be84ac5-d807-4498-a687-a38c44ee8609}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\pokopom_input\pokopom_input.vcxproj">
+      <Project>{f2f22eaa-2f95-4dcf-a62a-e455bd6836c0}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\video\video.vcxproj">
       <Project>{de176ebf-3526-425f-855b-981b19357791}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
