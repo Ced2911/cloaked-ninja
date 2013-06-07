@@ -647,6 +647,10 @@ static int handlepbp(const char *isofile) {
 		goto fail_io;
 	}
 
+	// Bswap header
+	pbp_hdr.sig = _byteswap_ulong(pbp_hdr.sig);
+	pbp_hdr.psar_offs = _byteswap_ulong(pbp_hdr.psar_offs);
+
 	ret = fseek(cdHandle, pbp_hdr.psar_offs, SEEK_SET);
 	if (ret != 0) {
 		SysPrintf("failed to seek to %x\n", pbp_hdr.psar_offs);
@@ -683,6 +687,8 @@ static int handlepbp(const char *isofile) {
 			cdrIsoMultidiskSelect = 0;
 
 		psisoimg_offs += offsettab[cdrIsoMultidiskSelect];
+		// bswap
+		psisoimg_offs = psisoimg_offs;
 
 		ret = fseek(cdHandle, psisoimg_offs, SEEK_SET);
 		if (ret != 0) {
@@ -709,6 +715,7 @@ static int handlepbp(const char *isofile) {
 	// first 3 entries are special
 	fseek(cdHandle, sizeof(toc_entry), SEEK_CUR);
 	fread(&toc_entry, 1, sizeof(toc_entry), cdHandle);
+
 	numtracks = btoi(toc_entry.index1[0]);
 
 	fread(&toc_entry, 1, sizeof(toc_entry), cdHandle);
@@ -757,6 +764,11 @@ static int handlepbp(const char *isofile) {
 	cdimg_base = psisoimg_offs + 0x100000;
 	for (i = 0; i < compr_img->index_len; i++) {
 		ret = fread(&index_entry, 1, sizeof(index_entry), cdHandle);
+
+		// bswap
+		index_entry.offset = _byteswap_ulong(index_entry.offset);
+		index_entry.size = _byteswap_ulong(index_entry.size);
+
 		if (ret != sizeof(index_entry)) {
 			SysPrintf("failed to read index_entry #%d\n", i);
 			goto fail_index;
@@ -808,6 +820,11 @@ static int handlecbin(const char *isofile) {
 		return -1;
 	}
 
+	// Bswap 
+	ciso_hdr.header_size = _byteswap_ulong(ciso_hdr.header_size);
+	ciso_hdr.block_size = _byteswap_ulong(ciso_hdr.block_size);
+	ciso_hdr.total_bytes = _byteswap_uint64(ciso_hdr.total_bytes);
+
 	if (strncmp(ciso_hdr.magic, "CISO", 4) != 0 || ciso_hdr.total_bytes <= 0 || ciso_hdr.block_size <= 0) {
 		SysPrintf("bad ciso header\n");
 		return -1;
@@ -832,6 +849,7 @@ static int handlecbin(const char *isofile) {
 	if (compr_img->index_table == NULL)
 		goto fail_io;
 
+
 	ret = fread(compr_img->index_table, sizeof(compr_img->index_table[0]), compr_img->index_len, cdHandle);
 	if (ret != compr_img->index_len) {
 		SysPrintf("failed to read index table\n");
@@ -839,7 +857,11 @@ static int handlecbin(const char *isofile) {
 	}
 
 	for (i = 0; i < compr_img->index_len + 1; i++) {
+		
 		index = compr_img->index_table[i];
+		// bswap
+		index = _byteswap_ulong(index);
+
 		plain = index & 0x80000000;
 		index &= 0x7fffffff;
 		compr_img->index_table[i] = (index << ciso_hdr.align) | plain;

@@ -10,7 +10,8 @@
 //char * game = "game:\\Tekken 3 (USA)\\Tekken 3 (USA) (Track 1).bin";
 //char * game = "game:\\Bushido Blade [U] [SCUS-94180]\\bushido_blade.bin";
 //char * game = "game:\\Soul Blade (USA) (v1.0)\\Soul Blade (USA) (v1.0).bin";
-char * game = "game:\\Castlevanina - SOTN.bin";
+//char * game = "game:\\Castlevanina - SOTN.bin";
+char * game = "game:\\BH2.bin";
 //char * game = "game:\\Final Fantasy VII (USA) (Disc 1)\\Final Fantasy VII (USA) (Disc 1).bin";
 //char * game = "game:\\Legend of Mana (USA)\\Legend of Mana (USA).bin";
 //char * game = "game:\\Chrono Cross (USA) (Disc 1)\\Chrono Cross (USA) (Disc 1).bin";

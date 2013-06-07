@@ -746,10 +746,10 @@ int LoadPlugins() {
 */
 	if (LoadGPUplugin("GPU") == -1) return -1;
 	if (LoadSPUplugin("SPU") == -1) return -1;
-	/*
+#ifdef _DEBUG
 	if (LoadPAD1plugin("PAD1") == -1) return -1;
 	if (LoadPAD2plugin("PAD2") == -1) return -1;
-	*/
+#endif
 	if (strcmp("Disabled", Config.Net) == 0 || strcmp("", Config.Net) == 0)
 		Config.UseNet = FALSE;
 	else {

@@ -173,10 +173,11 @@ static void DoPcsx(char * game) {
 
 	SysPrintf("Execute\r\n");
 	
-	memset(&psxRegs, 0, sizeof(psxRegs));
+	//memset(&psxRegs, 0, sizeof(psxRegs));
 
 	// Start in bootstrap (only work with .cue)
-	psxRegs.pc = 0xbfc00000; 
+	//psxRegs.pc = 0xbfc00000; 
+	//SysReset();
 
 	//psxExecuteBios();
 	psxCpu->Execute();
@@ -263,8 +264,8 @@ static void InitPcsx() {
 	Config.PsxAuto = 0;
 	
 	// Init some stuff ...
-	gpuDmaThreadInit();
-	cdrIsoInit();
+	//gpuDmaThreadInit();
+	//cdrIsoInit();
 }
 
 static void InitXui() {
