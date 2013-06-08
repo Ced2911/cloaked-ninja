@@ -16,13 +16,13 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program; if not, write to the                         *
  *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Street, Fifth Floor, Boston, MA 02111-1307 USA.           *
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
  ***************************************************************************/
 
 /*
 * GTE functions.
 */
-
+#define inline __inline
 #include "gte.h"
 #include "psxmem.h"
 
@@ -156,6 +156,8 @@
 #define gteZSF4 (psxRegs.CP2C.p[30].sw.l)
 #define gteFLAG (psxRegs.CP2C.r[31])
 
+#define SUM_FLAG { if( gteFLAG & 0x7f87e000 ) gteFLAG |= 0x80000000; }
+
 #define GTE_OP(op) ((op >> 20) & 31)
 #define GTE_SF(op) ((op >> 19) & 1)
 #define GTE_MX(op) ((op >> 17) & 3)
@@ -168,7 +170,7 @@
 
 #define gteop (psxRegs.code & 0x1ffffff)
 
-static __inline s64 BOUNDS(s64 n_value, s64 n_max, int n_maxflag, s64 n_min, int n_minflag) {
+static inline s64 BOUNDS(s64 n_value, s64 n_max, int n_maxflag, s64 n_min, int n_minflag) {
 	if (n_value > n_max) {
 		gteFLAG |= n_maxflag;
 	} else if (n_value < n_min) {
@@ -177,8 +179,8 @@ static __inline s64 BOUNDS(s64 n_value, s64 n_max, int n_maxflag, s64 n_min, int
 	return n_value;
 }
 
-static __inline s32 LIM(s32 value, s32 max, s32 min, u32 flag) {
-	s32 ret = value;
+static inline s64 LIM(s64 value, s64 max, s64 min, u32 flag) {
+	s64 ret = value;
 	if (value > max) {
 		gteFLAG |= flag;
 		ret = max;
@@ -189,33 +191,44 @@ static __inline s32 LIM(s32 value, s32 max, s32 min, u32 flag) {
 	return ret;
 }
 
-#define A1(a) BOUNDS((a), 0x7fffffff, (1 << 30), -(s64)0x80000000, (1 << 31) | (1 << 27))
-#define A2(a) BOUNDS((a), 0x7fffffff, (1 << 29), -(s64)0x80000000, (1 << 31) | (1 << 26))
-#define A3(a) BOUNDS((a), 0x7fffffff, (1 << 28), -(s64)0x80000000, (1 << 31) | (1 << 25))
-#define limB1(a, l) LIM((a), 0x7fff, -0x8000 * !l, (1 << 31) | (1 << 24))
-#define limB2(a, l) LIM((a), 0x7fff, -0x8000 * !l, (1 << 31) | (1 << 23))
+#define A1(a) BOUNDS((a), 0x7fffffff, (1 << 30), -(s64)0x80000000, (1 << 27))
+#define A2(a) BOUNDS((a), 0x7fffffff, (1 << 29), -(s64)0x80000000, (1 << 26))
+#define A3(a) BOUNDS((a), 0x7fffffff, (1 << 28), -(s64)0x80000000, (1 << 25))
+#define limB1(a, l) LIM((a), 0x7fff, -0x8000 * !l, (1 << 24))
+#define limB2(a, l) LIM((a), 0x7fff, -0x8000 * !l, (1 << 23))
 #define limB3(a, l) LIM((a), 0x7fff, -0x8000 * !l, (1 << 22))
 #define limC1(a) LIM((a), 0x00ff, 0x0000, (1 << 21))
 #define limC2(a) LIM((a), 0x00ff, 0x0000, (1 << 20))
 #define limC3(a) LIM((a), 0x00ff, 0x0000, (1 << 19))
-#define limD(a) LIM((a), 0xffff, 0x0000, (1 << 31) | (1 << 18))
+#define limD(a) LIM((a), 0xffff, 0x0000, (1 << 18))
 
-static __inline u32 limE(u32 result) {
+static inline u32 limE(u32 result) {
 	if (result > 0x1ffff) {
-		gteFLAG |= (1 << 31) | (1 << 17);
+		gteFLAG |= (1 << 17);
 		return 0x1ffff;
 	}
 	return result;
 }
 
-#define F(a) BOUNDS((a), 0x7fffffff, (1 << 31) | (1 << 16), -(s64)0x80000000, (1 << 31) | (1 << 15))
-#define limG1(a) LIM((a), 0x3ff, -0x400, (1 << 31) | (1 << 14))
-#define limG2(a) LIM((a), 0x3ff, -0x400, (1 << 31) | (1 << 13))
+static inline float flimE(float result) {
+	if (result > 0x1ffff) {
+		gteFLAG |= (1 << 17);
+		return 0x1ffff;
+	}
+	return result;
+}
+
+#define F(a) BOUNDS((a), 0x7fffffff, (1 << 16), -(s64)0x80000000, (1 << 15))
+#define limG1(a) LIM((a), 0x3ff, -0x400,(1 << 14))
+#define limG2(a) LIM((a), 0x3ff, -0x400, (1 << 13))
 #define limH(a) LIM((a), 0x1000, 0x0000, (1 << 12))
+
+#define limG1_ia(a) LIM((a), 0x3ffffff, -0x4000000, (1 << 14))
+#define limG2_ia(a) LIM((a), 0x3ffffff, -0x4000000, (1 << 13))
 
 #include "gte_divider.h"
 
-static __inline u32 MFC2(int reg) {
+static inline u32 MFC2(int reg) {
 	switch (reg) {
 		case 1:
 		case 3:
@@ -249,7 +262,7 @@ static __inline u32 MFC2(int reg) {
 	return psxRegs.CP2D.r[reg];
 }
 
-static __inline void MTC2(u32 value, int reg) {
+static inline void MTC2(u32 value, int reg) {
 	switch (reg) {
 		case 15:
 			gteSXY0 = gteSXY1;
@@ -320,7 +333,7 @@ static __inline void MTC2(u32 value, int reg) {
 	}
 }
 
-static __inline void CTC2(u32 value, int reg) {
+static inline void CTC2(u32 value, int reg) {
 	switch (reg) {
 		case 4:
 		case 12:
@@ -334,7 +347,6 @@ static __inline void CTC2(u32 value, int reg) {
 
 		case 31:
 			value = value & 0x7ffff000;
-			if (value & 0x7f87e000) value |= 0x80000000;
 			break;
 	}
 
@@ -348,6 +360,7 @@ void gteMFC2() {
 
 void gteCFC2() {
 	if (!_Rt_) return;
+	if (_Rd_ == 31) SUM_FLAG;
 	psxRegs.GPR.r[_Rt_] = psxRegs.CP2C.r[_Rd_];
 }
 
@@ -448,6 +461,7 @@ void gteRTPT() {
 #else
 void gteRTPS() {
 	int quotient;
+    float fquotient;
 
 #ifdef GTE_LOG
 	GTE_LOG("GTE RTPS\n");
@@ -467,15 +481,23 @@ void gteRTPS() {
 	quotient = limE(DIVIDE(gteH, gteSZ3));
 	gteSXY0 = gteSXY1;
 	gteSXY1 = gteSXY2;
-	gteSX2 = limG1(F((s64)gteOFX + ((s64)gteIR1 * quotient)) >> 16);
+	gteSX2 = limG1(F((s64)gteOFX + ((s64)gteIR1 * quotient) * (Config.Widescreen ? 0.75 : 1)) >> 16);
 	gteSY2 = limG2(F((s64)gteOFY + ((s64)gteIR2 * quotient)) >> 16);
 
+    fquotient = flimE((float)(gteH << 16) / (float)gteSZ3);
+    GPU_addVertex(gteSX2,
+                  gteSY2,
+                  limG1_ia((s64)gteOFX + (s64)(gteIR1 * fquotient) * (Config.Widescreen ? 0.75 : 1)), // TODO: MAC1 calc instead of IR1.
+                  limG2_ia((s64)gteOFY + (s64)(gteIR2 * fquotient)), // TODO: MAC2 calc instead of IR2.
+				  ((s64)gteSZ3));                                    // TODO: MAC3 calc instead of SZ3.
+	
 	gteMAC0 = F((s64)(gteDQB + ((s64)gteDQA * quotient)) >> 12);
 	gteIR0 = limH(gteMAC0);
 }
 
 void gteRTPT() {
 	int quotient;
+    float fquotient;
 	int v;
 	s32 vx, vy, vz;
 
@@ -497,9 +519,17 @@ void gteRTPT() {
 		gteIR3 = limB3(gteMAC3, 0);
 		fSZ(v) = limD(gteMAC3);
 		quotient = limE(DIVIDE(gteH, fSZ(v)));
-		fSX(v) = limG1(F((s64)gteOFX + ((s64)gteIR1 * quotient)) >> 16);
+		fSX(v) = limG1(F((s64)gteOFX + ((s64)gteIR1 * quotient) * (Config.Widescreen ? 0.75 : 1)) >> 16);
 		fSY(v) = limG2(F((s64)gteOFY + ((s64)gteIR2 * quotient)) >> 16);
+
+        fquotient = flimE((float)(gteH << 16) / (float)fSZ(v));
+		GPU_addVertex(fSX(v),
+                      fSY(v),
+                      limG1_ia((s64)gteOFX + (s64)(gteIR1 * fquotient) * (Config.Widescreen ? 0.75 : 1)), // TODO: MAC1 calc instead of IR1.
+                      limG2_ia((s64)gteOFY + (s64)(gteIR2 * fquotient)), // TODO: MAC2 calc instead of IR2.
+					  ((s64)fSZ(v)));                                    // TODO: MAC3 calc instead of fSZ(v).
 	}
+	
 	gteMAC0 = F((s64)(gteDQB + ((s64)gteDQA * quotient)) >> 12);
 	gteIR0 = limH(gteMAC0);
 }
@@ -540,23 +570,29 @@ void gteNCLIP() {
 }
 
 void gteAVSZ3() {
+	s64 t;
+	
 #ifdef GTE_LOG
 	GTE_LOG("GTE AVSZ3\n");
 #endif
 	gteFLAG = 0;
 
-	gteMAC0 = F((s64)(gteZSF3 * gteSZ1) + (gteZSF3 * gteSZ2) + (gteZSF3 * gteSZ3));
-	gteOTZ = limD(gteMAC0 >> 12);
+	t = (s64)(gteZSF3  * (s64)(gteSZ1 + gteSZ2 + gteSZ3));
+	gteMAC0 = F(t);
+	gteOTZ = limD(t >> 12);
 }
 
 void gteAVSZ4() {
+	s64 t;
+	
 #ifdef GTE_LOG
 	GTE_LOG("GTE AVSZ4\n");
 #endif
 	gteFLAG = 0;
 
-	gteMAC0 = F((s64)(gteZSF4 * (gteSZ0 + gteSZ1 + gteSZ2 + gteSZ3)));
-	gteOTZ = limD(gteMAC0 >> 12);
+	t = (s64)(gteZSF4 * (s64)(gteSZ0 + gteSZ1 + gteSZ2 + gteSZ3));
+	gteMAC0 = F(t);
+	gteOTZ = limD(t >> 12);
 }
 
 void gteSQR() {
@@ -771,18 +807,19 @@ void gteDCPL() {
 
 void gteGPF() {
 	int shift = 12 * GTE_SF(gteop);
+	int lm = GTE_LM(gteop);
 
 #ifdef GTE_LOG
 	GTE_LOG("GTE GPF\n");
 #endif
 	gteFLAG = 0;
 
-	gteMAC1 = A1(((s64)gteIR0 * gteIR1) >> shift);
-	gteMAC2 = A2(((s64)gteIR0 * gteIR2) >> shift);
-	gteMAC3 = A3(((s64)gteIR0 * gteIR3) >> shift);
-	gteIR1 = limB1(gteMAC1, 0);
-	gteIR2 = limB2(gteMAC2, 0);
-	gteIR3 = limB3(gteMAC3, 0);
+	gteMAC1 = A1((s64)(gteIR0 * gteIR1)) >> shift;
+	gteMAC2 = A2((s64)(gteIR0 * gteIR2)) >> shift;
+	gteMAC3 = A3((s64)(gteIR0 * gteIR3)) >> shift;
+	gteIR1 = limB1(gteMAC1, lm);
+	gteIR2 = limB2(gteMAC2, lm);
+	gteIR3 = limB3(gteMAC3, lm);
 
 	gteRGB0 = gteRGB1;
 	gteRGB1 = gteRGB2;
@@ -966,6 +1003,7 @@ void gteINTPL() {
 	gteIR1 = limB1(gteMAC1, lm);
 	gteIR2 = limB2(gteMAC2, lm);
 	gteIR3 = limB3(gteMAC3, lm);
+	
 	gteRGB0 = gteRGB1;
 	gteRGB1 = gteRGB2;
 	gteCODE2 = gteCODE;

@@ -49,11 +49,11 @@ GPUfreeze             GPU_freeze;
 GPUgetScreenPic       GPU_getScreenPic;
 GPUshowScreenPic      GPU_showScreenPic;
 GPUclearDynarec       GPU_clearDynarec;
+GPUhSync              GPU_hSync;
 GPUvBlank             GPU_vBlank;
-GPUregisterCallback   GPU_registerCallback;
-GPUidle               GPU_idle;
 GPUvisualVibration    GPU_visualVibration;
 GPUcursor             GPU_cursor;
+GPUaddVertex          GPU_addVertex;
 
 CDRinit               CDR_init;
 CDRshutdown           CDR_shutdown;
@@ -200,16 +200,6 @@ void CALLBACK GPU__displayText(char *pText) {
 	SysPrintf("%s\n", pText);
 }
 
-void CALLBACK GPUbusy( int ticks )
-{
-    //printf( "GPUbusy( %i )\n", ticks );
-    //fflush( 0 );
-
-    psxRegs.interrupt |= (1 << PSXINT_GPUBUSY);
-    psxRegs.intCycle[PSXINT_GPUBUSY].cycle = ticks;
-    psxRegs.intCycle[PSXINT_GPUBUSY].sCycle = psxRegs.cycle;
-}
-
 long CALLBACK GPU__configure(void) { return 0; }
 long CALLBACK GPU__test(void) { return 0; }
 void CALLBACK GPU__about(void) {}
@@ -218,11 +208,11 @@ void CALLBACK GPU__keypressed(int key) {}
 long CALLBACK GPU__getScreenPic(unsigned char *pMem) { return -1; }
 long CALLBACK GPU__showScreenPic(unsigned char *pMem) { return -1; }
 void CALLBACK GPU__clearDynarec(void (CALLBACK *callback)(void)) {}
+void CALLBACK GPU__hSync(int val) {}
 void CALLBACK GPU__vBlank(int val) {}
-void CALLBACK GPU__registerCallback(void (CALLBACK *callback)(int)) {}
-void CALLBACK GPU__idle(void) {}
 void CALLBACK GPU__visualVibration(unsigned long iSmall, unsigned long iBig) {}
 void CALLBACK GPU__cursor(int player, int x, int y) {}
+void CALLBACK GPU__addVertex(short sx,short sy,s64 fx,s64 fy,s64 fz) {}
 
 #define LoadGpuSym1(dest, name) \
 	LoadSym(GPU_##dest, GPU##dest, name, TRUE);
@@ -240,7 +230,8 @@ static int LoadGPUplugin(const char *GPUdll) {
 	hGPUDriver = SysLoadLibrary(GPUdll);
 	if (hGPUDriver == NULL) {
 		GPU_configure = NULL;
-		SysMessage (_("Could not load GPU plugin %s!"), GPUdll); return -1;
+		SysMessage (_("Could not load GPU plugin %s!\n%s"), GPUdll, SysLibError());
+		return -1;
 	}
 	drv = hGPUDriver;
 	LoadGpuSym1(init, "GPUinit");
@@ -262,17 +253,18 @@ static int LoadGPUplugin(const char *GPUdll) {
 	LoadGpuSym0(getScreenPic, "GPUgetScreenPic");
 	LoadGpuSym0(showScreenPic, "GPUshowScreenPic");
 	LoadGpuSym0(clearDynarec, "GPUclearDynarec");
+    LoadGpuSym0(hSync, "GPUhSync");
     LoadGpuSym0(vBlank, "GPUvBlank");
-    LoadGpuSym0(registerCallback, "GPUregisterCallback");
-    LoadGpuSym0(idle, "GPUidle");
     LoadGpuSym0(visualVibration, "GPUvisualVibration");
     LoadGpuSym0(cursor, "GPUcursor");
+	LoadGpuSym0(addVertex, "GPUaddVertex");
 	LoadGpuSym0(configure, "GPUconfigure");
 	LoadGpuSym0(test, "GPUtest");
 	LoadGpuSym0(about, "GPUabout");
 
 	return 0;
 }
+
 
 void *hCDRDriver = NULL;
 

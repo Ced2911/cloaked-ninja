@@ -126,7 +126,7 @@ ITR_HANDLER(cdrReadInterrupt, PSXINT_CDREAD);
 ITR_HANDLER(gpuInterrupt, PSXINT_GPUDMA);
 ITR_HANDLER(mdec1Interrupt, PSXINT_MDECOUTDMA);
 ITR_HANDLER(spuInterrupt, PSXINT_SPUDMA);
-ITR_HANDLER(GPU_idle, PSXINT_GPUBUSY);
+//ITR_HANDLER(GPU_idle, PSXINT_GPUBUSY);
 ITR_HANDLER(mdec0Interrupt, PSXINT_MDECINDMA);
 ITR_HANDLER(gpuotcInterrupt, PSXINT_GPUOTCDMA);
 ITR_HANDLER(cdrDmaInterrupt, PSXINT_CDRDMA);
@@ -201,13 +201,14 @@ void psxBranchTest() {
 				spuInterrupt();
 			}
 		}
+		/*
 		if (psxRegs.interrupt & (1 << PSXINT_GPUBUSY)) { // gpu busy
 			if ((psxRegs.cycle - psxRegs.intCycle[PSXINT_GPUBUSY].sCycle) >= psxRegs.intCycle[PSXINT_GPUBUSY].cycle) {
 				psxRegs.interrupt &= ~(1 << PSXINT_GPUBUSY);
 				GPU_idle();
 			}
 		}
-
+		*/
 		if (psxRegs.interrupt & (1 << PSXINT_MDECINDMA)) { // mdec in
 			if ((psxRegs.cycle - psxRegs.intCycle[PSXINT_MDECINDMA].sCycle) >= psxRegs.intCycle[PSXINT_MDECINDMA].cycle) {
 				psxRegs.interrupt &= ~(1 << PSXINT_MDECINDMA);
