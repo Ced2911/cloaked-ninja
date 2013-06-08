@@ -369,6 +369,83 @@ void gteSWC2() {
 	psxMemWrite32(_oB_, MFC2(_Rt_));
 }
 
+#if 0 // Accurate division based on no$cash documentation
+
+static inline u32 _divider(u16 h, u16 sz3) {
+	u32 n;
+
+	n = ((h*0x10000+sz3/2)/sz3);
+
+	return n;
+}
+
+void gteRTPS() {
+	int quotient;
+
+#ifdef GTE_LOG
+	GTE_LOG("GTE RTPS\n");
+#endif
+	gteFLAG = 0;
+
+	gteMAC1 = A1((((s64)gteTRX << 12) + (gteR11 * gteVX0) + (gteR12 * gteVY0) + (gteR13 * gteVZ0)) >> 12);
+	gteMAC2 = A2((((s64)gteTRY << 12) + (gteR21 * gteVX0) + (gteR22 * gteVY0) + (gteR23 * gteVZ0)) >> 12);
+	gteMAC3 = A3((((s64)gteTRZ << 12) + (gteR31 * gteVX0) + (gteR32 * gteVY0) + (gteR33 * gteVZ0)) >> 12);
+	gteIR1 = limB1(gteMAC1, 0);
+	gteIR2 = limB2(gteMAC2, 0);
+	gteIR3 = limB3(gteMAC3, 0);
+	gteSZ0 = gteSZ1;
+	gteSZ1 = gteSZ2;
+	gteSZ2 = gteSZ3;
+	gteSZ3 = limD(gteMAC3);
+
+
+
+	quotient = limE(_divider(gteH, gteSZ3));
+
+
+	gteSXY0 = gteSXY1;
+	gteSXY1 = gteSXY2;
+	gteSX2 = limG1(F((s64)gteOFX + ((s64)gteIR1 * quotient)) >> 16);
+	gteSY2 = limG2(F((s64)gteOFY + ((s64)gteIR2 * quotient)) >> 16);
+
+	gteMAC0 = F((s64)(gteDQB + ((s64)gteDQA * quotient)) >> 12);
+	gteIR0 = limH(gteMAC0);
+}
+
+void gteRTPT() {
+	int quotient;
+	int v;
+	s32 vx, vy, vz;
+
+#ifdef GTE_LOG
+	GTE_LOG("GTE RTPT\n");
+#endif
+	gteFLAG = 0;
+
+	gteSZ0 = gteSZ3;
+	for (v = 0; v < 3; v++) {
+		vx = VX(v);
+		vy = VY(v);
+		vz = VZ(v);
+		gteMAC1 = A1((((s64)gteTRX << 12) + (gteR11 * vx) + (gteR12 * vy) + (gteR13 * vz)) >> 12);
+		gteMAC2 = A2((((s64)gteTRY << 12) + (gteR21 * vx) + (gteR22 * vy) + (gteR23 * vz)) >> 12);
+		gteMAC3 = A3((((s64)gteTRZ << 12) + (gteR31 * vx) + (gteR32 * vy) + (gteR33 * vz)) >> 12);
+		gteIR1 = limB1(gteMAC1, 0);
+		gteIR2 = limB2(gteMAC2, 0);
+		gteIR3 = limB3(gteMAC3, 0);
+		fSZ(v) = limD(gteMAC3);
+
+
+		quotient = limE(_divider(gteH, fSZ(v)));
+
+
+		fSX(v) = limG1(F((s64)gteOFX + ((s64)gteIR1 * quotient)) >> 16);
+		fSY(v) = limG2(F((s64)gteOFY + ((s64)gteIR2 * quotient)) >> 16);
+	}
+	gteMAC0 = F((s64)(gteDQB + ((s64)gteDQA * quotient)) >> 12);
+	gteIR0 = limH(gteMAC0);
+}
+#else
 void gteRTPS() {
 	int quotient;
 
@@ -426,7 +503,7 @@ void gteRTPT() {
 	gteMAC0 = F((s64)(gteDQB + ((s64)gteDQA * quotient)) >> 12);
 	gteIR0 = limH(gteMAC0);
 }
-
+#endif
 void gteMVMVA() {
 	int shift = 12 * GTE_SF(gteop);
 	int mx = GTE_MX(gteop);
