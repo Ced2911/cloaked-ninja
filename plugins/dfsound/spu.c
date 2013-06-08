@@ -593,6 +593,8 @@ static void *MAINThread(void *arg)
         timeSetEvent(PAUSE_W,1,MAINProc,0,TIME_ONESHOT);
        return;                                         // -> and done this time (timer mode 1 or 2)
       }
+#else
+	 if(iUseTimer) return;							   // linux no-thread mode? bye
 #endif
 	 // win thread mode:
      Sleep(PAUSE_W);                                   // sleep for x ms (win)
@@ -1247,14 +1249,20 @@ void RemoveTimer(void)
  bEndThread=1;                                         // raise flag to end thread
 
 #if defined(_WINDOWS) || defined(_XBOX)
-
+ #ifndef _XBOX
  if(iUseTimer!=2)                                      // windows thread?
   {
    while(!bThreadEnded) {Sleep(5L);}                   // -> wait till thread has ended
    Sleep(5L);
   }
-#ifndef _XBOX
+
  if(iUseTimer==1) timeEndPeriod(1);                    // windows timer? stop it
+#else
+ if(iUseTimer!=2)                                      // windows thread?
+  {
+   while(!bThreadEnded) {Sleep(5L);}                   // -> wait till thread has ended
+   Sleep(5L);
+  }
 #endif
 #else
  if(!iUseTimer)                                        // linux tread?

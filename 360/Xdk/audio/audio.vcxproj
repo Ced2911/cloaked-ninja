@@ -504,7 +504,9 @@
     <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_audiodev.c" />
     <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_audiotypecvt.c" />
     <ClCompile Include="..\..\..\plugins\dfsound\sdl\SDL_xaudio2.c" />
-    <ClCompile Include="..\..\..\plugins\dfsound\sdl_2.c" />
+    <ClCompile Include="..\..\..\plugins\dfsound\sdl_2.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\plugins\dfsound\spu.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>
@@ -540,7 +542,6 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsCpp</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">CompileAsCpp</CompileAs>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -5,33 +5,36 @@
 #define _IN_OSS
 #include "externals.h"
 
-#define STREAMING_BUFFER_SIZE 65536
-#define MAX_BUFFER_COUNT 3
+#define BUFFER_SIZE		22050
 
-unsigned int write_buffer = 0;
-unsigned char mixer_playbuf[MAX_BUFFER_COUNT][ SOUNDSIZE ];
+static short			*pSndBuffer = NULL;
+static int				iBufSize = 0;
+static volatile int	iReadPos = 0, iWritePos = 0;
+
+static unsigned int write_buffer = 0;
+
+static unsigned char xaudio_buffer[ SOUNDSIZE ];
 
 static IXAudio2 *lpXAudio2 = NULL;
 static IXAudio2MasteringVoice *lpMasterVoice = NULL;
 static IXAudio2SourceVoice *lpSourceVoice = NULL;
 
-int nbChannel = 1;
-int output_channels = 2;
-int output_samplesize = 4;
+static int sample_len;
+static int nbChannel = 1;
+static int output_channels = 2;
+static int output_samplesize = 4;
 
-
-WAVEFORMATEX wfx;
-
-static volatile unsigned int stream_running = 0;
+void SOUND_FillAudio();
+static WAVEFORMATEX wfx;
 
 struct StreamingVoiceContext : public IXAudio2VoiceCallback
 {
     void OnVoiceProcessingPassStart( UINT32 BytesRequired ){}
     void OnVoiceProcessingPassEnd(){}
     void OnStreamEnd(){}
-    void OnBufferStart( void* ){ stream_running = 1; SetEvent( hBufferEndEvent );}
+    void OnBufferStart( void* ){ SetEvent( hBufferEndEvent );}
     //void OnBufferEnd( void* ){ SetEvent( hBufferEndEvent ); }
-	void OnBufferEnd( void* ){ stream_running = 0; }
+	void OnBufferEnd( void* ){ SOUND_FillAudio(); }
     void OnLoopEnd( void* ){}
     void OnVoiceError( void*, HRESULT ){}
 
@@ -66,7 +69,6 @@ extern "C" void RemoveSound()
 extern "C" void SetupSound(void)
 {
 	int channels, blockalign;
-	XAUDIO2_BUFFER xaudio2_buf;
 
 	if( FAILED(XAudio2Create( &lpXAudio2, 0 , XAUDIO2_DEFAULT_PROCESSOR ) ) ) {
 		DebugBreak();
@@ -120,77 +122,80 @@ extern "C" void SetupSound(void)
 		return;
 	}
 
-	memset( mixer_playbuf, 0, sizeof(mixer_playbuf) );	
+	memset( xaudio_buffer, 0, sizeof(xaudio_buffer) );	
 
 	lpSourceVoice->FlushSourceBuffers();
 	lpSourceVoice->Start( 0, 0 );
+
+	iBufSize = BUFFER_SIZE;
+	//if (iDisStereo) iBufSize /= 2;
+
+	if (pSndBuffer == NULL) {
+		pSndBuffer = (short *)malloc(iBufSize * sizeof(short));
+	}
+
+	// submit fake buffer for starting
+	XAUDIO2_BUFFER buf = {0};
+	buf.AudioBytes = 2048;
+	buf.pAudioData = xaudio_buffer;
+
+	lpSourceVoice->SubmitSourceBuffer( &buf );
 }
 
-extern "C" unsigned long SoundGetBytesBuffered(void)
-{
+static void SOUND_FillAudio() {
+	int len = SOUNDSIZE;
+	int byte_size = len = 2048;
+	short *p = (short *)xaudio_buffer;
+
+	XAUDIO2_BUFFER buf = {0};
+
+	len /= sizeof(short);
+
+	while (iReadPos != iWritePos && len > 0) {
+		*p++ = pSndBuffer[iReadPos++];
+		if (iReadPos >= iBufSize) iReadPos = 0;
+		--len;
+	}
+
+	// Fill remaining space with zero
+	while (len > 0) {
+		*p++ = 0;
+		--len;
+	}
+
+	// submit to xaudio
+	buf.AudioBytes = byte_size;
+	buf.pAudioData = xaudio_buffer;
+
+	lpSourceVoice->SubmitSourceBuffer( &buf );
+}
+
+extern "C"  unsigned long SoundGetBytesBuffered(void) {
 	int size;
-	int sample_played;
 
-	size = 0;
+	if (pSndBuffer == NULL) return SOUNDSIZE;
 
-	XAUDIO2_VOICE_STATE state;
-	lpSourceVoice->GetState( &state );
-	sample_played =  state.SamplesPlayed;
+	size = iReadPos - iWritePos;
+	if (size <= 0) size += iBufSize;
 
-	size = sample_played * (wfx.wBitsPerSample/8);
-
-	//return size;
+	if (size < iBufSize / 2) return SOUNDSIZE;
 
 	return 0;
 }
 
-extern "C" void SoundFeedStreamData( unsigned char* pSound, long lBytes )
-{	
-#ifdef _DEBUG
-	return;
-#endif
-	if(lBytes<0) {
-		return;
-	}
+extern "C" void SoundFeedStreamData(unsigned char *pSound, long lBytes) {
+	short *p = (short *)pSound;
 
-	XAUDIO2_VOICE_STATE state;
-	int size = lBytes;
-	unsigned char* pData = pSound;
-	unsigned int start = 0;
-	unsigned int chunck_size = 0;
-	while(size > 0) {
-		for(;;)
-		{
-			
-			lpSourceVoice->GetState( &state, XAUDIO2_VOICE_NOSAMPLESPLAYED );
-			
-			if ( state.BuffersQueued < MAX_BUFFER_COUNT - 1 )
-				break;
-			// Audio sync !!
-			WaitForSingleObject( voiceContext.hBufferEndEvent, INFINITE );
-		}
-		/*
-		while(stream_running) {
-			// wait 
-		}
-		*/
+	if (pSndBuffer == NULL) return;
 
-		//WaitForSingleObject( voiceContext.hBufferEndEvent, INFINITE );
-		chunck_size = min(SOUNDSIZE, size);
+	while (lBytes > 0) {
+		if (((iWritePos + 1) % iBufSize) == iReadPos) break;
 
-		memcpy(mixer_playbuf[write_buffer], pData + start, chunck_size);
+		pSndBuffer[iWritePos] = *p++;
 
-		XAUDIO2_BUFFER buf = {0};
-		buf.AudioBytes = chunck_size;
-		buf.pAudioData = mixer_playbuf[write_buffer];
+		++iWritePos;
+		if (iWritePos >= iBufSize) iWritePos = 0;
 
-		lpSourceVoice->SubmitSourceBuffer( &buf );
-
-		size -= SOUNDSIZE;
-		start += SOUNDSIZE;
-
-		write_buffer = (write_buffer + 1) & (MAX_BUFFER_COUNT - 1);
+		lBytes -= sizeof(short);
 	}
 }
-
-
