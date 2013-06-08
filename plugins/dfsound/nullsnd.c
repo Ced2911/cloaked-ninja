@@ -2,8 +2,6 @@
 #define _IN_OSS
 #include "externals.h"
 
-#if 0
-
 // SETUP SOUND
 void SetupSound(void)
 {
@@ -24,6 +22,3 @@ unsigned long SoundGetBytesBuffered(void)
 void SoundFeedStreamData(unsigned char* pSound,long lBytes)
 {
 }
-
-
-#endif

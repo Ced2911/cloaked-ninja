@@ -65,6 +65,9 @@
     <ClCompile Include="..\..\..\plugins\dfsound\sdl_2.c">
       <Filter>sdl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\dfsound\externals.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\plugins\dfsound\adsr.h">

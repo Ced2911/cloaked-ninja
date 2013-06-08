@@ -1,5 +1,5 @@
 /***************************************************************************
-                            spu.h  -  description
+                         externals.c  -  description
                              -------------------
     begin                : Wed May 15 2002
     copyright            : (C) 2002 by Pete Bernert
@@ -15,7 +15,12 @@
  *                                                                         *
  ***************************************************************************/
 
-void SetupTimer(void);
-void RemoveTimer(void);
-void CALLBACK SPUplayADPCMchannel(xa_decode_t *xap);
-void CALLBACK SPUplayCDDAchannel(short *pcm, int bytes);
+#include <stdint.h>
+
+// 15-bit value + 1-sign
+int CLAMP16(int x) {
+	if(x > 32767) x = 32767;
+	else if(x < -32768) x = -32768;
+
+	return x;
+}

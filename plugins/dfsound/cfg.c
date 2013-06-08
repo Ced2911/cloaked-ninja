@@ -14,7 +14,7 @@ email                : BlackDove@addcom.de
 *   additional informations.                                              *
 *                                                                         *
 ***************************************************************************/
-
+#include <stdio.h>
 #include "stdafx.h"
 
 #define _IN_CFG

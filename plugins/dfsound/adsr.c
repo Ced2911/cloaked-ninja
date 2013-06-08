@@ -142,7 +142,7 @@ void InitADSR(void)                                    // INIT ADSR
 
 ////////////////////////////////////////////////////////////////////////
 
-INLINE void StartADSR(int ch)                          // MIX ADSR
+static INLINE void StartADSR(int ch)                          // MIX ADSR
 {
  s_chan[ch].ADSRX.lVolume=1;                           // and init some adsr vars
  s_chan[ch].ADSRX.State=0;
@@ -152,7 +152,7 @@ INLINE void StartADSR(int ch)                          // MIX ADSR
 
 ////////////////////////////////////////////////////////////////////////
 
-INLINE int MixADSR(int ch)                             // MIX ADSR
+static INLINE int MixADSR(int ch)                             // MIX ADSR
 {    
  int EnvelopeVol = s_chan[ch].ADSRX.EnvelopeVol;
  int EnvelopeVol_f = s_chan[ch].ADSRX.EnvelopeVol_f;
@@ -182,7 +182,9 @@ INLINE int MixADSR(int ch)                             // MIX ADSR
     {
      EnvelopeVol=0;
 		 EnvelopeVol_f=0;
-     s_chan[ch].bOn=0;
+     // don't stop if this chan can still cause irqs
+     if(!(spuCtrl&0x40) || (s_chan[ch].pCurr > pSpuIrq && s_chan[ch].pLoop > pSpuIrq))
+       s_chan[ch].bOn=0;
 		}
 
    
@@ -197,15 +199,20 @@ INLINE int MixADSR(int ch)                             // MIX ADSR
     {
      if(s_chan[ch].ADSRX.AttackModeExp)
       {
-       if(EnvelopeVol>=0x6000)
+       if(EnvelopeVol>=0x6000) {
 				EnvelopeVol+=RateTableAdd[s_chan[ch].ADSRX.AttackRate + 8];
-			 else
-				EnvelopeVol+=RateTableAdd[s_chan[ch].ADSRX.AttackRate + 0];
+				EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.AttackRate + 8];
+			 }
+			 else {
+				EnvelopeVol+=RateTableAdd[ s_chan[ch].ADSRX.AttackRate + 0];
+				EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.AttackRate + 0];
+			 }
       }
-		 else
-			EnvelopeVol+=RateTableAdd[s_chan[ch].ADSRX.AttackRate + 0];
+		 else {
+			EnvelopeVol+=RateTableAdd[ s_chan[ch].ADSRX.AttackRate + 0];
+			EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.AttackRate + 0];
+		 }
 
-		 EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.AttackRate ];
 		 if( EnvelopeVol_f >= RateTable_denom ) {
 			 EnvelopeVol_f -= RateTable_denom;
 			 EnvelopeVol++;
@@ -214,7 +221,7 @@ INLINE int MixADSR(int ch)                             // MIX ADSR
      if(EnvelopeVol>=0x8000) 
       {
        EnvelopeVol=0x7FFF;
-			 EnvelopeVol_f=0;
+			 EnvelopeVol_f=RateTable_denom;
        s_chan[ch].ADSRX.State=1;
 		 }
 
@@ -226,9 +233,9 @@ INLINE int MixADSR(int ch)                             // MIX ADSR
    //--------------------------------------------------//
    if(s_chan[ch].ADSRX.State==1)                       // -> decay
     {
-		 EnvelopeVol += ( RateTableSub[ s_chan[ch].ADSRX.ReleaseRate * 4 ] * EnvelopeVol ) >> 15;
+		 EnvelopeVol += ( RateTableSub[ s_chan[ch].ADSRX.DecayRate * 4 ] * EnvelopeVol ) >> 15;
 		 
-		 EnvelopeVol_f += RateTableSub_f[ s_chan[ch].ADSRX.ReleaseRate * 4 ];
+		 EnvelopeVol_f += RateTableSub_f[ s_chan[ch].ADSRX.DecayRate * 4 ];
 		 if( EnvelopeVol_f < 0 ) {
 			 EnvelopeVol_f += RateTable_denom;
 			 EnvelopeVol--;
@@ -258,15 +265,20 @@ INLINE int MixADSR(int ch)                             // MIX ADSR
       {
        if(s_chan[ch].ADSRX.SustainModeExp)
         {
-				 if(EnvelopeVol>=0x6000)
-					EnvelopeVol+=RateTableAdd[s_chan[ch].ADSRX.SustainRate + 8];
-				 else
-					EnvelopeVol+=RateTableAdd[s_chan[ch].ADSRX.SustainRate + 0];
+				 if(EnvelopeVol>=0x6000) {
+					EnvelopeVol+=RateTableAdd[ s_chan[ch].ADSRX.SustainRate + 8];
+					EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.SustainRate + 8];
+				 }
+				 else {
+					EnvelopeVol+=RateTableAdd[ s_chan[ch].ADSRX.SustainRate + 0];
+					EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.SustainRate + 0];
+				 }
 				}
-			 else
-				EnvelopeVol+=RateTableAdd[s_chan[ch].ADSRX.SustainRate + 0];
+			 else {
+				EnvelopeVol+=RateTableAdd[ s_chan[ch].ADSRX.SustainRate + 0];
+				EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.SustainRate + 0];
+			 }
 
-			 EnvelopeVol_f += RateTableAdd_f[ s_chan[ch].ADSRX.AttackRate ];
 			 if( EnvelopeVol_f >= RateTable_denom ) {
 				 EnvelopeVol_f -= RateTable_denom;
 				 EnvelopeVol++;
@@ -275,7 +287,7 @@ INLINE int MixADSR(int ch)                             // MIX ADSR
        if(EnvelopeVol >= 0x8000) 
         {
          EnvelopeVol=0x7FFF;
-				 EnvelopeVol_f=0;
+				 EnvelopeVol_f=RateTable_denom;
         }
       }
      else

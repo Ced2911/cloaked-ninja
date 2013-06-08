@@ -42,6 +42,38 @@
 #define SUSTAIN_MS     441L
 #define RELEASE_MS     437L
 
+
+
+
+
+
+int Check_IRQ( int addr, int force ) {
+	if(spuCtrl & CTRL_IRQ)         // some callback and irq active?
+	{
+		if( ( bIrqHit == 0 ) &&
+				( force == 1 || pSpuIrq == spuMemC+addr ) )
+		{
+			if(irqCallback)
+				irqCallback();                        // -> call main emu
+
+			// one-time
+			bIrqHit = 1;
+			spuStat |= STAT_IRQ;
+
+#if 0
+			MessageBox( NULL, "IRQ", "SPU", MB_OK );
+#endif
+
+			return 1;
+		}
+	}
+
+
+	return 0;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////
 // WRITE REGISTERS: called by main emu
 ////////////////////////////////////////////////////////////////////////
@@ -163,8 +195,10 @@ void CALLBACK SPUwriteRegister(unsigned long reg, unsigned short val)
      //------------------------------------------------//
      case 14:                                          // loop?
        //WaitForSingleObject(s_chan[ch].hMutex,2000);        // -> no multithread fuckups
-       s_chan[ch].pLoop=spuMemC+((unsigned long)((val<<3)&~0xf));
-       s_chan[ch].bIgnoreLoop=1;
+       
+			 s_chan[ch].pLoop=spuMemC+((unsigned long)((val<<3)&~0xf));
+       
+			 //s_chan[ch].bIgnoreLoop=1;
        //ReleaseMutex(s_chan[ch].hMutex);                    // -> oki, on with the thread
        break;
      //------------------------------------------------//
@@ -181,14 +215,60 @@ void CALLBACK SPUwriteRegister(unsigned long reg, unsigned short val)
       break;
     //-------------------------------------------------//
     case H_SPUdata:
-      spuMem[spuAddr>>1] = SWAP16(val);
+      // BIOS - allow dma 00
+      Check_IRQ( spuAddr, 0 );
+
+      spuMem[spuAddr>>1] = val;
       spuAddr+=2;
       if(spuAddr>0x7ffff) spuAddr=0;
       break;
     //-------------------------------------------------//
     case H_SPUctrl:
       spuCtrl=val;
-	  dwNoiseClock = (spuCtrl&0x3f00)>>8;
+
+
+			// flags
+			if( spuCtrl & CTRL_CD_PLAY )
+				spuStat |= CTRL_CD_PLAY;
+			else
+				spuStat &= ~CTRL_CD_PLAY;
+
+			if( spuCtrl & CTRL_CD_REVERB )
+				spuStat |= STAT_CD_REVERB;
+			else
+				spuStat &= ~STAT_CD_REVERB;
+
+
+			if( spuCtrl & CTRL_EXT_PLAY )
+				spuStat |= STAT_EXT_PLAY;
+			else
+				spuStat &= ~STAT_EXT_PLAY;
+
+			if( spuCtrl & CTRL_EXT_REVERB )
+				spuStat |= STAT_EXT_REVERB;
+			else
+				spuStat &= ~STAT_EXT_REVERB;
+
+
+			
+			spuStat &= ~(STAT_DMA_NON | STAT_DMA_R | STAT_DMA_W);
+
+			if( spuCtrl & CTRL_DMA_F )
+				spuStat |= STAT_DMA_F;
+
+			if( (spuCtrl & CTRL_DMA_F) == CTRL_DMA_R )
+				spuStat |= STAT_DMA_R;
+
+
+
+			// reset IRQ flag
+			if( (spuCtrl & CTRL_IRQ) == 0 ) {
+				bIrqHit = 0;
+				spuStat &= ~STAT_IRQ;
+			}
+
+
+			dwNoiseClock = (spuCtrl & CTRL_NOISE)>>8;
       break;
     //-------------------------------------------------//
     case H_SPUstat:
@@ -266,12 +346,10 @@ void CALLBACK SPUwriteRegister(unsigned long reg, unsigned short val)
       break;
     //-------------------------------------------------//
     case H_CDLeft:
-			// Attenuation: [$00-ff left][$00-ff right]
 			iLeftXAVol = val;
 			if(cddavCallback) cddavCallback(0,val);
 			break;
     case H_CDRight:
-			// Attenuation: [$00-ff right][$00-ff left]
 			iRightXAVol = val;
 			if(cddavCallback) cddavCallback(1,val);
 			break;
@@ -371,37 +449,27 @@ unsigned short CALLBACK SPUreadRegister(unsigned long reg)
         return 1;
        return (unsigned short)(s_chan[ch].ADSRX.EnvelopeVol);
       }
-
-     case 14:                                          // get loop address
-      {
-       const int ch=(r>>4)-0xc0;
-       if(s_chan[ch].pLoop==NULL) return 0;
-       return (unsigned short)((s_chan[ch].pLoop-spuMemC)>>3);
-      }
     }
   }
 
  switch(r)
   {
+	case H_SPUaddr:
+     return spuAddr>>3;
+
     case H_SPUctrl:
      return spuCtrl;
 
     case H_SPUstat:
      return spuStat;
-        
-    case H_SPUaddr:
-     return (unsigned short)(spuAddr>>3);
 
     case H_SPUdata:
      {
-      unsigned short s= SWAP16(spuMem[spuAddr>>1]);
+      unsigned short s=spuMem[spuAddr>>1];
       spuAddr+=2;
       if(spuAddr>0x7ffff) spuAddr=0;
       return s;
      }
-
-    case H_SPUirqAddr:
-     return spuIrq;
 
     //case H_SPUIsOn1:
     // return IsSoundOn(0,16);
@@ -426,7 +494,7 @@ void SoundOn(int start,int end,unsigned short val)     // SOUND ON PSX COMAND
   {
    if((val&1) && s_chan[ch].pStart)                    // mmm... start has to be set before key on !?!
     {
-     s_chan[ch].bIgnoreLoop=0;
+		 s_chan[ch].bLoopJump = 0;
      s_chan[ch].bNew=1;
 
 		 // do this here, not in StartSound
@@ -435,6 +503,11 @@ void SoundOn(int start,int end,unsigned short val)     // SOUND ON PSX COMAND
 		 s_chan[ch].bStop=0;
 		 s_chan[ch].bOn=1;
 		 s_chan[ch].pCurr=s_chan[ch].pStart;
+
+#if 0
+		 // ADSR init time (guess to # apu cycles)
+		 s_chan[ch].ADSRX.StartDelay = 0;
+#endif
 
 		 // Final Fantasy 7 - don't do any of these
 		 // - sets loop address before VoiceOn

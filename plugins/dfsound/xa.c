@@ -45,8 +45,8 @@ uint32_t * CDDAEnd   = NULL;
 int             iLeftXAVol  = 0x8000;
 int             iRightXAVol = 0x8000;
 
-static int gauss_ptr = 0;
-static int gauss_window[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static int UNUSED_VARIABLE gauss_ptr = 0;
+static int UNUSED_VARIABLE gauss_window[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 #define gvall0 gauss_window[gauss_ptr]
 #define gvall(x) gauss_window[(gauss_ptr+x)&3]
@@ -59,31 +59,18 @@ long cdxa_dbuf_ptr;
 // MIX XA & CDDA
 ////////////////////////////////////////////////////////////////////////
 
-/*
-Attenuation
-- Blade_Arma (edgbla) (PCSX-reloaded)
-- accurate (!)
-
-
-s32 lc = (spsound[i ] * attenuators.val0 + spsound[i+1] * attenuators.val3]) / 128;
-s32 rc = (spsound[i+1] * attenuators.val2 + spsound[i ] * attenuators.val1]) / 128;
-*/
-
 static int lastxa_lc, lastxa_rc;
 static int lastcd_lc, lastcd_rc;
 
-INLINE void MixXA(void)
+static INLINE void MixXA(void)
 {
  int ns;
- unsigned char val0,val1,val2,val3;
- short l,r;
  int lc,rc;
  unsigned long cdda_l;
+ int decoded_xa;
+ int decoded_cdda;
 
- val0 = (iLeftXAVol>>8)&0xff;
- val1 = iLeftXAVol&0xff;
- val2 = (iRightXAVol>>8)&0xff;
- val3 = iRightXAVol&0xff;
+ decoded_xa = decoded_ptr;
 
  lc = 0;
  rc = 0;
@@ -93,19 +80,9 @@ INLINE void MixXA(void)
 	 XALastVal=*XAPlay++;
    if(XAPlay==XAEnd) XAPlay=XAStart;
 
-	 l = XALastVal&0xffff;
-	 r = (XALastVal>>16) & 0xffff;
+	 lc = (short)(XALastVal&0xffff);
+	 rc = (short)((XALastVal>>16) & 0xffff);
 
-   lc=(l * val0 + r * val3) / 128;
-   rc=(r * val2 + l * val1) / 128;
-
-	 if( lc < -32768 ) lc = -32768;
-	 if( rc < -32768 ) rc = -32768;
-	 if( lc > 32767 ) lc = 32767;
-	 if( rc > 32767 ) rc = 32767;
-
-	 SSumL[ns]+=lc;
-	 SSumR[ns]+=rc;
 
 	 // improve crackle - buffer under
 	 // - not update fast enough
@@ -114,52 +91,113 @@ INLINE void MixXA(void)
 
 
 	 // Tales of Phantasia - voice meter
-	 if( cdxa_dbuf_ptr >= 0x800 )
-		 cdxa_dbuf_ptr = 0;
-	 spuMem[ cdxa_dbuf_ptr++ ] = lc;
-	 spuMem[ cdxa_dbuf_ptr++ ] = rc;
-  }
+	 spuMem[ (decoded_xa + 0x000)/2 ] = (short) lc;
+	 spuMem[ (decoded_xa + 0x400)/2 ] = (short) rc;
+
+	 decoded_xa += 2;
+	 if( decoded_xa >= 0x400 )
+		 decoded_xa = 0;
+
+ 
+	 lc = CLAMP16( (lc * iLeftXAVol) / 0x8000 );
+	 rc = CLAMP16( (rc * iRightXAVol) / 0x8000 );
+
+
+	 // reverb write flag
+	 if( spuCtrl & CTRL_CD_REVERB ) {
+		StoreREVERB_CD( lc, rc, ns );
+	 }
+
+
+	 // play flag
+	 if( spuCtrl & CTRL_CD_PLAY ) {
+		 SSumL[ns]+=lc;
+		 SSumR[ns]+=rc;
+	 }
+ }
 
  if(XAPlay==XAFeed && XARepeat)
   {
    //XARepeat--;
    for(;ns<NSSIZE;ns++)
     {
-		 SSumL[ns]+=lastxa_rc;
-		 SSumR[ns]+=lastxa_rc;
+		 // improve crackle - buffer under
+		 // - not update fast enough
+		 lc = lastxa_lc;
+		 rc = lastxa_rc;
 
 
 		 // Tales of Phantasia - voice meter
-		 if( cdxa_dbuf_ptr >= 0x800 )
-			 cdxa_dbuf_ptr = 0;
-		 spuMem[ cdxa_dbuf_ptr++ ] = lastxa_rc;
-		 spuMem[ cdxa_dbuf_ptr++ ] = lastxa_rc;
+		 spuMem[ (decoded_xa + 0x000)/2 ] = (short) lc;
+		 spuMem[ (decoded_xa + 0x400)/2 ] = (short) rc;
+
+		 decoded_xa += 2;
+		 if( decoded_xa >= 0x400 )
+			 decoded_xa = 0;
+
+
+		 lc = CLAMP16( (lc * iLeftXAVol) / 0x8000 );
+		 rc = CLAMP16( (rc * iRightXAVol) / 0x8000 );
+
+
+		 // reverb write flags
+		 if( spuCtrl & CTRL_CD_REVERB ) {
+			StoreREVERB_CD( lc, rc, ns );
+		 }
+
+
+		 // play flag
+		 if( spuCtrl & CTRL_CD_PLAY ) {
+			 SSumL[ns]+=lc;
+			 SSumR[ns]+=rc;
+		 }
     }
   }
+
+
+
+ decoded_cdda = decoded_ptr;
 
  for(ns=0;ns<NSSIZE && CDDAPlay!=CDDAFeed && (CDDAPlay!=CDDAEnd-1||CDDAFeed!=CDDAStart);ns++)
   {
    cdda_l=*CDDAPlay++;
    if(CDDAPlay==CDDAEnd) CDDAPlay=CDDAStart;
 
-	 l = cdda_l&0xffff;
-	 r = (cdda_l>>16) & 0xffff;
+	 lc = (short)(cdda_l&0xffff);
+	 rc = (short)((cdda_l>>16) & 0xffff);
 
-   lc=(l * val0 + r * val3) / 128;
-   rc=(r * val2 + l * val1) / 128;
-
-	 if( lc < -32768 ) lc = -32768;
-	 if( rc < -32768 ) rc = -32768;
-	 if( lc > 32767 ) lc = 32767;
-	 if( rc > 32767 ) rc = 32767;
-
-	 SSumL[ns]+=lc;
-	 SSumR[ns]+=rc;
 
 	 // improve crackle - buffer under
 	 // - not update fast enough
 	 lastcd_lc = lc;
 	 lastcd_rc = rc;
+
+
+	 // Vib Ribbon - playback
+	 spuMem[ (decoded_cdda + 0x000)/2 ] = (short) lc;
+	 spuMem[ (decoded_cdda + 0x400)/2 ] = (short) rc;
+
+	 decoded_cdda += 2;
+	 if( decoded_cdda >= 0x400 )
+		 decoded_cdda = 0;
+
+
+	 // Rayman - stage end fadeout
+	 lc = CLAMP16( (lc * iLeftXAVol) / 0x8000 );
+	 rc = CLAMP16( (rc * iRightXAVol) / 0x8000 );
+
+
+	 // reverb write flag
+	 if( spuCtrl & CTRL_CD_REVERB ) {
+		StoreREVERB_CD( lc, rc, ns );
+	 }
+
+
+	 // play flag
+	 if( spuCtrl & CTRL_CD_PLAY ) {
+		 SSumL[ns]+=lc;
+		 SSumR[ns]+=rc;
+	 }
 	}
 
 
@@ -168,9 +206,38 @@ INLINE void MixXA(void)
    //XARepeat--;
    for(;ns<NSSIZE;ns++)
     {
-		 SSumL[ns]+=lastcd_lc;
-		 SSumR[ns]+=lastcd_rc;
-    }
+		 // improve crackle - buffer under
+		 // - not update fast enough
+		 lc = lastcd_lc;
+		 rc = lastcd_rc;
+
+
+		 // Vib Ribbon - playback
+		 spuMem[ (decoded_cdda + 0x000)/2 ] = (short) lc;
+		 spuMem[ (decoded_cdda + 0x400)/2 ] = (short) rc;
+
+		 decoded_cdda += 2;
+		 if( decoded_cdda >= 0x400 )
+			 decoded_cdda = 0;
+
+
+		 // Rayman - stage end fadeout
+		 lc = CLAMP16( (lc * iLeftXAVol) / 0x8000 );
+		 rc = CLAMP16( (rc * iRightXAVol) / 0x8000 );
+
+
+		 // reverb write flag
+		 if( spuCtrl & CTRL_CD_REVERB ) {
+			StoreREVERB_CD( lc, rc, ns );
+		 }
+
+
+		 // play flag
+		 if( spuCtrl & CTRL_CD_PLAY ) {
+			 SSumL[ns]+=lc;
+			 SSumR[ns]+=rc;
+		 }
+	 }
   }
 }
 
@@ -178,7 +245,7 @@ INLINE void MixXA(void)
 // small linux time helper... only used for watchdog
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef _WINDOWS
+#if 1
 
 unsigned long timeGetTime_spu()
 {
@@ -193,9 +260,9 @@ unsigned long timeGetTime_spu()
 // FEED XA 
 ////////////////////////////////////////////////////////////////////////
 
-INLINE void FeedXA(xa_decode_t *xap)
+static INLINE void FeedXA(xa_decode_t *xap)
 {
- int sinc,spos,i,iSize,iPlace,vl,vr;
+ int sinc,spos,i,iSize,iPlace;
 
  if(!bSPUIsOpen) return;
 
@@ -363,7 +430,7 @@ INLINE void FeedXA(xa_decode_t *xap)
         }
        l=s;
 
-       *XAFeed++=(l|(l<<16));
+       *XAFeed++=((l&0xffff)|(l<<16));
 
        if(XAFeed==XAEnd) XAFeed=XAStart;
        if(XAFeed==XAPlay) 
@@ -384,7 +451,7 @@ INLINE void FeedXA(xa_decode_t *xap)
 
 unsigned int cdda_ptr;
 
-INLINE void FeedCDDA(unsigned char *pcm, int nBytes)
+static INLINE void FeedCDDA(unsigned char *pcm, int nBytes)
 {
  while(nBytes>0)
   {
@@ -392,7 +459,7 @@ INLINE void FeedCDDA(unsigned char *pcm, int nBytes)
    while(CDDAFeed==CDDAPlay-1||
          (CDDAFeed==CDDAEnd-1&&CDDAPlay==CDDAStart))
    {
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(_XBOX)
     if (!iUseTimer) Sleep(1);
     else return;
 #else
@@ -403,25 +470,6 @@ INLINE void FeedCDDA(unsigned char *pcm, int nBytes)
    *CDDAFeed++=(*pcm | (*(pcm+1)<<8) | (*(pcm+2)<<16) | (*(pcm+3)<<24));
    nBytes-=4;
    pcm+=4;
-
- 
-#if 0
-	 /*
-	 Vib Ribbon
-	 $00000-$003ff  CD audio left
-	 $00400-$007ff  CD audio right
-	 */
-
-	 // TIMING: perform in PCSX-r
-	 // - gets data from reverb buffer, only update this at intervals (not real-time)
-
-	 // remember: 16-bit ptrs
-	 spuMem[ cdda_ptr ] = (l >> 0) & 0xffff;
-	 spuMem[ cdda_ptr+0x200 ] = (l >> 16) & 0xffff;
-
-	 cdda_ptr++;
-	 cdda_ptr &= 0x1ff;
-#endif
  }
 }
 

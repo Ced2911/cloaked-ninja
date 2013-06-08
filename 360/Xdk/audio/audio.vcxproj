@@ -425,6 +425,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\dfsound\externals.c" />
     <ClCompile Include="..\..\..\plugins\dfsound\freeze.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>
@@ -450,6 +451,14 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\plugins\dfsound\pulseaudio.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsC</CompileAs>

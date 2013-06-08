@@ -15,17 +15,12 @@
  *                                                                         *
  ***************************************************************************/
 
-#if defined (_WINDOWS)|(_XBOX)
+#if defined(_WINDOWS) || defined(_XBOX)
 
+#ifdef _XBOX
 #define WIN32_LEAN_AND_MEAN
 #define STRICT
-#ifdef _XBOX
 #include <xtl.h>
-#else
-#include <windows.h>
-#include <windowsx.h>
-#include "mmsystem.h"
-#endif
 #include <process.h>
 #include <stdlib.h>
 
@@ -33,12 +28,24 @@
 #define INLINE __inline
 #endif
 
-#ifndef _XBOX
-#include "resource.h"
+#pragma warning (disable:4996)
+#else
+#define WIN32_LEAN_AND_MEAN
+#define STRICT
+#include <windows.h>
+#include <windowsx.h>
+#include "mmsystem.h"
+#include <process.h>
+#include <stdlib.h>
+
+#ifndef INLINE
+#define INLINE __inline
 #endif
 
-#pragma warning (disable:4996)
+#include "resource.h"
 
+#pragma warning (disable:4996)
+#endif
 #else
 
 #ifndef _MACOSX
@@ -61,9 +68,9 @@
 
 #undef CALLBACK
 #define CALLBACK
-#define DWORD unsigned long
+#define DWORD unsigned int
 #define LOWORD(l)           ((unsigned short)(l)) 
-#define HIWORD(l)           ((unsigned short)(((unsigned long)(l) >> 16) & 0xFFFF)) 
+#define HIWORD(l)           ((unsigned short)(((unsigned int)(l) >> 16) & 0xFFFF)) 
 
 #ifndef INLINE
 #define INLINE inline
@@ -71,8 +78,13 @@
 
 #endif
 
-#include "psemuxa.h"
+#if defined (__GNUC__) || defined (__clang__)
+#define UNUSED_VARIABLE __attribute__((unused))
+#else
+#define UNUSED_VARIABLE
+#endif
 
+#include "psemuxa.h"
 
 #ifdef _XBOX
 #define SPUreadDMA				PEOPS_SPUreadDMA
