@@ -342,7 +342,8 @@ void SetAutoFrameCap(void)
 	else
 	{
 		//fFrameRateHz = PSXDisplay.PAL?50.0f:59.94f;
-		fFrameRateHz = 59.94f;
+		//fFrameRateHz = 59.94f;
+		fFrameRateHz = 59.29f; // no$cash doc
 		dwFrameRateTicks=(TIMEBASE*100 / (unsigned long)(fFrameRateHz*100));
 	}
 }
