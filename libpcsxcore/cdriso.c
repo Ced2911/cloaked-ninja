@@ -1199,9 +1199,8 @@ static long CALLBACK ISOclose(void) {
 }
 
 long CALLBACK ISOinit(void) {
-	printf("cdhandle:%p\n", cdHandle);
-	assert(cdHandle == NULL);
-	assert(subHandle == NULL);
+	//assert(cdHandle == NULL);
+	//assert(subHandle == NULL);
 
 	return 0; // do nothing
 }

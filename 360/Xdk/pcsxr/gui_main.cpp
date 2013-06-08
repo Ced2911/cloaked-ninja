@@ -8,7 +8,19 @@
 #include "simpleini\SimpleIni.h"
 #include <xfilecache.h>
 
+#define MAX_FILENAME 256
+
+
+CSimpleIniA ini;
+
 void RenderXui();
+extern "C" void cdrThreadInit(void);
+extern "C" void POKOPOM_Init();
+extern void SetIso(const char * fname);
+
+static float xui_time;
+static float fTicksPerMicrosecond;
+
 
 DWORD * InGameThread() {
 	while(1) {
@@ -28,7 +40,6 @@ DWORD * InGameThread() {
 	return NULL;
 }
 
-#define MAX_FILENAME 256
 
 HRESULT ShowKeyboard(std::wstring & resultText, std::wstring titleText, std::wstring descriptionText, std::wstring defaultText) {
 	wchar_t result[MAX_FILENAME];
@@ -106,6 +117,9 @@ void LoadStatePcsx(int n) {
 }
 
 void RenderXui() {
+	// ûpdate xui time
+	xui_time = (__mftb()/fTicksPerMicrosecond) - xui_time;
+
 	g_pd3dDevice->Clear( 0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL,
 	0xff000000, 1.0f, 0L );
 
@@ -113,7 +127,7 @@ void RenderXui() {
 		 DrawPcsxSurface();
 	}
 
-	app.RunFrame();
+	app.RunFrame(xui_time);
 	app.Render();
 	XuiTimersRun();
 
@@ -122,15 +136,14 @@ void RenderXui() {
 	VideoPresent();
 }
 
-extern "C" void cdrThreadInit(void);
-extern "C" void POKOPOM_Init();
+
 static void DoPcsx(char * game) {
 	int ret;
 
 	cdrIsoInit();
 	POKOPOM_Init();
 	//cdrThreadInit();
-	SetIsoFile(game);
+	SetIso(game);
 
 	
 	gpuDmaThreadInit();
@@ -183,8 +196,6 @@ static void DoPcsx(char * game) {
 	psxCpu->Execute();
 }
 
-
-CSimpleIniA ini;
 
 void ApplySettings() {
 	Config.Cpu = xboxConfig.UseDynarec ? CPU_DYNAREC : CPU_INTERPRETER;
@@ -287,6 +298,11 @@ static void InitXui() {
 	XSetThreadProcessor(hInGameThread, 5);
 	ResumeThread(hInGameThread);
 
+	// Init xui time
+	xui_time = 0;
+	LARGE_INTEGER TicksPerSecond;
+    QueryPerformanceFrequency( &TicksPerSecond );
+    fTicksPerMicrosecond = (float)TicksPerSecond.QuadPart * 0.000001;
 }
 
 void Add(char * d, char * mountpoint){

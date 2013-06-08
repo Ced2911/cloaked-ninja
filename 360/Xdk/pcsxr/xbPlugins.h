@@ -36,6 +36,22 @@ typedef struct {
 } PluginTable;
 #define NUM_PLUGINS 8
 
+long CDRCIMGplay(unsigned char *time);
+long CDRCIMGgetTN(unsigned char *buffer);
+long CDRCIMGgetTD(unsigned char track, unsigned char *buffer);
+long CDRCIMGreadTrack(unsigned char *time);
+unsigned char *CDRCIMGgetBuffer(void);
+long CDRCIMGplay(unsigned char *time);
+long CDRCIMGstop(void);
+unsigned char* CDRCIMGgetBufferSub(void);
+long CDRCIMGgetStatus(struct CdrStat *stat);
+long CDRCIMGclose(void);
+long CDRCIMGshutdown(void);
+long CDRCIMGinit(void);
+long CDRCIMGopen(void);
+
+void cdrcimg_set_fname(const char *fname);
+
 /* PAD */
 //typedef long (* PADopen)(unsigned long *);
 extern long PAD__init(long);
@@ -406,6 +422,36 @@ void PEOPS_GPUvBlank( int val );
 	      PEOPS_GPUupdateLace} \
 	       } }
 
+#define CDRCIMG_PLUGIN \
+{ "CDRCIMG",      \
+13,         \
+{ { "CDRinit",  \
+CDRCIMGinit }, \
+{ "CDRshutdown",	\
+CDRCIMGshutdown}, \
+{ "CDRopen", \
+CDRCIMGopen}, \
+{ "CDRclose", \
+CDRCIMGclose}, \
+{ "CDRgetStatus", \
+CDRCIMGgetStatus}, \
+{ "CDRgetTN", \
+CDRCIMGgetTN}, \
+{ "CDRgetTD", \
+CDRCIMGgetTD}, \
+{ "CDRplay", \
+CDRCIMGplay}, \
+{ "CDRstop", \
+CDRCIMGstop}, \
+{ "CDRreadTrack", \
+CDRCIMGreadTrack}, \
+{ "CDRgetBuffer", \
+CDRCIMGgetBuffer}, \
+{ "CDRgetBufferSub", \
+CDRCIMGgetBufferSub} \
+} \
+}
+
 #define PLUGIN_SLOT_0 EMPTY_PLUGIN
 #define PLUGIN_SLOT_1 PAD1_PLUGIN
 #define PLUGIN_SLOT_2 PAD2_PLUGIN
@@ -414,7 +460,7 @@ void PEOPS_GPUvBlank( int val );
 #define PLUGIN_SLOT_4 SPU_PEOPS_PLUGIN
 //#define PLUGIN_SLOT_5 GPU_NULL_PLUGIN
 #define PLUGIN_SLOT_5 GPU_PEOPS_PLUGIN
-#define PLUGIN_SLOT_6 EMPTY_PLUGIN
+#define PLUGIN_SLOT_6 CDRCIMG_PLUGIN
 #define PLUGIN_SLOT_7 EMPTY_PLUGIN
 
 

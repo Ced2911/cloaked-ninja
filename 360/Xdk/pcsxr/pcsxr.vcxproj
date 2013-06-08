@@ -559,6 +559,9 @@
       <Project>{041da0e5-636e-49ca-a0a1-07ef0edf5aff}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\bzip\bzip.vcxproj">
+      <Project>{f8a83a6b-af65-4b0e-9aab-a7c289897876}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\cdrom\cdrom.vcxproj">
       <Project>{bd5aeb5d-9ad7-46d2-a1f1-a0a2d66c5721}</Project>
     </ProjectReference>

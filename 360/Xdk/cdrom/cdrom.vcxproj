@@ -266,7 +266,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_XBOX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -281,7 +281,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_XBOX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -296,7 +296,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_XBOX;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -321,6 +321,7 @@
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <PREfast>AnalyzeOnly</PREfast>
       <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">
@@ -336,6 +337,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">
@@ -351,6 +353,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallAttributedProfiling>Fastcap</CallAttributedProfiling>
       <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">
@@ -365,6 +368,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">
@@ -378,7 +382,7 @@
       <PrecompiledHeaderOutputFile>$(OutDir)$(ProjectName).pch</PrecompiledHeaderOutputFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -387,6 +391,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\cdr.c" />
+    <ClCompile Include="src\cdrcimg.c">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsC</CompileAs>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">../bzip/src/;../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">CompileAsC</CompileAs>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\cdrcimg.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

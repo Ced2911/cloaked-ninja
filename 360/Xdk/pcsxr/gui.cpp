@@ -1,3 +1,7 @@
+/**
+* Ugly xui gui
+**/
+
 #include "gui.h"
 #include "gui_class.h"
 

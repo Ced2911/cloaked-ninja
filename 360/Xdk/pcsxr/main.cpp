@@ -11,7 +11,8 @@
 //char * game = "game:\\Bushido Blade [U] [SCUS-94180]\\bushido_blade.bin";
 //char * game = "game:\\Soul Blade (USA) (v1.0)\\Soul Blade (USA) (v1.0).bin";
 //char * game = "game:\\Castlevanina - SOTN.bin";
-char * game = "game:\\BH2.bin";
+//char * game = "game:\\BH2.bin";
+char * game = "game:\\mgz.bin.Z";
 //char * game = "game:\\Final Fantasy VII (USA) (Disc 1)\\Final Fantasy VII (USA) (Disc 1).bin";
 //char * game = "game:\\Legend of Mana (USA)\\Legend of Mana (USA).bin";
 //char * game = "game:\\Chrono Cross (USA) (Disc 1)\\Chrono Cross (USA) (Disc 1).bin";
@@ -43,6 +44,41 @@ void ShutdownPcsx() {
 	SysClose();
 }
 
+extern "C" {
+	void cdrcimg_set_fname(const char *fname);
+}
+
+static void buffer_dump(uint8_t * buf, int size) {
+	int i = 0;
+	for (i = 0; i < size; i++) {
+		printf("%02x ", buf[i]);
+	}
+	printf("\r\n");
+}
+
+void SetIso(const char * fname) {
+	FILE *fd = fopen(fname, "rb");
+	if (fd == NULL) {
+		printf("Error loading %s\r\n", fname);
+		return;
+	}
+	uint8_t header[0x10];
+	int n = fread(header, 0x10, 1, fd);
+	printf("n : %d\r\n", n);
+
+	buffer_dump(header, 0x10);
+
+	if (header[0] == 0x78 && header[1] == 0xDA) {
+		printf("Use CDRCIMG for  %s\r\n", fname);
+		strcpy(Config.Cdr, "CDRCIMG");
+		cdrcimg_set_fname(fname);
+	} else {
+		SetIsoFile(fname);
+	}
+
+	fclose(fd);
+}
+
 void RunPcsx(char * game) {
 	// __SetHWThreadPriorityHigh();
 
@@ -71,7 +107,7 @@ void RunPcsx(char * game) {
 
 
 	cdrIsoInit();	
-	SetIsoFile(game);
+	SetIso(game);
 
 	if (SysInit() == -1) 
 	{

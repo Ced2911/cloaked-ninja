@@ -736,14 +736,13 @@ int LoadPlugins() {
 	char Plugin[MAXPATHLEN];
 
 	ReleasePlugins();
-/*
+
 	if (UsingIso()) {
 		LoadCDRplugin(NULL);
 	} else {
-		sprintf(Plugin, "%s/%s", Config.PluginsDir, Config.Cdr);
-		if (LoadCDRplugin(Plugin) == -1) return -1;
+		if (LoadCDRplugin(Config.Cdr) == -1) return -1;
 	}
-*/
+
 	if (LoadGPUplugin("GPU") == -1) return -1;
 	if (LoadSPUplugin("SPU") == -1) return -1;
 #ifdef _DEBUG
