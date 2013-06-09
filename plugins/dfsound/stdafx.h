@@ -111,6 +111,7 @@
 
 #define ReadConfig				SPUReadConfig
 #define ReadConfigFile			SPUReadConfigFile
+#define WriteConfig				SPUWriteConfig
 #define iDebugMode				SPUiDebugMode
 
 #define SWAP16(x) _byteswap_ushort(x)

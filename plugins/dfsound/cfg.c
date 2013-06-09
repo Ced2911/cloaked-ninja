@@ -112,12 +112,12 @@ void ReadConfig(void)
 	iVolume=2;
 	iXAPitch=0;
 	iSPUIRQWait=0;
-	iUseTimer=0;
 	//iUseTimer=0;
-	iUseReverb=2;
-	iUseInterpolation=2;
+	iUseTimer=0;
+	iUseReverb=0;
+	iUseInterpolation=0;
 	iDisStereo=0;
 	iFreqResponse=0;
 
-	ReadConfigFile();
+	//ReadConfigFile();
 }

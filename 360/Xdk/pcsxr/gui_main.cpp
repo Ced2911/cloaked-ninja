@@ -273,6 +273,7 @@ static void InitPcsx() {
 	Config.Xa = 0;  //XA enabled
 	Config.Cdda = 0;
 	Config.PsxAuto = 0;
+	Config.Widescreen = 0;
 	
 	// Init some stuff ...
 	//gpuDmaThreadInit();
@@ -281,7 +282,7 @@ static void InitPcsx() {
 
 static void InitXui() {
 	// Initialize the xui application
-	HRESULT hr = app.InitShared(g_pd3dDevice, &g_d3dpp, XuiD3DXTextureLoader, NULL);
+	HRESULT hr = app.InitShared(g_pd3dDevice, &g_d3dpp);
 
     // Register a default typeface
     hr = app.RegisterDefaultTypeface( L"Arial Unicode MS", L"file://game:/media/xui/xarialuni.ttf" );

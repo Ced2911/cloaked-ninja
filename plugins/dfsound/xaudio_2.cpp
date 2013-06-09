@@ -19,7 +19,7 @@ static IXAudio2 *lpXAudio2 = NULL;
 static IXAudio2MasteringVoice *lpMasterVoice = NULL;
 static IXAudio2SourceVoice *lpSourceVoice = NULL;
 
-static int sample_len;
+static int byte_per_sample;
 static int nbChannel = 1;
 static int output_channels = 2;
 static int output_samplesize = 4;
@@ -32,9 +32,9 @@ struct StreamingVoiceContext : public IXAudio2VoiceCallback
     void OnVoiceProcessingPassStart( UINT32 BytesRequired ){}
     void OnVoiceProcessingPassEnd(){}
     void OnStreamEnd(){}
-    void OnBufferStart( void* ){ SetEvent( hBufferEndEvent );}
+    void OnBufferStart( void* ){ }
     //void OnBufferEnd( void* ){ SetEvent( hBufferEndEvent ); }
-	void OnBufferEnd( void* ){ SOUND_FillAudio(); }
+	void OnBufferEnd( void* ){ SOUND_FillAudio(); SetEvent( hBufferEndEvent );}
     void OnLoopEnd( void* ){}
     void OnVoiceError( void*, HRESULT ){}
 
@@ -108,6 +108,8 @@ extern "C" void SetupSound(void)
 	wfx.nBlockAlign = wfx.nChannels * wfx.wBitsPerSample / 8;
 	wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 	wfx.cbSize = 0;	
+
+	byte_per_sample = wfx.nAvgBytesPerSec/wfx.nSamplesPerSec;
 	
 	// wave streaming
 	/*
@@ -144,7 +146,7 @@ extern "C" void SetupSound(void)
 
 static void SOUND_FillAudio() {
 	int len = SOUNDSIZE;
-	int byte_size = len = 2048;
+	int byte_size = len = byte_per_sample*2;
 	short *p = (short *)xaudio_buffer;
 
 	XAUDIO2_BUFFER buf = {0};
@@ -187,6 +189,11 @@ extern "C" void SoundFeedStreamData(unsigned char *pSound, long lBytes) {
 	short *p = (short *)pSound;
 
 	if (pSndBuffer == NULL) return;
+
+	if (1) {
+		// audio sync
+		//WaitForSingleObject(voiceContext.hBufferEndEvent, INFINITE);
+	}
 
 	while (lBytes > 0) {
 		if (((iWritePos + 1) % iBufSize) == iReadPos) break;

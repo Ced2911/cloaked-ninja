@@ -395,6 +395,7 @@
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <OpenMPSupport>true</OpenMPSupport>
       <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

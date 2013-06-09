@@ -240,6 +240,9 @@ static void SpuWriteRegister16(u32 add, u16 value) {
 static void SpuWriteRegister32(u32 add, u32 value) {
 	SPU_writeRegister(add, value&0xffff);
 
+	if( (add & 0xFFFF) >= 0x1dF8) {
+		
+	}
 	// next 16bit
 	SPU_writeRegister(add+2, (value>>16)&0xffff);
 }
@@ -333,9 +336,12 @@ void psxHwInit() {
 	}
 
 	// Spu
-	for(i = 0x1c00; i < 0x1e00; i++) {
+	for(i = 0x1c00; i < 0x1e00; i+=2) {
 		hw_read16_handler[i] = (hw_read16_t)SPU_readRegister;
 		hw_write16_handler[i] = (hw_write16_t)SpuWriteRegister16;
+	}
+
+	for(i = 0x1c00; i < 0x1e00; i+=4) {
 		hw_write32_handler[i] = (hw_write32_t)SpuWriteRegister32;
 	}
 

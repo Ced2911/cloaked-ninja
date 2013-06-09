@@ -557,7 +557,6 @@
   <ItemGroup>
     <ProjectReference Include="..\audio\audio.vcxproj">
       <Project>{041da0e5-636e-49ca-a0a1-07ef0edf5aff}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\bzip\bzip.vcxproj">
       <Project>{f8a83a6b-af65-4b0e-9aab-a7c289897876}</Project>
