@@ -412,6 +412,7 @@
       <StructMemberAlignment>1Byte</StructMemberAlignment>
       <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
