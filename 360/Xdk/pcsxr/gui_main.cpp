@@ -163,14 +163,16 @@ static void DoPcsx(char * game) {
 	if (ret < 0) { SysMessage (_("Error Opening CDR Plugin")); return; }
 	ret = GPU_open(NULL);
 	if (ret < 0) { SysMessage (_("Error Opening GPU Plugin (%d)"), ret); return; }
-	ret = SPU_open(NULL);
-	if (ret < 0) { SysMessage (_("Error Opening SPU Plugin (%d)"), ret); return; }
+	ret = SPU_open(NULL);	
+	if (ret < 0) { SysMessage (_("Error Opening SPU Plugin (%d)"), ret); return; }	
+	SPU_registerCallback(SPUirq);
 	ret = PAD1_open(NULL);
 	if (ret < 0) { SysMessage (_("Error Opening PAD1 Plugin (%d)"), ret); return; }	
 	ret = PAD2_open(NULL);
 	if (ret < 0) { SysMessage (_("Error Opening PAD2 Plugin (%d)"), ret); return; }	
 	
-	SysReset();
+	PAD1_registerVibration(GPU_visualVibration);	 
+	PAD2_registerVibration(GPU_visualVibration);   
 
 	//Config.SlowBoot = 1;
 
@@ -180,6 +182,10 @@ static void DoPcsx(char * game) {
 	int res = CheckCdrom();
 	if(res)
 		SysPrintf("CheckCdrom: %08x\r\n",res);
+
+	
+	SysReset();
+
 	res=LoadCdrom();
 	if(res)
 		SysPrintf("LoadCdrom: %08x\r\n",res);
