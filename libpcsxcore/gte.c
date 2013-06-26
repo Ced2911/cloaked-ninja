@@ -382,11 +382,13 @@ void gteSWC2() {
 	psxMemWrite32(_oB_, MFC2(_Rt_));
 }
 
-#if 0 // Accurate division based on no$cash documentation
+#if 1 // Accurate division based on no$cash documentation
 
 static inline u32 _divider(u16 h, u16 sz3) {
 	u32 n;
-
+	if (sz3 == 0) {
+		return 0x1FFFF;
+	}
 	n = ((h*0x10000+sz3/2)/sz3);
 
 	return n;

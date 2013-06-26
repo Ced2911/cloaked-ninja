@@ -19,6 +19,7 @@
 
 #define _IN_XA
 #include <stdint.h>
+#include <xtl.h>
 
 // will be included from spu.c
 #ifdef _IN_SPU
@@ -249,9 +250,12 @@ static INLINE void MixXA(void)
 
 unsigned long timeGetTime_spu()
 {
+	/*
  struct timeval tv;
  gettimeofday(&tv, 0);                                 // well, maybe there are better ways
  return tv.tv_sec * 1000 + tv.tv_usec/1000;            // to do that, but at least it works
+ */
+	return __mftb()/500;//(500 cpu tick speed)
 }
 
 #endif

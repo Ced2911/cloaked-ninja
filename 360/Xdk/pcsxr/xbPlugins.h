@@ -178,11 +178,70 @@ void PEOPS_GPUdisplayText(char *);
 long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 void PEOPS_GPUvBlank( int val );
 
+/* hw gpu plugins */
+long HW_GPUopen(unsigned long *, char *, char *);
+long HW_GPUinit(void);
+long HW_GPUshutdown(void);
+long HW_GPUclose(void);
+void HW_GPUwriteStatus(unsigned long);
+void HW_GPUwriteData(unsigned long);
+void HW_GPUwriteDataMem(unsigned long *, int);
+unsigned long HW_GPUreadStatus(void);
+unsigned long HW_GPUreadData(void);
+void HW_GPUreadDataMem(unsigned long *, int);
+long HW_GPUdmaChain(unsigned long *, unsigned long);
+void HW_GPUupdateLace(void);
+void HW_GPUdisplayText(char *);
+long HW_GPUfreeze(unsigned long, GPUFreeze_t *);
+void HW_GPUvBlank(int val);
+void HW_GPUvisualVibration(uint32_t iSmall, uint32_t iBig);
+void HW_GPUmakeSnapshot(void);
+void HW_GPUcursor(int iPlayer, int x, int y);
+void HW_GPUaddVertex(short sx, short sy, s64 fx, s64 fy, s64 fz);
+
 #define EMPTY_PLUGIN \
 	{ NULL,      \
 	  0,         \
 	  { { NULL,  \
 	      NULL }, } }
+
+// HW GPU
+#define GPU_HW_PEOPS_PLUGIN \
+{ "GPU",      \
+16,         \
+{ { "GPUinit",  \
+HW_GPUinit }, \
+{ "GPUshutdown",	\
+HW_GPUshutdown}, \
+{ "GPUopen", \
+HW_GPUopen}, \
+{ "GPUclose", \
+HW_GPUclose}, \
+{ "GPUwriteStatus", \
+HW_GPUwriteStatus}, \
+{ "GPUwriteData", \
+HW_GPUwriteData}, \
+{ "GPUwriteDataMem", \
+HW_GPUwriteDataMem}, \
+{ "GPUreadStatus", \
+HW_GPUreadStatus}, \
+{ "GPUreadData", \
+HW_GPUreadData}, \
+{ "GPUreadDataMem", \
+HW_GPUreadDataMem}, \
+{ "GPUdmaChain", \
+HW_GPUdmaChain}, \
+{ "GPUfreeze", \
+HW_GPUfreeze}, \
+{ "GPUvisualVibration", \
+HW_GPUvisualVibration}, \
+{ "GPUcursor", \
+HW_GPUcursor}, \
+{ "GPUupdateLace", \
+HW_GPUupdateLace}, \
+{ "GPUvBlank", \
+HW_GPUvBlank}, \
+} }
 	      
 #define PAD1_PLUGIN \
 	{ "PAD1",      \
@@ -460,6 +519,7 @@ CDRCIMGgetBufferSub} \
 #define PLUGIN_SLOT_4 SPU_PEOPS_PLUGIN
 //#define PLUGIN_SLOT_5 GPU_NULL_PLUGIN
 #define PLUGIN_SLOT_5 GPU_PEOPS_PLUGIN
+//#define PLUGIN_SLOT_5 GPU_HW_PEOPS_PLUGIN
 #define PLUGIN_SLOT_6 CDRCIMG_PLUGIN
 #define PLUGIN_SLOT_7 EMPTY_PLUGIN
 

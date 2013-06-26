@@ -729,12 +729,13 @@ int LoadPlugins() {
 
 	ReleasePlugins();
 
+#ifndef _DEBUG
 	if (UsingIso()) {
 		LoadCDRplugin(NULL);
 	} else {
 		if (LoadCDRplugin(Config.Cdr) == -1) return -1;
 	}
-
+#endif
 	if (LoadGPUplugin("GPU") == -1) return -1;
 	if (LoadSPUplugin("SPU") == -1) return -1;
 #ifdef _DEBUG

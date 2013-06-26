@@ -36,8 +36,6 @@
 	func(value);				\
 }
 
-
-
 #define DmaExec(n) \
 	static void DmaExec##n##(u32 add, u32 value) { \
 		HW_DMA##n##_CHCR = SWAPu32(value); \
@@ -201,15 +199,15 @@ static void psxWtgt2(u32 add, u32 v) {
 static void psxWiReg16(u32 add, u16 value) {
 	if (Config.Sio) psxHu16ref(0x1070) |= SWAPu16(0x80);
 	if (Config.SpuIrq) psxHu16ref(0x1070) |= SWAPu16(0x200);
-	//psxHu16ref(0x1070) &= SWAPu16(value);
-	psxHu16ref(0x1070) &= SWAPu16((psxHu16(0x1074) & value));
+	psxHu16ref(0x1070) &= SWAPu16(value); // old
+	//psxHu16ref(0x1070) &= SWAPu16((psxHu16(0x1074) & value));
 }
 
 static void psxWiReg32(u32 add, u32 value) {
 	if (Config.Sio) psxHu32ref(0x1070) |= SWAPu32(0x80);
 	if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAPu32(0x200);
-	//psxHu32ref(0x1070) &= SWAPu32(value);
-	psxHu32ref(0x1070) &= SWAPu32((psxHu32(0x1074) & value));
+	psxHu32ref(0x1070) &= SWAPu32(value); // old
+	//psxHu32ref(0x1070) &= SWAPu32((psxHu32(0x1074) & value));
 }
 
 /**

@@ -2193,6 +2193,9 @@ void (*biosB0[256])();
 void (*biosC0[256])();
 
 #include "sjisfont.h"
+#include "gpu.h"
+// Hack !
+void gpu_sync();
 
 void psxBiosInit() {
 	u32 base, size;
@@ -2211,7 +2214,19 @@ void psxBiosInit() {
 	biosB0[0x3d] = psxBios_putchar;
 	biosB0[0x3f] = psxBios_puts;
 
-	if (!Config.HLE) return;
+	if (!Config.HLE) {
+		// Hack !
+		biosA0[0x46] = gpu_sync;
+		biosA0[0x47] = gpu_sync;
+		biosA0[0x48] = gpu_sync;
+		biosA0[0x49] = gpu_sync;
+		biosA0[0x4A] = gpu_sync;
+		biosA0[0x4B] = gpu_sync;
+		biosA0[0x4C] = gpu_sync;
+		biosA0[0x4D] = gpu_sync;
+		biosA0[0x4E] = gpu_sync;
+		return;
+	}
 
 	for(i = 0; i < 256; i++) {
 		if (biosA0[i] == NULL) biosA0[i] = psxBios_dummy;

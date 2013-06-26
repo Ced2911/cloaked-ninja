@@ -1227,10 +1227,14 @@ void SetupTimer(void)
   {
    //_beginthread(MAINThread,0,NULL);
    DWORD dw;
-   hMainThread=CreateThread(NULL,0,MAINThreadEx,0,0,&dw);
+   hMainThread=CreateThread(NULL,0,MAINThreadEx,0,CREATE_SUSPENDED,&dw);
+
    SetThreadPriority(hMainThread,
                      //THREAD_PRIORITY_TIME_CRITICAL);
                      THREAD_PRIORITY_HIGHEST);
+   XSetThreadProcessor(hMainThread, 4);
+
+	ResumeThread(hMainThread);
   }
 
 #else
@@ -1358,6 +1362,9 @@ long CALLBACK SPUinit(void)
 
  ReadConfig();                                         // read user stuff
  SetupStreams();                                       // prepare streaming
+
+ memset(regArea, 0, 10000 + sizeof(short));
+ memset(spuMem, 0, (256*1024) + sizeof(short));
 
  return 0;
 }

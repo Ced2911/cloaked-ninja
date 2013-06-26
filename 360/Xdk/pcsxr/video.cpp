@@ -27,17 +27,17 @@ void InitD3D() {
 	XVIDEO_MODE VideoMode;
 	ZeroMemory( &VideoMode, sizeof( VideoMode ) );
 	XGetVideoMode( &VideoMode );
-	BOOL bEnable720p = ( VideoMode.dwDisplayHeight >= 720 ) ? TRUE : FALSE;
 
 	// Set up the structure used to create the D3DDevice.
 	ZeroMemory( &g_d3dpp, sizeof( g_d3dpp ) );
-	g_d3dpp.BackBufferWidth = bEnable720p ? 1280 : 640;
-	g_d3dpp.BackBufferHeight = bEnable720p ? 720  : 480;
-	g_d3dpp.BackBufferFormat =  ( D3DFORMAT )MAKESRGBFMT( D3DFMT_A8R8G8B8 );
-	g_d3dpp.FrontBufferFormat = ( D3DFORMAT )MAKESRGBFMT( D3DFMT_LE_X8R8G8B8 );
+	g_d3dpp.BackBufferWidth = VideoMode.fIsHiDef ? 1280 : 640;
+	g_d3dpp.BackBufferHeight = VideoMode.fIsHiDef ? 720  : 480;
+
+	g_d3dpp.BackBufferFormat =  D3DFMT_X8R8G8B8;
+	g_d3dpp.FrontBufferFormat = D3DFMT_LE_X8R8G8B8;
 	g_d3dpp.MultiSampleType = D3DMULTISAMPLE_NONE;
 	g_d3dpp.MultiSampleQuality = 0;
-	g_d3dpp.BackBufferCount = 1;
+	g_d3dpp.BackBufferCount = 0;
 	g_d3dpp.EnableAutoDepthStencil = TRUE;
 	g_d3dpp.AutoDepthStencilFormat = D3DFMT_D24S8;
 	g_d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;

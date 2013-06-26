@@ -725,10 +725,9 @@ __inline void GetTextureTransColG32(uint32_t * pdest,uint32_t color)
 
 ////////////////////////////////////////////////////////////////////////
 
-__inline void GetTextureTransColG32_S(uint32_t * __restrict pdest,uint32_t color)
+__inline void GetTextureTransColG32_S(uint32_t * pdest,uint32_t color)
 {
 	int32_t r,g,b;
-	__dcbt(0,pdest);
 
 	//if(color==0) return; // Load hit store
 	if(!color) return;

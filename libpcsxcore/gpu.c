@@ -88,7 +88,7 @@ static u32 gpuDmaChainSize(u32 addr) {
 #define THREAD_GPU_WRITE
 
 static volatile	uint32_t gpu_thread_running = 0;
-static volatile uint32_t gpu_thread_exit = 0;
+static volatile uint32_t gpu_thread_exit = 1;
 static volatile uint32_t dma_addr;
 
 
@@ -181,6 +181,10 @@ static __inline void WaitForGpuThread() {
 	__asm{
 		or r3, r3, r3
 	};
+}
+
+void gpu_sync() {
+	WaitForGpuThread();
 }
 
 static void gpuThread() {
@@ -346,11 +350,6 @@ uint32_t gpuReadStatus(void) {
 	
 	// GPU plugin
 	hard = GPU_readStatus();
-
-	// Gameshark Lite - wants to see VRAM busy
-	// - Must enable GPU 'Fake Busy States' hack
-	if( (hard & GPUSTATUS_IDLE) == 0 )
-		hard &= ~GPUSTATUS_READYFORVRAM;
 
 	return hard;
 }

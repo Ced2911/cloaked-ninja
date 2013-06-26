@@ -151,9 +151,7 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 			startxy = ((1024) * (column + y)) + x;
 			pD = (unsigned char *)&psxVuw[startxy];
 			destpix = (uint32_t *)(surf + (column * lPitch));
-
-			__dcbt(0,pD);
-
+			
 			for (row = 0; row < dx; row++)
 			{
 				rdest = &destpix[row];
@@ -175,8 +173,6 @@ void BlitScreen32(unsigned char * surf, int32_t x, int32_t y)
 		{
 			startxy = (1024 * (column + y)) + x;
 			destpix = (uint32_t *)(surf + (column * lPitch));
-			
-			__dcbt(0,&psxVuw[startxy]);
 
 			for (row = 0; row < dx; row+=8)
 			{					

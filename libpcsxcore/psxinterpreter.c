@@ -268,7 +268,7 @@ void psxDelayTest(int reg, u32 bpc) {
 	// Don't execute yet - just peek
 	code = (u32 *)PSXM(bpc);
 
-	tmp = ((code == NULL) ? 0 : SWAP32(*code));
+	tmp = SWAP32(*code);
 	branch = 1;
 
 	switch (psxTestLoadDelay(reg, tmp)) {
@@ -292,7 +292,8 @@ static u32 psxBranchNoDelay(void) {
 	u32 temp;
 
 	code = (u32 *)PSXM(psxRegs.pc);
-	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+	psxRegs.code = SWAP32(*code);
+
 	switch (_Op_) {
 		case 0x00: // SPECIAL
 			switch (_Funct_) {
@@ -423,7 +424,7 @@ static __inline void doBranch(u32 tar) {
 	// branch delay slot
 	code = (u32 *)PSXM(psxRegs.pc);
 
-	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+	psxRegs.code = SWAP32(*code);
 
 	debugI();
 
@@ -1091,8 +1092,11 @@ static void intReset() {
 }
 
 static void intExecute() {
-	while(Config.CpuRunning) {
-		execI();
+	if ( Config.CpuRunning ) {
+		do {			
+			execI();
+		}
+		while(Config.CpuRunning);
 	}
 }
 
@@ -1111,11 +1115,7 @@ static void intShutdown() {
 // interpreter execution
 static __inline void execI() { 
 	u32 *code = (u32 *)PSXM(psxRegs.pc);
-	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
-
-	debugI();
-
-	if (Config.Debug) ProcessDebug();
+	psxRegs.code = SWAP32(*code);
 
 	psxRegs.pc += 4;
 	psxRegs.cycle += BIAS;

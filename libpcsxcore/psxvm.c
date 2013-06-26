@@ -64,17 +64,17 @@ int psxMemInit() {
 		return 0;
 	}
 	// Create 0x20000000 (512M) virtual memory
-	psxVM = (s8 *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE, PAGE_READWRITE);
+	psxVM = (s8 *)VirtualAlloc(NULL, VM_SIZE, MEM_RESERVE|MEM_LARGE_PAGES, PAGE_READWRITE);
 
 	// Create Mapping ...
 	// 0x00200000 * 4 Mirrors
-	psxM = (s8 *)VirtualAlloc(psxVM, 0x00800000, MEM_COMMIT, PAGE_READWRITE);
+	psxM = (s8 *)VirtualAlloc(psxVM, 0x00800000, MEM_COMMIT|MEM_LARGE_PAGES, PAGE_READWRITE);
 	// Parallel Port
-	psxP = (s8 *)VirtualAlloc(psxVM+0x1f000000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
+	psxP = (s8 *)VirtualAlloc(psxVM+0x1f000000, 0x00010000, MEM_COMMIT|MEM_LARGE_PAGES, PAGE_READWRITE);
 	// Hardware Regs + Scratch Pad
-	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000, 0x00010000, MEM_COMMIT, PAGE_READWRITE);
+	psxH = (s8 *)VirtualAlloc(psxVM+0x1f800000, 0x00010000, MEM_COMMIT|MEM_LARGE_PAGES, PAGE_READWRITE);
 	// Bios
-	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000, 0x00080000, MEM_COMMIT, PAGE_READWRITE);
+	psxR = (s8 *)VirtualAlloc(psxVM+0x1fc00000, 0x00080000, MEM_COMMIT|MEM_LARGE_PAGES, PAGE_READWRITE);
 
 	/*
 	// Page guard (usefull for debuggin)
