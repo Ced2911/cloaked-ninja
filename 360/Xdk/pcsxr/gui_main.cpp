@@ -305,6 +305,13 @@ static void InitXui() {
 	XSetThreadProcessor(hInGameThread, 5);
 	ResumeThread(hInGameThread);
 
+	// Set matrice for xui - allow to resize move correctly in small tvs
+	HXUIDC hDc;D3DXMATRIX mat;D3DXMATRIX tr;
+	XuiRenderGetViewTransform(app.GetDC(), &mat);
+	D3DXMatrixTranslation(&tr, 0, (((float)g_d3dpp.BackBufferHeight-720.f)/2.f), 0);
+	D3DXMatrixMultiply(&mat, &mat, &tr);
+	XuiRenderSetViewTransform(app.GetDC(), &mat);
+
 	// Init xui time
 	xui_time = 0;
 	LARGE_INTEGER TicksPerSecond;

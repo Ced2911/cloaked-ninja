@@ -30,8 +30,12 @@ void InitD3D() {
 
 	// Set up the structure used to create the D3DDevice.
 	ZeroMemory( &g_d3dpp, sizeof( g_d3dpp ) );
-	g_d3dpp.BackBufferWidth = VideoMode.fIsHiDef ? 1280 : 640;
-	g_d3dpp.BackBufferHeight = VideoMode.fIsHiDef ? 720  : 480;
+	g_d3dpp.BackBufferWidth = 1280;
+	if (VideoMode.fIsWideScreen) {
+		g_d3dpp.BackBufferHeight = 720;
+	} else {
+		g_d3dpp.BackBufferHeight = 1024;
+	}
 
 	g_d3dpp.BackBufferFormat =  D3DFMT_X8R8G8B8;
 	g_d3dpp.FrontBufferFormat = D3DFMT_LE_X8R8G8B8;
