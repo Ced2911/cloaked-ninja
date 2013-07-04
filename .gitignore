@@ -172,3 +172,5 @@ roms/
 *.lib
 debug_cc/
 Release_LTCG/
+
+360/Xdk/pcsxr/git-version.cpp

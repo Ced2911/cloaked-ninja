@@ -386,10 +386,14 @@ public:
 	XUI_IMPLEMENT_CLASS( COsdMenuScene, L"InGameMenu", XUI_CLASS_SCENE )
 };
 
+extern const char *PCSXR_GIT_VERSION;
+
 class CMainMenuScene : public CXuiSceneImpl
 {
 	wchar_t fileBrowserInfoText[512];
+	wchar_t gitVersionText[512];
 
+	CXuiControl GitVersion;
 	CXuiList FileBrowser;
 	CXuiControl FileBrowserInfo;
 	CXuiNavButton OsdBtn;
@@ -419,6 +423,9 @@ class CMainMenuScene : public CXuiSceneImpl
 		GetChildById( L"SpuIrqCbox", &SpuIrqCbox );
 		GetChildById( L"GpuThCbox", &GpuThCbox );		
 
+		GetChildById( L"GitVersion", &GitVersion );
+		
+
 		GetChildById( L"FrameLimitCbox", &FrameLimitCbox );
 
 		// Init values from xbox config
@@ -426,6 +433,9 @@ class CMainMenuScene : public CXuiSceneImpl
 		SpuIrqCbox.SetCheck(xboxConfig.UseSpuIrq);
 		FrameLimitCbox.SetCheck(xboxConfig.UseFrameLimiter);
 		GpuThCbox.SetCheck(xboxConfig.UseThreadedGpu);
+
+		swprintf(gitVersionText, L"Version: %S", PCSXR_GIT_VERSION);
+		GitVersion.SetText(gitVersionText);
 		return S_OK;
 	}
 

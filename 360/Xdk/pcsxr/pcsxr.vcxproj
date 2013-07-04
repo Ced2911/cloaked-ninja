@@ -560,9 +560,16 @@
       <OpticalDiscDriveMapping>false</OpticalDiscDriveMapping>
       <TitleID>0x1CED2911</TitleID>
     </ImageXex>
+    <CustomBuildStep>
+      <Command>git-version-gen.cmd</Command>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>git-version-gen.cmd</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bram.cpp" />
+    <ClCompile Include="git-version.cpp" />
     <ClCompile Include="gui.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc_optimised|Xbox 360'">true</ExcludedFromBuild>
