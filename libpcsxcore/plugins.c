@@ -729,7 +729,7 @@ int LoadPlugins() {
 
 	ReleasePlugins();
 
-#ifndef _DEBUG
+#ifndef NO_GUI
 	if (UsingIso()) {
 		LoadCDRplugin(NULL);
 	} else {
@@ -738,7 +738,7 @@ int LoadPlugins() {
 #endif
 	if (LoadGPUplugin("GPU") == -1) return -1;
 	if (LoadSPUplugin("SPU") == -1) return -1;
-#ifdef _DEBUG
+#ifdef NO_GUI
 	if (LoadPAD1plugin("PAD1") == -1) return -1;
 	if (LoadPAD2plugin("PAD2") == -1) return -1;
 #endif

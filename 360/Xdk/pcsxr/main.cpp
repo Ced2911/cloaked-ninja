@@ -9,6 +9,7 @@
 //char * game = "game:\\Bloody Roar II (USA)\\Bloody Roar II (USA).cue";
 //char * game = "game:\\Tekken 3 (USA)\\Tekken 3 (USA) (Track 1).bin";
 char * game = "game:\\Tenchu 2.bin";
+//char * game = "game:\\mgs.bin";
 //char * game = "game:\\Bushido Blade [U] [SCUS-94180]\\bushido_blade.bin";
 //char * game = "game:\\Soul Blade (USA) (v1.0)\\Soul Blade (USA) (v1.0).bin";
 //char * game = "game:\\Castlevanina - SOTN.bin";

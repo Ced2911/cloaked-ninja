@@ -65,6 +65,14 @@
       <Configuration>Release_LTCG</Configuration>
       <Platform>Xbox 360</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_No_Gui|Win32">
+      <Configuration>Release_No_Gui</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_No_Gui|Xbox 360">
+      <Configuration>Release_No_Gui</Configuration>
+      <Platform>Xbox 360</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -80,6 +88,9 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -107,6 +118,12 @@
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>MultiByte</CharacterSet>
@@ -162,6 +179,9 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -187,6 +207,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'" Label="PropertySheets">
@@ -241,8 +264,11 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Release\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Release_LTCG\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">Release_LTCG\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Release_LTCG\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">Release_LTCG\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Win32'" />
@@ -286,11 +312,17 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Win32'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
@@ -298,6 +330,7 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'" />
     <ImageXexOutput Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)$(ProjectName)_retail.xex</ImageXexOutput>
+    <ImageXexOutput Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)$(ProjectName)_retail.xex</ImageXexOutput>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">
     <ClCompile>
@@ -313,6 +346,8 @@
       <CallAttributedProfiling>Disabled</CallAttributedProfiling>
       <OpenMPSupport>true</OpenMPSupport>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilibd.lib;d3d9d.lib;d3dx9d.lib;xgraphicsd.lib;xboxkrnl.lib;xnetd.lib;xaudiod2.lib;xactd3.lib;x3daudiod.lib;xmcored.lib;xbdm.lib;vcompd.lib;core.lib;video.lib;audio.lib;zlib.lib;input.lib;xuirund.lib;xuirenderd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -344,7 +379,7 @@
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
@@ -410,6 +445,8 @@
       <BrowseInformation>false</BrowseInformation>
       <ExpandAttributedSource>false</ExpandAttributedSource>
       <AssemblerOutput>NoListing</AssemblerOutput>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilibd.lib;d3d9d.lib;d3dx9d.lib;xgraphicsd.lib;xboxkrnl.lib;xnetd.lib;xaudiod2.lib;xactd3.lib;x3daudiod.lib;xmcored.lib;xbdm.lib;vcompd.lib;core.lib;video.lib;audio.lib;zlib.lib;input.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -436,6 +473,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <PREfast>AnalyzeOnly</PREfast>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilibd.lib;d3d9d.lib;d3dx9d.lib;xgraphicsd.lib;xboxkrnl.lib;xnetd.lib;xaudiod2.lib;xactd3.lib;x3daudiod.lib;xmcored.lib;xbdm.lib;vcompd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -461,6 +500,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallAttributedProfiling>Callcap</CallAttributedProfiling>
       <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilibi.lib;d3d9i.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3i.lib;x3daudioi.lib;xmcorei.lib;xbdm.lib;vcomp.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -489,6 +530,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallAttributedProfiling>Fastcap</CallAttributedProfiling>
       <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilib.lib;d3d9.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3.lib;x3daudio.lib;xmcore.lib;vcomp.lib;xbdm.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -515,6 +558,8 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilib.lib;d3d9.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3.lib;x3daudio.lib;xmcore.lib;vcomp.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -544,6 +589,46 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>xapilib.lib;d3d9ltcg.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3ltcg.lib;x3daudioltcg.lib;xmcoreltcg.lib;vcomp.lib;xuirunltcg.lib;xuirenderltcg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ProgramDatabaseFile>$(OutDir)$(ProjectName).pdb</ProgramDatabaseFile>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Deploy>
+      <DeploymentType>CopyToHardDrive</DeploymentType>
+      <DeploymentFiles>$(RemoteRoot)=$(ImagePath);$(RemoteRoot)\media=$(OutDir)media;</DeploymentFiles>
+    </Deploy>
+    <ImageXex>
+      <OpticalDiscDriveMapping>false</OpticalDiscDriveMapping>
+      <TitleID>0x1CED2911</TitleID>
+    </ImageXex>
+    <CustomBuildStep>
+      <Command>git-version-gen.cmd</Command>
+    </CustomBuildStep>
+    <PreBuildEvent>
+      <Command>git-version-gen.cmd</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>../../common/;../../../libpcsxcore/;../../lib/zlib-1.2.5/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;NO_GUI;_XBOX;LTCG;__BIG_ENDIAN__;__BIGENDIAN__;__ppc__;__PPC__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <TrapIntegerDividesOptimization>true</TrapIntegerDividesOptimization>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>xapilib.lib;d3d9ltcg.lib;d3dx9.lib;xgraphics.lib;xboxkrnl.lib;xnet.lib;xaudio2.lib;xact3ltcg.lib;x3daudioltcg.lib;xmcoreltcg.lib;vcomp.lib;xuirunltcg.lib;xuirenderltcg.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -573,14 +658,17 @@
     <ClCompile Include="gui.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc_optimised|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="gui_main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc_optimised|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="gui_tools.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc_optimised|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="gui_video.cpp" />
     <ClCompile Include="main.cpp" />
@@ -591,10 +679,13 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsC</CompileAs>
     </ClCompile>
-    <ClCompile Include="sys\Mount.cpp" />
+    <ClCompile Include="sys\Mount.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="video.cpp" />
     <ClCompile Include="xb_sys.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Xbox 360'">CompileAsC</CompileAs>
@@ -603,6 +694,7 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug_Opt|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsC</CompileAs>
     </ClCompile>
@@ -615,6 +707,7 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">CompileAsC</CompileAs>
     </ClCompile>
   </ItemGroup>
@@ -622,10 +715,12 @@
     <ClInclude Include="gui.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc_optimised|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="gui_class.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='debug_cc_optimised|Xbox 360'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="simpleini\SimpleIni.h" />
     <ClInclude Include="xb_sys.h" />
@@ -694,8 +789,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename)%(Extension)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">copy "%(FullPath)" "$(OutDir)\media\xui\%(Filename)%(Extension)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">copy "%(FullPath)" "$(OutDir)\media\xui\%(Filename)%(Extension)"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename)%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)\media\xui\%(Filename)%(Extension)</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">copy "%(FullPath)" "$(OutDir)\media\xui\%(Filename)%(Extension)"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename)%(Extension)</Outputs>
@@ -726,8 +824,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
@@ -756,8 +857,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
@@ -776,6 +880,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">Copy file %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">Copy file %(FullPath)</Message>
@@ -784,6 +889,7 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">Copy file %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">Copy file %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">Copy file %(FullPath)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">Copy file %(FullPath)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">Copy file %(FullPath)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
@@ -792,6 +898,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
     </CustomBuild>
   </ItemGroup>
@@ -806,6 +913,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
@@ -815,6 +923,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
     </CustomBuild>
     <CustomBuild Include="media\xui\loadstates.xui">
@@ -827,6 +936,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">XUI2Bin  "%(FullPath)" "$(OutDir)\media\xui\%(Filename).xur"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='CodeAnalysis|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='debug_cc|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
@@ -836,6 +946,7 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile_FastCap|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Profile|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_LTCG|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_No_Gui|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Xbox 360'">$(OutDir)\media\xui\%(Filename).xur</Outputs>
     </CustomBuild>
   </ItemGroup>
