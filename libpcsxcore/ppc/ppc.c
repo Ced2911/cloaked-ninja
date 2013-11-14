@@ -10,9 +10,20 @@
 #include "ppc.h"
 
 // General Purpose hardware registers
+/** 
+R12/R13 are reserved by compiler/os
+R14 is reserverd for vm base address
+**/
 int cpuHWRegisters[NUM_HW_REGISTERS] = {
-    6, 7, 8, 9, 10, 11, 12, /*13,*/ 14, 15, 16, 17, 18, 19, 20, 
-    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+    6, 7, 8,						// 3
+	9, 10, 11,						// 6
+	/*12, 13, 14,*/					
+	15, 16, 17,						// 9
+	18, 19, 20,						// 12
+    21, 22, 23,						// 15
+	24, 25, 26,						// 18
+	27, 28, 29,						// 21
+	30, 31							// 23
 };
 
 u32 *ppcPtr;

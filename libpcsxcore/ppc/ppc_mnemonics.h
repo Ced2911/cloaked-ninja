@@ -59,6 +59,10 @@
 	{int _reg = (REG); int _dst=(REG_DST); \
         INSTR = (0x88000000 | (_dst << 21) | (_reg << 16) | ((OFFSET) & 0xffff));}
 
+#define LBZX(REG_DST, a, b) \
+	{int _a = (a);  int _b = (b); int dest=(REG_DST); \
+        INSTR = ((31<<26) | (dest << 21) | (a << 16) | (b << 11) | (87<<1));}
+
 #define LMW(REG_DST, OFFSET, REG) \
 	{int _reg = (REG); int _dst=(REG_DST); \
         INSTR = (0xB8000000 | (_dst << 21) | (_reg << 16) | ((OFFSET) & 0xffff));}
@@ -523,3 +527,8 @@
 	} \
 }
 #endif
+
+
+// Debug !
+#define Break() \
+	{INSTR = (0x0FE00016);}

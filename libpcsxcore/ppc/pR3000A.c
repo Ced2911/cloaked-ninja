@@ -44,6 +44,13 @@ void   __cdecl bfree(_Inout_opt_ void * _Memory);
 
 static void recRecompile();
 
+static void MOVI2R(int dest, unsigned int imm) {
+	LIS(dest, imm>>16);
+	if ((imm & 0xFFFF) != 0) {
+		// LO 16bit
+		ORI(dest, dest, imm & 0xFFFF);
+	}
+}
 
 void __declspec(naked) __icbi(int offset, const void * base)
 {
@@ -1099,7 +1106,7 @@ static void preMemWrite(int size)
 	//FlushAllHWReg();
 }
 
-#define DR_REWRITE_CALL 0
+#define DR_REWRITE_CALL 1
 #define DR_REWRITE_WRITE 0
 
 static void recLB() {
@@ -1122,6 +1129,52 @@ static void recLB() {
 			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 			return;
 		}
+	} else {
+
+#if 0 // Not complete
+		u32 * ptr;
+		u32 * ptr_end;
+
+		Break();
+
+		// R3 = RS
+		OR(R3, GetHWReg32(_Rs_), GetHWReg32(_Rs_));
+		// R3 = R3 & 0x1FFF.FFFF
+		RLWINM(R3, R3, 0, 3, 31);
+		// R4 = R3 >> 24
+		SRWI(R4, R3, 24); 
+
+		// Compare ...
+		CMPLWI(R4, 0x1F);
+
+		// if R4 != 0x1F
+		BEQ_L(ptr);
+		
+		// Direct memory access
+		if (_Rt_) {
+			LBZX(PutHWReg32(_Rt_), R14, R3);
+		}
+
+		// Jump to end
+		B_L(ptr_end);
+
+		// Set direct call jump address
+		B_DST(ptr);
+
+		// Direct call func ... optimise ...
+		preMemRead();
+		CALLFunc(func);
+
+		// Set func end call jump adress
+		B_DST(ptr_end);
+		
+		// rt = (signed)rt;
+		if (_Rt_) {
+			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+		}
+		return;
+
+#endif
 	}
 #endif
 #endif
@@ -2007,6 +2060,9 @@ static void recRecompile() {
 	PC_REC32(psxRegs.pc) = (u32)ppcPtr;
 
 	ppcRec.pcold = ppcRec.pc = psxRegs.pc;
+
+	// Save vm ptr
+	MOVI2R(R14, (u32)psxVM);
 	
 	// Build dynarec cache
 	for (ppcRec.count=0; ppcRec.count<500;) {
