@@ -164,9 +164,9 @@ static void SetBranch() {
 		iStoreCycle();
 		
 		treg = GetHWRegSpecial(TARGET);
-		MR(PutHWRegSpecial(ARG2), treg);
+		MR(R4, treg);
 		DisposeHWReg(GetHWRegFromCPUReg(treg));
-		LIW(PutHWRegSpecial(ARG1), _Rt_);
+		LIW(R3, _Rt_);
         LIW(GetHWRegSpecial(PSXPC), ppcRec.pc);
 
 		FlushAllHWReg();
@@ -212,8 +212,8 @@ static void iJump(u32 branchPC) {
 		/* store cycle */
 		iStoreCycle();
 
-		LIW(PutHWRegSpecial(ARG2), branchPC);
-		LIW(PutHWRegSpecial(ARG1), _Rt_);
+		LIW(R4, branchPC);
+		LIW(R3, _Rt_);
 		LIW(GetHWRegSpecial(PSXPC), ppcRec.pc);
 		FlushAllHWReg();
 		CALLFunc((u32)psxDelayTest);
@@ -288,8 +288,8 @@ static void iBranch(u32 branchPC, int savectx) {
 		/* store cycle */
 		iStoreCycle();
 		
-		LIW(PutHWRegSpecial(ARG1), _Rt_);
-		LIW(PutHWRegSpecial(ARG2), branchPC);
+		LIW(R3, _Rt_);
+		LIW(R4, branchPC);
         LIW(GetHWRegSpecial(PSXPC), ppcRec.pc);
 
 		FlushAllHWReg();
@@ -373,8 +373,8 @@ void iDumpBlock(char *ptr) {
 void psx##f(); \
 static void rec##f() { \
 	iFlushRegs(0); \
-	LIW(PutHWRegSpecial(ARG1), (u32)psxRegs.code); \
-	STW(GetHWRegSpecial(ARG1), OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
+	LIW(R3, (u32)psxRegs.code); \
+	STW(R3, OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
 	LIW(PutHWRegSpecial(PSXPC), (u32)ppcRec.pc); \
 	FlushAllHWReg(); \
 	CALLFunc((u32)psx##f); \
@@ -385,8 +385,8 @@ static void rec##f() { \
 void psx##f(); \
 static void rec##f() { \
 	iFlushRegs(0); \
-        LIW(PutHWRegSpecial(ARG1), (u32)psxRegs.code); \
-        STW(GetHWRegSpecial(ARG1), OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
+        LIW(R3, (u32)psxRegs.code); \
+        STW(R3, OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
         LIW(PutHWRegSpecial(PSXPC), (u32)ppcRec.pc); \
         FlushAllHWReg(); \
 	CALLFunc((u32)psx##f); \
@@ -398,8 +398,8 @@ static void rec##f() { \
 void psx##f(); \
 static void rec##f() { \
 	iFlushRegs(0); \
-        LIW(PutHWRegSpecial(ARG1), (u32)psxRegs.code); \
-        STW(GetHWRegSpecial(ARG1), OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
+        LIW(R3, (u32)psxRegs.code); \
+        STW(R3, OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
         LIW(PutHWRegSpecial(PSXPC), (u32)ppcRec.pc); \
         FlushAllHWReg(); \
 	CALLFunc((u32)psx##f); \
@@ -1062,14 +1062,12 @@ REC_FUNC(SWR);
 static void preMemRead()
 {
 	int rs;
-
-	ReserveArgs(1);
 	if (_Rs_ != _Rt_) {
 		DisposeHWReg(iRegs[_Rt_].reg);
 	}
 	rs = GetHWReg32(_Rs_);
 	if (rs != 3 || _Imm_ != 0) {
-		ADDI(PutHWRegSpecial(ARG1), rs, _Imm_);
+		ADDI(R3, rs, _Imm_);
 	}
 	if (_Rs_ == _Rt_) {
 		DisposeHWReg(iRegs[_Rt_].reg);
@@ -1082,20 +1080,18 @@ static void preMemRead()
 static void preMemWrite(int size)
 {
 	int rs;
-
-	ReserveArgs(2);
 	rs = GetHWReg32(_Rs_);
 	if (rs != 3 || _Imm_ != 0) {
-		ADDI(PutHWRegSpecial(ARG1), rs, _Imm_);
+		ADDI(R3, rs, _Imm_);
 	}
 	if (size == 1) {
-		RLWINM(PutHWRegSpecial(ARG2), GetHWReg32(_Rt_), 0, 24, 31);
-		//ANDI_(PutHWRegSpecial(ARG2), GetHWReg32(_Rt_), 0xff);
+		RLWINM(R4, GetHWReg32(_Rt_), 0, 24, 31);
+		//ANDI_(R4, GetHWReg32(_Rt_), 0xff);
 	} else if (size == 2) {
-		RLWINM(PutHWRegSpecial(ARG2), GetHWReg32(_Rt_), 0, 16, 31);
-		//ANDI_(PutHWRegSpecial(ARG2), GetHWReg32(_Rt_), 0xffff);
+		RLWINM(R4, GetHWReg32(_Rt_), 0, 16, 31);
+		//ANDI_(R4, GetHWReg32(_Rt_), 0xffff);
 	} else {
-		MR(PutHWRegSpecial(ARG2), GetHWReg32(_Rt_));
+		MR(R4, GetHWReg32(_Rt_));
 	}
 
 	InvalidateCPURegs();
@@ -1789,11 +1785,11 @@ static void recBGEZ() {
 static void recRFE() {
     
     iFlushRegs(0);
-    LWZ(10, OFFSET(&psxRegs, &psxRegs.CP0.n.Status), GetHWRegSpecial(PSXREGS));
+    LWZ(0, OFFSET(&psxRegs, &psxRegs.CP0.n.Status), GetHWRegSpecial(PSXREGS));
     RLWINM(11, 0, 0, 0, 27);
-    RLWINM(10, 0, 30, 28, 31);
-    OR(10, 10, 11);
-    STW(10, OFFSET(&psxRegs, &psxRegs.CP0.n.Status), GetHWRegSpecial(PSXREGS));
+    RLWINM(0, 0, 30, 28, 31);
+    OR(0, 0, 11);
+    STW(0, OFFSET(&psxRegs, &psxRegs.CP0.n.Status), GetHWRegSpecial(PSXREGS));
 
 #if 1 // not needed ?
     //LIW(PutHWRegSpecial(PSXPC), (u32)pc);

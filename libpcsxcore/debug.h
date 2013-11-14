@@ -24,17 +24,18 @@
 extern "C" {
 #endif
 
+/* Disabled break ppc dynarec
 enum breakpoint_types {
 	E, R1, R2, R4, W1, W2, W4
 };
-
+*/
 void StartDebugger();
 void StopDebugger();
 
 void DebugVSync();
 void ProcessDebug();
 
-void DebugCheckBP(u32 address, enum breakpoint_types type);
+void DebugCheckBP(u32 address, int type);
 
 void PauseDebugger();
 void ResumeDebugger();

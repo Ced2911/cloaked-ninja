@@ -224,7 +224,9 @@ Error messages (5xx):
 531, 532, 533 <message>
     Invalid breakpoint address.
 */
-
+enum breakpoint_types {
+	E, R1, R2, R4, W1, W2, W4
+};
 static int debugger_active = 0, paused = 0, trace = 0, reset = 0, resetting = 0;
 static int mapping_e = 0, mapping_r8 = 0, mapping_r16 = 0, mapping_r32 = 0, mapping_w8 = 0, mapping_w16 = 0, mapping_w32 = 0;
 static int breakmp_e = 0, breakmp_r8 = 0, breakmp_r16 = 0, breakmp_r32 = 0, breakmp_w8 = 0, breakmp_w16 = 0, breakmp_w32 = 0;

@@ -248,30 +248,6 @@ void SetDstCPUReg(int cpureg)
 	DstCPUReg = cpureg;
 }
 
-void ReserveArgs(int args)
-{
-	int index, i;
-
-	for (i=0; i<args; i++) {
-		index = GetHWRegFromCPUReg(3+i);
-		HWRegisters[index].usage |= HWUSAGE_RESERVED | HWUSAGE_HARDWIRED | HWUSAGE_ARG;
-	}
-}
-
-void ReleaseArgs()
-{
-	int i;
-
-	for (i=0; i<NUM_HW_REGISTERS; i++) {
-		if (HWRegisters[i].usage & HWUSAGE_ARG) {
-			//HWRegisters[i].usage = HWUSAGE_NONE;
-			//HWRegisters[i].flush = NULL;
-			HWRegisters[i].usage &= ~(HWUSAGE_RESERVED | HWUSAGE_HARDWIRED | HWUSAGE_ARG);
-			FlushHWReg(i);
-		}
-	}
-}
-
 static void MapPsxReg32(int reg)
 {
 	int hwreg = GetFreeHWReg();
@@ -443,16 +419,6 @@ int GetHWRegSpecial(int which)
 			HWRegisters[index].flush = NULL;
 			LIW(HWRegisters[index].code, 0);
 			break;
-		case RETVAL:
-			MoveHWRegToCPUReg(3, index);
-			/*reg = GetHWRegFromCPUReg(3);
-			HWRegisters[reg].code = HWRegisters[index].code;
-			HWRegisters[index].code = 3;*/
-			HWRegisters[index].flush = NULL;
-
-			usage |= HWUSAGE_RESERVED;
-			break;
-
 		case CYCLECOUNT:
 			LWZ(HWRegisters[index].code, OFFSET(&psxRegs, &psxRegs.cycle), GetHWRegSpecial(PSXREGS));
 			break;
@@ -513,24 +479,8 @@ int PutHWRegSpecial(int which)
 			case ARG1:
 			case ARG2:
 			case ARG3:
-				MoveHWRegToCPUReg(3+(which-ARG1), index);
-				/*reg = GetHWRegFromCPUReg(3+(which-ARG1));
-
-				if (HWRegisters[reg].usage != HWUSAGE_NONE) {
-				HWRegisters[reg].usage &= ~(HWUSAGE_HARDWIRED | HWUSAGE_ARG);
-				if (HWRegisters[reg].flush != NULL && HWRegisters[reg].usage & (HWUSAGE_WRITE | HWUSAGE_READ)) {
-				MR(HWRegisters[index].code, HWRegisters[reg].code);
-				} else {
-				FlushHWReg(reg);
-				}
-				}
-				HWRegisters[reg].code = HWRegisters[index].code;
-				if (!(HWRegisters[index].code >= 3 && HWRegisters[index].code <=31))
-				SysPrintf("Error! Register allocation");
-				HWRegisters[index].code = 3+(which-ARG1);*/
-				HWRegisters[index].flush = NULL;
-
-				usage |= HWUSAGE_RESERVED | HWUSAGE_HARDWIRED | HWUSAGE_ARG;
+				SysPrintf("Don't use this... Call R%d\n", which);
+				exit(0);
 				break;
 			}
 		}

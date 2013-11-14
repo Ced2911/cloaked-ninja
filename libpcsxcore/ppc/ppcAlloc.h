@@ -140,7 +140,6 @@ typedef struct ppcMipsRec {
 	int count;		/* recompiler intruction count */
 	int branch;		/* set for branch */
 	u32 target;		/* branch target */
-	u32 resp;
 
 } ppcMipsRec;
 
