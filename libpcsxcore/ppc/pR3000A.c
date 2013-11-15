@@ -1128,8 +1128,8 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	u32 * ptr;
 	u32 * ptr_end;
 
-	// Break();
 	u32 RS = GetHWReg32(_Rs_);
+	u32 RT = GetHWReg32(_Rt_);
 
 	// R3 = RS
 	MR(R3, RS);
@@ -1138,18 +1138,23 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	if (_Imm_ != 0) {
 		ADDI(R3, R3, _Imm_);
 	}
+
 	// R3 = R3 & 0x1FFF.FFFF
-	//RLWINM(R3, R3, 0, 3, 31);
-	MOVI2R(R4, VM_MASK);
-	AND(R3, R3, R4);
+	RLWINM(R3, R3, 0, 3, 31);
 	// R4 = R3 >> 24
 	SRWI(R4, R3, 24); 
 
 	// Compare ...
 	CMPLWI(R4, 0x1F);
 
-	// if R4 != 0x1F
+	// if R4 == 0x1F (Direct func call ...) go to ptr
 	BEQ_L(ptr);
+	
+	//Break();
+
+	// Really needed ? psxRegs.cycle += 1;
+	// ADDI(PutHWRegSpecial(CYCLECOUNT), GetHWRegSpecial(CYCLECOUNT), 1);
+	// ppcRec.count++;
 		
 	// Direct memory access
 	if (_Rt_) { // Load only if rt != r0
@@ -1157,21 +1162,21 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 		case REC_LB:
 			LBZX(PutHWReg32(_Rt_), R14, R3);
 			// rt = sign(rt)
-			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+			EXTSB(RT, RT);
 			break;
 		case REC_LBU:	
-			LBZX(PutHWReg32(_Rt_), R14, R3);
+			LBZX(RT, R14, R3);
 			break;
 		case REC_LH:
-			LHBRX(PutHWReg32(_Rt_), R14, R3);
+			LHBRX(RT, R14, R3);
 			// rt = sign(rt)
-			EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+			EXTSH(RT, RT);
 			break;
 		case REC_LHU:
-			LHBRX(PutHWReg32(_Rt_), R14, R3);
+			LHBRX(RT, R14, R3);
 			break;
 		case REC_LW:
-			LWBRX(PutHWReg32(_Rt_), R14, R3);
+			LWBRX(RT, R14, R3);
 			break;
 
 		default:
@@ -1186,47 +1191,48 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	// Set direct call jump address
 	B_DST(ptr);
 
-	// Direct call func ... optimise ...
+	// Direct call func ... todo optimise ...
 	preMemRead();
-	if (_Rt_) {
-		switch(operation) {
+	switch(operation) {
 		case REC_LB:
 		case REC_LBU:		
 			CALLFunc((u32)psxMemRead8);
+			break;
 		case REC_LH:
 		case REC_LHU:
 			CALLFunc((u32)psxMemRead16);
+			break;
 		case REC_LW:
 			CALLFunc((u32)psxMemRead32);
 			break;
 		default:
 			// Not made yet
 			DebugBreak();
-		}
 	}
+
 	// rt = (signed)rt;
 	if (_Rt_) {
 		switch(operation) {
-		// no need to sign extend
-		case REC_LBU:
-		case REC_LHU:
-		case REC_LW:
-			break;
+		// need to sign extend
 		case REC_LB:			
-			EXTSB(PutHWReg32(_Rt_), 3);
+			EXTSB(RT, R3);
 			break;
 		case REC_LH:			
-			EXTSH(PutHWReg32(_Rt_), 3);
+			EXTSH(RT, R3);
 			break;
+		// Copy reg
 		default:
-			// Not made yet
-			DebugBreak();
+			MR(RT, R3);
+			break;
 		}
 	}
 
 	// Set func end call jump adress
 	B_DST(ptr_end);
 		
+	// Map rt as dirty
+	PutHWReg32(_Rt_);
+
 	return;
 #endif
 }
@@ -1253,7 +1259,7 @@ static void recLB() {
 			return;
 		}
 	} 
-#if DR_RECOMPILE_LOAD
+#if 1//DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LB);
 		return;
@@ -1262,6 +1268,7 @@ static void recLB() {
 #endif
 #endif
 
+	Break();
 	preMemRead();
 	CALLFunc(func);
 	if (_Rt_) {
