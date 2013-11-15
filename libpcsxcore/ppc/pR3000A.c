@@ -1107,7 +1107,130 @@ static void preMemWrite(int size)
 }
 
 #define DR_REWRITE_CALL 1
+#define DR_RECOMPILE_LOAD 0
 #define DR_REWRITE_WRITE 0
+
+enum LOAD_STORE_OPERATION {
+	// Load
+	REC_LB,
+	REC_LBU,
+	REC_LH,
+	REC_LHU,
+	REC_LW,
+	// Store
+	REC_SB,
+	REC_SH,
+	REC_SW
+};
+
+static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
+#if 1 // Not complete
+	u32 * ptr;
+	u32 * ptr_end;
+
+	// Break();
+	u32 RS = GetHWReg32(_Rs_);
+
+	// R3 = RS
+	MR(R3, RS);
+
+	// Add offset
+	if (_Imm_ != 0) {
+		ADDI(R3, R3, _Imm_);
+	}
+	// R3 = R3 & 0x1FFF.FFFF
+	//RLWINM(R3, R3, 0, 3, 31);
+	MOVI2R(R4, VM_MASK);
+	AND(R3, R3, R4);
+	// R4 = R3 >> 24
+	SRWI(R4, R3, 24); 
+
+	// Compare ...
+	CMPLWI(R4, 0x1F);
+
+	// if R4 != 0x1F
+	BEQ_L(ptr);
+		
+	// Direct memory access
+	if (_Rt_) { // Load only if rt != r0
+		switch(operation) {
+		case REC_LB:
+			LBZX(PutHWReg32(_Rt_), R14, R3);
+			// rt = sign(rt)
+			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+			break;
+		case REC_LBU:	
+			LBZX(PutHWReg32(_Rt_), R14, R3);
+			break;
+		case REC_LH:
+			LHBRX(PutHWReg32(_Rt_), R14, R3);
+			// rt = sign(rt)
+			EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+			break;
+		case REC_LHU:
+			LHBRX(PutHWReg32(_Rt_), R14, R3);
+			break;
+		case REC_LW:
+			LWBRX(PutHWReg32(_Rt_), R14, R3);
+			break;
+
+		default:
+			// Not made yet
+			DebugBreak();
+		}
+	}
+
+	// Jump to end
+	B_L(ptr_end);
+
+	// Set direct call jump address
+	B_DST(ptr);
+
+	// Direct call func ... optimise ...
+	preMemRead();
+	if (_Rt_) {
+		switch(operation) {
+		case REC_LB:
+		case REC_LBU:		
+			CALLFunc((u32)psxMemRead8);
+		case REC_LH:
+		case REC_LHU:
+			CALLFunc((u32)psxMemRead16);
+		case REC_LW:
+			CALLFunc((u32)psxMemRead32);
+			break;
+		default:
+			// Not made yet
+			DebugBreak();
+		}
+	}
+	// rt = (signed)rt;
+	if (_Rt_) {
+		switch(operation) {
+		// no need to sign extend
+		case REC_LBU:
+		case REC_LHU:
+		case REC_LW:
+			break;
+		case REC_LB:			
+			EXTSB(PutHWReg32(_Rt_), 3);
+			break;
+		case REC_LH:			
+			EXTSH(PutHWReg32(_Rt_), 3);
+			break;
+		default:
+			// Not made yet
+			DebugBreak();
+		}
+	}
+
+	// Set func end call jump adress
+	B_DST(ptr_end);
+		
+	return;
+#endif
+}
+
 
 static void recLB() {
 	u32 func = (u32) psxMemRead8;
@@ -1129,53 +1252,13 @@ static void recLB() {
 			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 			return;
 		}
-	} else {
-
-#if 0 // Not complete
-		u32 * ptr;
-		u32 * ptr_end;
-
-		Break();
-
-		// R3 = RS
-		OR(R3, GetHWReg32(_Rs_), GetHWReg32(_Rs_));
-		// R3 = R3 & 0x1FFF.FFFF
-		RLWINM(R3, R3, 0, 3, 31);
-		// R4 = R3 >> 24
-		SRWI(R4, R3, 24); 
-
-		// Compare ...
-		CMPLWI(R4, 0x1F);
-
-		// if R4 != 0x1F
-		BEQ_L(ptr);
-		
-		// Direct memory access
-		if (_Rt_) {
-			LBZX(PutHWReg32(_Rt_), R14, R3);
-		}
-
-		// Jump to end
-		B_L(ptr_end);
-
-		// Set direct call jump address
-		B_DST(ptr);
-
-		// Direct call func ... optimise ...
-		preMemRead();
-		CALLFunc(func);
-
-		// Set func end call jump adress
-		B_DST(ptr_end);
-		
-		// rt = (signed)rt;
-		if (_Rt_) {
-			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
-		}
+	} 
+#if DR_RECOMPILE_LOAD
+	else {
+		recompileLoad(REC_LB);
 		return;
-
-#endif
 	}
+#endif
 #endif
 #endif
 
@@ -1207,6 +1290,12 @@ static void recLBU() {
 			return;
 		}
 	}
+#if DR_RECOMPILE_LOAD
+	else {
+		recompileLoad(REC_LBU);
+		return;
+	}
+#endif
 #endif
 #endif
 	preMemRead();
@@ -1237,7 +1326,13 @@ static void recLH() {
 			EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 			return;
 		}
+	} 
+#if DR_RECOMPILE_LOAD	
+	else {
+		recompileLoad(REC_LH);
+		return;
 	}
+#endif
 #endif
 #endif
 	preMemRead();
@@ -1264,7 +1359,13 @@ static void recLHU() {
 			LHBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
 			return;
 		}
+	} 
+#if DR_RECOMPILE_LOAD
+	else {
+		recompileLoad(REC_LHU);
+		return;
 	}
+#endif
 #endif
 #endif
 	preMemRead();
@@ -1291,7 +1392,13 @@ static void recLW() {
 			LWBRX(PutHWReg32(_Rt_), 0, GetHWReg32(_Rt_));
 			return;
 		}
+	} 
+#if DR_RECOMPILE_LOAD
+	else {
+		recompileLoad(REC_LW);
+		return;
 	}
+#endif
 #endif
 #endif
 	preMemRead();

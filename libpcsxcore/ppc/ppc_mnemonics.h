@@ -110,7 +110,7 @@
 
 #define MR(REG_DST, REG_SRC) \
 	{int __src = (REG_SRC); int __dst=(REG_DST); \
-        if (__src != __dst) {ADDI(__dst, __src, 0)}}
+        if (__src != __dst) {OR(__dst, __src, __src)}}
 
 #define ADD(REG_DST, REG1, REG2) \
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \

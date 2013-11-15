@@ -78,6 +78,8 @@ int psxMemInit() {
 
 	initialised++;
 
+	printf("Allocated virtual Memory Address at: %08x\n", (u32)psxVM);
+
 	return 0;
 }
 
