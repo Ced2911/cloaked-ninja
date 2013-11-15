@@ -1081,7 +1081,7 @@ static void preMemRead()
 	}
 	InvalidateCPURegs();
 
-	//FlushAllHWReg();
+	FlushAllHWReg();
 }
 
 static void preMemWrite(int size)
@@ -1127,9 +1127,12 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 #if 1 // Not complete
 	u32 * ptr;
 	u32 * ptr_end;
+	u32 RS, RT;
 
-	u32 RS = GetHWReg32(_Rs_);
-	u32 RT = GetHWReg32(_Rt_);
+	DisposeHWReg(iRegs[_Rt_].reg);
+
+	RS = GetHWReg32(_Rs_);
+	RT = PutHWReg32(_Rt_);
 
 	// R3 = RS
 	MR(R3, RS);
@@ -1229,9 +1232,6 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 
 	// Set func end call jump adress
 	B_DST(ptr_end);
-		
-	// Map rt as dirty
-	PutHWReg32(_Rt_);
 
 	return;
 #endif
@@ -1259,7 +1259,7 @@ static void recLB() {
 			return;
 		}
 	} 
-#if 1//DR_RECOMPILE_LOAD
+#if DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LB);
 		return;
