@@ -11,7 +11,7 @@
 #include "../psxcommon.h"
 #include "ppc_mnemonics.h"
 
-#define NUM_HW_REGISTERS 23
+#define NUM_HW_REGISTERS 17
 
 enum PPCRegs {
 	R0 = 0, R1, R2, R3, R4, R5, R6, R7, R8, R9,

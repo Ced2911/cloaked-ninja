@@ -1107,7 +1107,7 @@ static void preMemWrite(int size)
 }
 
 #define DR_REWRITE_CALL 1
-#define DR_RECOMPILE_LOAD 0
+#define DR_RECOMPILE_LOAD 1
 #define DR_REWRITE_WRITE 0
 
 enum LOAD_STORE_OPERATION {
@@ -1129,24 +1129,17 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	u32 * ptr_end;
 	u32 RS, RT;
 
-	DisposeHWReg(iRegs[_Rt_].reg);
-
 	RS = GetHWReg32(_Rs_);
-	RT = PutHWReg32(_Rt_);
-
-	// R3 = RS
-	MR(R3, RS);
-
+	
 	// Add offset
-	if (_Imm_ != 0) {
-		ADDI(R3, R3, _Imm_);
-	}
+	ADDI(R3, RS, _Imm_);
 
 	// R3 = R3 & 0x1FFF.FFFF
 	RLWINM(R3, R3, 0, 3, 31);
+
+#if 0 // this par fail
 	// R4 = R3 >> 24
 	SRWI(R4, R3, 24); 
-
 	// Compare ...
 	CMPLWI(R4, 0x1F);
 
@@ -1165,21 +1158,21 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 		case REC_LB:
 			LBZX(PutHWReg32(_Rt_), R14, R3);
 			// rt = sign(rt)
-			EXTSB(RT, RT);
+			EXTSB(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 			break;
 		case REC_LBU:	
-			LBZX(RT, R14, R3);
+			LBZX(PutHWReg32(_Rt_), R14, R3);
 			break;
 		case REC_LH:
-			LHBRX(RT, R14, R3);
+			LHBRX(PutHWReg32(_Rt_), R14, R3);
 			// rt = sign(rt)
-			EXTSH(RT, RT);
+			EXTSH(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
 			break;
 		case REC_LHU:
-			LHBRX(RT, R14, R3);
+			LHBRX(PutHWReg32(_Rt_), R14, R3);
 			break;
 		case REC_LW:
-			LWBRX(RT, R14, R3);
+			LWBRX(PutHWReg32(_Rt_), R14, R3);
 			break;
 
 		default:
@@ -1193,8 +1186,51 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 
 	// Set direct call jump address
 	B_DST(ptr);
+#endif
 
 	// Direct call func ... todo optimise ...
+	//preMemRead();
+	//FlushAllHWReg();
+
+	switch(operation) {
+		case REC_LB:
+		case REC_LBU:		
+			CALLFunc((u32)psxMemRead8);
+			break;
+		case REC_LH:
+		case REC_LHU:
+			CALLFunc((u32)psxMemRead16);
+			break;
+		case REC_LW:
+			CALLFunc((u32)psxMemRead32);
+			break;
+		default:
+			// Not made yet
+			DebugBreak();
+	}
+
+	// rt = (signed)rt;
+	if (_Rt_) {
+		switch(operation) {
+		// need to sign extend
+		case REC_LB:
+			EXTSB(PutHWReg32(_Rt_), R3);
+			break;
+		case REC_LH:			
+			EXTSH(PutHWReg32(_Rt_), R3);
+			break;
+		// Copy reg
+		default:
+			MR(PutHWReg32(_Rt_), R3);
+			break;
+		}
+	}
+#if 0
+	// Set func end call jump adress
+	B_DST(ptr_end);
+#endif
+	return;
+#else
 	preMemRead();
 	switch(operation) {
 		case REC_LB:
@@ -1217,23 +1253,18 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	if (_Rt_) {
 		switch(operation) {
 		// need to sign extend
-		case REC_LB:			
-			EXTSB(RT, R3);
+		case REC_LB:
+			EXTSB(PutHWReg32(_Rt_), R3);
 			break;
 		case REC_LH:			
-			EXTSH(RT, R3);
+			EXTSH(PutHWReg32(_Rt_), R3);
 			break;
 		// Copy reg
 		default:
-			MR(RT, R3);
+			MR(PutHWReg32(_Rt_), R3);
 			break;
 		}
 	}
-
-	// Set func end call jump adress
-	B_DST(ptr_end);
-
-	return;
 #endif
 }
 
@@ -1243,7 +1274,7 @@ static void recLB() {
 
 #if DR_REWRITE_CALL
 #ifdef _USE_VM
-	if (IsConst(_Rs_)) {
+	if (IsConst(_Rs_)  && 0) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
@@ -1259,16 +1290,15 @@ static void recLB() {
 			return;
 		}
 	} 
-#if DR_RECOMPILE_LOAD
+#if 0 && DR_RECOMPILE_LOAD
 	else {
-		recompileLoad(REC_LB);
+		recompileLoad(REC_LB);// crash
 		return;
 	}
 #endif
 #endif
 #endif
 
-	Break();
 	preMemRead();
 	CALLFunc(func);
 	if (_Rt_) {
@@ -1282,7 +1312,7 @@ static void recLBU() {
 #if DR_REWRITE_CALL
 #ifdef _USE_VM
 
-	if (IsConst(_Rs_)) {
+	if (IsConst(_Rs_)  && 0) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
@@ -1297,7 +1327,7 @@ static void recLBU() {
 			return;
 		}
 	}
-#if DR_RECOMPILE_LOAD
+#if 0 && DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LBU);
 		return;
@@ -1317,7 +1347,7 @@ static void recLH() {
 	u32 func = (u32) psxMemRead16;
 #if DR_REWRITE_CALL
 #ifdef _USE_VM	
-	if (IsConst(_Rs_)) {
+	if (IsConst(_Rs_)  && 0) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
@@ -1334,7 +1364,7 @@ static void recLH() {
 			return;
 		}
 	} 
-#if DR_RECOMPILE_LOAD	
+#if 0 && DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LH);
 		return;
@@ -1353,7 +1383,7 @@ static void recLHU() {
 	u32 func = (u32) psxMemRead16;
 #if DR_REWRITE_CALL
 #ifdef _USE_VM
-	if (IsConst(_Rs_)) {
+	if (IsConst(_Rs_)  && 0) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {			
@@ -1367,7 +1397,7 @@ static void recLHU() {
 			return;
 		}
 	} 
-#if DR_RECOMPILE_LOAD
+#if 0 && DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LHU);
 		return;
@@ -1386,7 +1416,7 @@ static void recLW() {
 	u32 func = (u32) psxMemRead32;
 #if DR_REWRITE_CALL
 #ifdef _USE_VM
-	if (IsConst(_Rs_)) {
+	if (IsConst(_Rs_)  && 0) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 
 		if (addr >= 0x1f801000 && addr <= 0x1f803000) {
