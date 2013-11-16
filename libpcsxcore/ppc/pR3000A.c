@@ -1123,6 +1123,10 @@ enum LOAD_STORE_OPERATION {
 	REC_SW
 };
 
+static u32 vmRead32Unchecked(u32 addr) {
+	return (SWAP32(*(u32 *)&psxVM[addr]));
+}
+
 static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 #if 1 // Not complete
 	u32 * ptr;
@@ -1137,12 +1141,12 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	// R3 = R3 & 0x1FFF.FFFF
 	RLWINM(R3, R3, 0, 3, 31);
 
-#if 0 // this par fail
 	// R4 = R3 >> 24
 	SRWI(R4, R3, 24); 
 	// Compare ...
 	CMPLWI(R4, 0x1F);
-
+	
+#if 1 // this par fail
 	// if R4 == 0x1F (Direct func call ...) go to ptr
 	BEQ_L(ptr);
 	
@@ -1151,7 +1155,7 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 	// Really needed ? psxRegs.cycle += 1;
 	// ADDI(PutHWRegSpecial(CYCLECOUNT), GetHWRegSpecial(CYCLECOUNT), 1);
 	// ppcRec.count++;
-		
+#if 1
 	// Direct memory access
 	if (_Rt_) { // Load only if rt != r0
 		switch(operation) {
@@ -1180,7 +1184,15 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 			DebugBreak();
 		}
 	}
+#endif
 
+#if 0 // working ... only for rec lw
+	//CALLFunc((u32)vmRead32Unchecked);
+	//MR(PutHWReg32(_Rt_), R3);
+	
+	LWBRX(PutHWReg32(_Rt_), R14, R3);
+	//MR(PutHWReg32(_Rt_), GetHWReg32(_Rt_));
+#endif
 	// Jump to end
 	B_L(ptr_end);
 
@@ -1225,7 +1237,7 @@ static void recompileLoad(enum LOAD_STORE_OPERATION operation) {
 			break;
 		}
 	}
-#if 0
+#if 1
 	// Set func end call jump adress
 	B_DST(ptr_end);
 #endif
