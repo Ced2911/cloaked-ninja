@@ -1302,7 +1302,7 @@ static void recLB() {
 			return;
 		}
 	} 
-#if 0 && DR_RECOMPILE_LOAD
+#if DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LB);// crash
 		return;
@@ -1339,7 +1339,7 @@ static void recLBU() {
 			return;
 		}
 	}
-#if 0 && DR_RECOMPILE_LOAD
+#if DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LBU);
 		return;
@@ -1376,7 +1376,7 @@ static void recLH() {
 			return;
 		}
 	} 
-#if 0 && DR_RECOMPILE_LOAD
+#if DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LH);
 		return;
@@ -1409,7 +1409,7 @@ static void recLHU() {
 			return;
 		}
 	} 
-#if 0 && DR_RECOMPILE_LOAD
+#if DR_RECOMPILE_LOAD
 	else {
 		recompileLoad(REC_LHU);
 		return;
