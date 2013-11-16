@@ -1047,7 +1047,278 @@ __inline void GetTextureTransColGX32_S(uint32_t * __restrict pdest,uint32_t colo
 // FILL FUNCS
 ////////////////////////////////////////////////////////////////////////
 
+typedef void (*t_getshadetrans_func)(uint32_t *, uint32_t);
+
+__inline void __GetShadeTransCheckMask(uint32_t * pdest, int32_t r, int32_t g,int32_t b) {
+	uint32_t ma=GETLE32(pdest);
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
+	if(ma&0x80000000) PUTLE32(pdest, (ma&0xFFFF0000)|(*pdest&0xFFFF));
+	if(ma&0x00008000) PUTLE32(pdest, (ma&0xFFFF)    |(*pdest&0xFFFF0000));
+}
+
+__inline void __GetShadeClampRGB(int32_t * r, int32_t * g, int32_t * b) {
+	
+	if(*r&0x7FE00000) *r=0x1f0000|(*r&0xFFFF);
+	if(*r&0x7FE0)     *r=0x1f    |(*r&0xFFFF0000);
+	if(*b&0x7FE00000) *b=0x1f0000|(*b&0xFFFF);
+	if(*b&0x7FE0)     *b=0x1f    |(*b&0xFFFF0000);
+	if(*g&0x7FE00000) *g=0x1f0000|(*g&0xFFFF);
+	if(*g&0x7FE0)     *g=0x1f    |(*g&0xFFFF0000);
+}
+
+__inline void GetShadeTransCol32ABR0_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	PUTLE32(pdest, (((GETLE32(pdest)&0x7bde7bde)>>1)+(((color)&0x7bde7bde)>>1))|lSetMask);//0x80008000;
+} 
+
+__inline void GetShadeTransCol32ABR0_CheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+
+	r=(X32ACOL1(GETLE32(pdest))>>1)+((X32ACOL1(color))>>1);
+	b=(X32ACOL2(GETLE32(pdest))>>1)+((X32ACOL2(color))>>1);
+	g=(X32ACOL3(GETLE32(pdest))>>1)+((X32ACOL3(color))>>1);
+
+	__GetShadeClampRGB(&r, &g, &b);
+
+	__GetShadeTransCheckMask(pdest, r, g, b);
+} 
+
+__inline void GetShadeTransCol32ABR1_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+
+	r=(X32COL1(GETLE32(pdest)))+((X32COL1(color)));
+	b=(X32COL2(GETLE32(pdest)))+((X32COL2(color)));
+	g=(X32COL3(GETLE32(pdest)))+((X32COL3(color)));
+
+	__GetShadeClampRGB(&r, &g, &b);
+
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
+}  
+
+__inline void GetShadeTransCol32ABR1_CheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+
+	r=(X32COL1(GETLE32(pdest)))+((X32COL1(color)));
+	b=(X32COL2(GETLE32(pdest)))+((X32COL2(color)));
+	g=(X32COL3(GETLE32(pdest)))+((X32COL3(color)));
+
+	__GetShadeClampRGB(&r, &g, &b);
+
+	__GetShadeTransCheckMask(pdest, r, g, b);
+}   
+
+__inline void GetShadeTransCol32ABR2_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+	int32_t sr,sb,sg,src,sbc,sgc,c;
+
+	src=XCOL1(color);sbc=XCOL2(color);sgc=XCOL3(color);
+	c=GETLE32(pdest)>>16;
+	sr=(XCOL1(c))-src;   if(sr&0x8000) sr=0;
+	sb=(XCOL2(c))-sbc;  if(sb&0x8000) sb=0;
+	sg=(XCOL3(c))-sgc; if(sg&0x8000) sg=0;
+	r=((int32_t)sr)<<16;b=((int32_t)sb)<<11;g=((int32_t)sg)<<6;
+	c=LOWORD(GETLE32(pdest));
+	sr=(XCOL1(c))-src;   if(sr&0x8000) sr=0;
+	sb=(XCOL2(c))-sbc;  if(sb&0x8000) sb=0;
+	sg=(XCOL3(c))-sgc; if(sg&0x8000) sg=0;
+	r|=sr;b|=sb>>5;g|=sg>>10;
+
+	__GetShadeClampRGB(&r, &g, &b);
+
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
+}  
+
+__inline void GetShadeTransCol32ABR2_CheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+	int32_t sr,sb,sg,src,sbc,sgc,c;
+
+	src=XCOL1(color);sbc=XCOL2(color);sgc=XCOL3(color);
+	c=GETLE32(pdest)>>16;
+	sr=(XCOL1(c))-src;   if(sr&0x8000) sr=0;
+	sb=(XCOL2(c))-sbc;  if(sb&0x8000) sb=0;
+	sg=(XCOL3(c))-sgc; if(sg&0x8000) sg=0;
+	r=((int32_t)sr)<<16;b=((int32_t)sb)<<11;g=((int32_t)sg)<<6;
+	c=LOWORD(GETLE32(pdest));
+	sr=(XCOL1(c))-src;   if(sr&0x8000) sr=0;
+	sb=(XCOL2(c))-sbc;  if(sb&0x8000) sb=0;
+	sg=(XCOL3(c))-sgc; if(sg&0x8000) sg=0;
+	r|=sr;b|=sb>>5;g|=sg>>10;
+
+	__GetShadeClampRGB(&r, &g, &b);
+
+	__GetShadeTransCheckMask(pdest, r, g, b);
+}   
+
+__inline void GetShadeTransCol32SemiTrans_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+
+#ifdef HALFBRIGHTMODE3
+	r=(X32COL1(GETLE32(pdest)))+((X32BCOL1(color))>>2);
+	b=(X32COL2(GETLE32(pdest)))+((X32BCOL2(color))>>2);
+	g=(X32COL3(GETLE32(pdest)))+((X32BCOL3(color))>>2);
+#else
+	r=(X32COL1(GETLE32(pdest)))+((X32ACOL1(color))>>1);
+	b=(X32COL2(GETLE32(pdest)))+((X32ACOL2(color))>>1);
+	g=(X32COL3(GETLE32(pdest)))+((X32ACOL3(color))>>1);
+#endif
+
+	__GetShadeClampRGB(&r, &g, &b);
+
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
+} 
+
+__inline void GetShadeTransCol32SemiTrans_CheckMask(uint32_t * pdest, uint32_t color)
+{
+	int32_t r,g,b;
+
+#ifdef HALFBRIGHTMODE3
+	r=(X32COL1(GETLE32(pdest)))+((X32BCOL1(color))>>2);
+	b=(X32COL2(GETLE32(pdest)))+((X32BCOL2(color))>>2);
+	g=(X32COL3(GETLE32(pdest)))+((X32BCOL3(color))>>2);
+#else
+	r=(X32COL1(GETLE32(pdest)))+((X32ACOL1(color))>>1);
+	b=(X32COL2(GETLE32(pdest)))+((X32ACOL2(color))>>1);
+	g=(X32COL3(GETLE32(pdest)))+((X32ACOL3(color))>>1);
+#endif
+
+	__GetShadeClampRGB(&r, &g, &b);
+	
+	__GetShadeTransCheckMask(pdest, r, g, b);
+} 
+
+__inline void GetShadeTransCol32NoSemiTrans_CheckMask(uint32_t * pdest, uint32_t color)
+{
+	uint32_t ma=GETLE32(pdest);
+	PUTLE32(pdest, color|lSetMask);//0x80008000;
+	if(ma&0x80000000) PUTLE32(pdest, (ma&0xFFFF0000)|(GETLE32(pdest)&0xFFFF));
+	if(ma&0x00008000) PUTLE32(pdest, (ma&0xFFFF)    |(GETLE32(pdest)&0xFFFF0000));
+}  
+
+__inline void GetShadeTransCol32NoSemiTrans_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	PUTLE32(pdest, color|lSetMask);//0x80008000;
+}
+
 void FillSoftwareAreaTrans(
+	short x0,short y0,short x1, // FILL AREA TRANS
+	short y1,unsigned short col)
+{
+	short j,i,dx,dy;
+
+	if(y0>y1) return;
+	if(x0>x1) return;
+
+	if(x1<drawX) return;
+	if(y1<drawY) return;
+	if(x0>drawW) return;
+	if(y0>drawH) return;
+
+	x1=min(x1,drawW+1);
+	y1=min(y1,drawH+1);
+	x0=max(x0,drawX);
+	y0=max(y0,drawY);
+
+	if(y0>=iGPUHeight)   return;
+	if(x0>1023)          return;
+
+	if(y1>iGPUHeight) y1=iGPUHeight;
+	if(x1>1024)       x1=1024;
+
+	dx=x1-x0;dy=y1-y0;
+
+	if(dx&1)                                              // slow fill
+	{
+		unsigned short * DSTPtr;
+		unsigned short LineOffset;
+		DSTPtr = psxVuw + (1024*y0) + x0;
+		LineOffset = 1024 - dx;
+		for(i=0;i<dy;i++)
+		{
+			for(j=0;j<dx;j++) {
+				GetShadeTransCol(DSTPtr++,col);
+			}
+			DSTPtr += LineOffset;
+		} 
+	}
+	else                                                  // fast fill
+	{
+		uint32_t * DSTPtr;
+		unsigned short LineOffset;
+		uint32_t lcol=lSetMask|(((uint32_t)(col))<<16)|col;
+		dx>>=1;
+		DSTPtr = (uint32_t *)(psxVuw + (1024*y0) + x0);
+		LineOffset = 512 - dx;
+
+		if(!bCheckMask && !DrawSemiTrans)
+		{
+			for(i=0;i<dy;i++)
+			{
+				for(j=0;j<dx;j++) { 
+					PUTLE32(DSTPtr, lcol); 
+					DSTPtr++; 
+				}
+				DSTPtr += LineOffset;
+			}
+			return;
+		}
+		else {
+			// New code way ..
+			t_getshadetrans_func func = GetShadeTransCol32;
+
+			if(DrawSemiTrans) {
+				if (GlobalTextABR==0)
+				{
+					if (bCheckMask) {
+						func = GetShadeTransCol32ABR0_CheckMask;
+					} else {
+						func = GetShadeTransCol32ABR0_NoCheckMask; 
+					}
+			
+				} else if(GlobalTextABR==1) {
+					if (bCheckMask) {
+						func = GetShadeTransCol32ABR1_CheckMask;
+					} else {
+						func = GetShadeTransCol32ABR1_NoCheckMask; 
+					}
+				} else if(GlobalTextABR==2) {
+					if (bCheckMask) {
+						func = GetShadeTransCol32ABR2_CheckMask;
+					} else {
+						func = GetShadeTransCol32ABR2_NoCheckMask; 
+					}
+				} else {
+					if (bCheckMask) {
+						func = GetShadeTransCol32SemiTrans_CheckMask;
+					} else {
+						func = GetShadeTransCol32SemiTrans_NoCheckMask; 
+					}
+				}
+			} else {
+				if (bCheckMask) {
+					func = GetShadeTransCol32NoSemiTrans_CheckMask;
+				} else {
+					func = GetShadeTransCol32NoSemiTrans_NoCheckMask; 
+				}
+			}
+
+			for(i=0;i<dy;i++)
+			{
+				for(j=0;j<dx;j++) {
+					func(DSTPtr++, lcol);
+				}
+				DSTPtr += LineOffset;
+			} 
+		}
+	}
+}
+
+void FillSoftwareAreaTrans_old(
 	short x0,short y0,short x1, // FILL AREA TRANS
 	short y1,unsigned short col)
 {
