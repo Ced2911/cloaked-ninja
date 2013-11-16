@@ -100,6 +100,25 @@ int32_t           GlobalTextAddrX,GlobalTextAddrY,GlobalTextTP;
 int32_t           GlobalTextREST,GlobalTextABR,GlobalTextPAGE;
 
 ////////////////////////////////////////////////////////////////////////
+// Helper... select the good function
+////////////////////////////////////////////////////////////////////////
+typedef void (*t_getshadetrans_func)(uint32_t *, uint32_t);
+
+__inline t_getshadetrans_func GetShadeTransCol32Func();
+__inline t_getshadetrans_func GetTextureTransColG32Func();
+
+
+#define __GetShadeClampRGB(r,g,b)	{			\
+	if(r&0x7FE00000) r=0x1f0000|(r&0xFFFF);		\
+	if(r&0x7FE0)     r=0x1f    |(r&0xFFFF0000); \
+	if(b&0x7FE00000) b=0x1f0000|(b&0xFFFF);		\
+	if(b&0x7FE0)     b=0x1f    |(b&0xFFFF0000);	\
+	if(g&0x7FE00000) g=0x1f0000|(g&0xFFFF);		\
+	if(g&0x7FE0)     g=0x1f    |(g&0xFFFF0000);	\
+}	
+
+
+////////////////////////////////////////////////////////////////////////
 // POLYGON OFFSET FUNCS
 ////////////////////////////////////////////////////////////////////////
 
@@ -619,7 +638,7 @@ __inline void GetTextureTransColG_SPR(unsigned short * pdest,unsigned short colo
 }
 
 ////////////////////////////////////////////////////////////////////////
-
+/** Todo optimize !!!*/
 __inline void GetTextureTransColG32(uint32_t * pdest,uint32_t color)
 {
 	int32_t r,g,b,l;
@@ -721,6 +740,440 @@ __inline void GetTextureTransColG32(uint32_t * pdest,uint32_t color)
 	if((color&0xffff0000)==0) {PUTLE32(pdest, (GETLE32(pdest)&0xffff0000)|(((X32PSXCOL(r,g,b))|l)&0xffff));return;}
 
 	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+}
+
+
+__inline void __GetTextureTransColG32CheckMask(uint32_t * pdest,uint32_t color, uint32_t l, uint32_t r,uint32_t g, uint32_t b) {
+	uint32_t ma=GETLE32(pdest);
+
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+
+	if((color&0xffff)==0    ) PUTLE32(pdest, (ma&0xffff)|(GETLE32(pdest)&0xffff0000));
+	if((color&0xffff0000)==0) PUTLE32(pdest, (ma&0xffff0000)|(GETLE32(pdest)&0xffff));
+	if(ma&0x80000000) PUTLE32(pdest, (ma&0xFFFF0000)|(GETLE32(pdest)&0xFFFF));
+	if(ma&0x00008000) PUTLE32(pdest, (ma&0xFFFF)    |(GETLE32(pdest)&0xFFFF0000));
+}
+
+__inline void __GetTextureTransColG320x8000(uint32_t color, uint32_t *r,uint32_t *g, uint32_t *b) {
+	*r=(*r&0xffff0000)|((((X32COL1(color))* g_m1)&0x0000FF80)>>7);
+	*b=(*b&0xffff0000)|((((X32COL2(color))* g_m2)&0x0000FF80)>>7);
+	*g=(*g&0xffff0000)|((((X32COL3(color))* g_m3)&0x0000FF80)>>7);
+}
+
+__inline void __GetTextureTransColG320x80000000(uint32_t color, uint32_t *r,uint32_t *g, uint32_t *b) {
+	*r=(*r&0xffff)|((((X32COL1(color))* g_m1)&0xFF800000)>>7);
+	*b=(*b&0xffff)|((((X32COL2(color))* g_m2)&0xFF800000)>>7);
+	*g=(*g&0xffff)|((((X32COL3(color))* g_m3)&0xFF800000)>>7);
+}
+
+__inline void __GetTextureTransColG32Simple(uint32_t color, uint32_t *r,uint32_t *g, uint32_t *b) {
+	*r=(((X32COL1(color))* g_m1)&0xFF80FF80)>>7;
+	*b=(((X32COL2(color))* g_m2)&0xFF80FF80)>>7;
+	*g=(((X32COL3(color))* g_m3)&0xFF80FF80)>>7;
+}
+
+__inline void GetTextureTransColG32ABR0_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	uint32_t r,g,b,l;
+
+	if(color==0) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+		r=((((X32TCOL1(GETLE32(pdest)))+((X32COL1(color)) * g_m1))&0xFF00FF00)>>8);
+		b=((((X32TCOL2(GETLE32(pdest)))+((X32COL2(color)) * g_m2))&0xFF00FF00)>>8);
+		g=((((X32TCOL3(GETLE32(pdest)))+((X32COL3(color)) * g_m3))&0xFF00FF00)>>8);
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+	
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+}
+
+__inline void GetTextureTransColG32ABR0_CheckMask(uint32_t * pdest, uint32_t color) {
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+		r=((((X32TCOL1(GETLE32(pdest)))+((X32COL1(color)) * g_m1))&0xFF00FF00)>>8);
+		b=((((X32TCOL2(GETLE32(pdest)))+((X32COL2(color)) * g_m2))&0xFF00FF00)>>8);
+		g=((((X32TCOL3(GETLE32(pdest)))+((X32COL3(color)) * g_m3))&0xFF00FF00)>>8);
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+
+	// Apply mask
+	__GetTextureTransColG32CheckMask(pdest, color, l, r, g, b);
+}
+__inline void GetTextureTransColG32ABR1_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+		r=(X32COL1(GETLE32(pdest)))+(((((X32COL1(color)))* g_m1)&0xFF80FF80)>>7);
+		b=(X32COL2(GETLE32(pdest)))+(((((X32COL2(color)))* g_m2)&0xFF80FF80)>>7);
+		g=(X32COL3(GETLE32(pdest)))+(((((X32COL3(color)))* g_m3)&0xFF80FF80)>>7);
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+	
+	// No mask
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+}
+
+__inline void GetTextureTransColG32ABR1_CheckMask(uint32_t * pdest, uint32_t color) {
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+		r=(X32COL1(GETLE32(pdest)))+(((((X32COL1(color)))* g_m1)&0xFF80FF80)>>7);
+		b=(X32COL2(GETLE32(pdest)))+(((((X32COL2(color)))* g_m2)&0xFF80FF80)>>7);
+		g=(X32COL3(GETLE32(pdest)))+(((((X32COL3(color)))* g_m3)&0xFF80FF80)>>7);
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+
+	// Apply mask
+	__GetTextureTransColG32CheckMask(pdest, color, l, r, g, b);
+}
+
+__inline void GetTextureTransColG32ABR2_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+		uint32_t t;
+		r=(((((X32COL1(color)))* g_m1)&0xFF80FF80)>>7);
+		t=(GETLE32(pdest)&0x001f0000)-(r&0x003f0000); if(t&0x80000000) t=0;
+		r=(GETLE32(pdest)&0x0000001f)-(r&0x0000003f); if(r&0x80000000) r=0;
+		r|=t;
+
+		b=(((((X32COL2(color)))* g_m2)&0xFF80FF80)>>7);
+		t=((GETLE32(pdest)>>5)&0x001f0000)-(b&0x003f0000); if(t&0x80000000) t=0;
+		b=((GETLE32(pdest)>>5)&0x0000001f)-(b&0x0000003f); if(b&0x80000000) b=0;
+		b|=t;
+
+		g=(((((X32COL3(color)))* g_m3)&0xFF80FF80)>>7);
+		t=((GETLE32(pdest)>>10)&0x001f0000)-(g&0x003f0000); if(t&0x80000000) t=0;
+		g=((GETLE32(pdest)>>10)&0x0000001f)-(g&0x0000003f); if(g&0x80000000) g=0;
+		g|=t;
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+	
+	// No mask
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+}
+
+__inline void GetTextureTransColG32ABR2_CheckMask(uint32_t * pdest, uint32_t color) {
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+		uint32_t t;
+		r=(((((X32COL1(color)))* g_m1)&0xFF80FF80)>>7);
+		t=(GETLE32(pdest)&0x001f0000)-(r&0x003f0000); if(t&0x80000000) t=0;
+		r=(GETLE32(pdest)&0x0000001f)-(r&0x0000003f); if(r&0x80000000) r=0;
+		r|=t;
+
+		b=(((((X32COL2(color)))* g_m2)&0xFF80FF80)>>7);
+		t=((GETLE32(pdest)>>5)&0x001f0000)-(b&0x003f0000); if(t&0x80000000) t=0;
+		b=((GETLE32(pdest)>>5)&0x0000001f)-(b&0x0000003f); if(b&0x80000000) b=0;
+		b|=t;
+
+		g=(((((X32COL3(color)))* g_m3)&0xFF80FF80)>>7);
+		t=((GETLE32(pdest)>>10)&0x001f0000)-(g&0x003f0000); if(t&0x80000000) t=0;
+		g=((GETLE32(pdest)>>10)&0x0000001f)-(g&0x0000003f); if(g&0x80000000) g=0;
+		g|=t;
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+
+	// Apply mask
+	__GetTextureTransColG32CheckMask(pdest, color, l, r, g, b);
+}
+
+
+__inline void GetTextureTransColG32SemiTrans_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+#ifdef HALFBRIGHTMODE3
+		r=(X32COL1(GETLE32(pdest)))+(((((X32BCOL1(color))>>2)* g_m1)&0xFF80FF80)>>7);
+		b=(X32COL2(GETLE32(pdest)))+(((((X32BCOL2(color))>>2)* g_m2)&0xFF80FF80)>>7);
+		g=(X32COL3(GETLE32(pdest)))+(((((X32BCOL3(color))>>2)* g_m3)&0xFF80FF80)>>7);
+#else
+		r=(X32COL1(GETLE32(pdest)))+(((((X32ACOL1(color))>>1)* g_m1)&0xFF80FF80)>>7);
+		b=(X32COL2(GETLE32(pdest)))+(((((X32ACOL2(color))>>1)* g_m2)&0xFF80FF80)>>7);
+		g=(X32COL3(GETLE32(pdest)))+(((((X32ACOL3(color))>>1)* g_m3)&0xFF80FF80)>>7);
+#endif
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+	
+	// No mask
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+}
+
+__inline void GetTextureTransColG32SemiTrans_CheckMask(uint32_t * pdest, uint32_t color) {
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	if(color&0x80008000)
+	{
+#ifdef HALFBRIGHTMODE3
+		r=(X32COL1(GETLE32(pdest)))+(((((X32BCOL1(color))>>2)* g_m1)&0xFF80FF80)>>7);
+		b=(X32COL2(GETLE32(pdest)))+(((((X32BCOL2(color))>>2)* g_m2)&0xFF80FF80)>>7);
+		g=(X32COL3(GETLE32(pdest)))+(((((X32BCOL3(color))>>2)* g_m3)&0xFF80FF80)>>7);
+#else
+		r=(X32COL1(GETLE32(pdest)))+(((((X32ACOL1(color))>>1)* g_m1)&0xFF80FF80)>>7);
+		b=(X32COL2(GETLE32(pdest)))+(((((X32ACOL2(color))>>1)* g_m2)&0xFF80FF80)>>7);
+		g=(X32COL3(GETLE32(pdest)))+(((((X32ACOL3(color))>>1)* g_m3)&0xFF80FF80)>>7);
+#endif
+
+		if(!(color&0x8000))
+		{
+			__GetTextureTransColG320x8000(color, &r, &g, &b);
+		}
+		if(!(color&0x80000000))
+		{
+			__GetTextureTransColG320x80000000(color, &r, &g, &b);
+		}
+
+	}
+	else 
+	{
+		__GetTextureTransColG32Simple(color, &r, &g, &b);
+	}
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+
+	// Apply mask
+	__GetTextureTransColG32CheckMask(pdest, color, l, r, g, b);
+}
+
+
+__inline void GetTextureTransColG32NoSemiTrans_NoCheckMask(uint32_t * pdest, uint32_t color)
+{
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	__GetTextureTransColG32Simple(color, &r, &g, &b);
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+	
+	// No mask
+	PUTLE32(pdest, (X32PSXCOL(r,g,b))|l);
+}
+
+__inline void GetTextureTransColG32NoSemiTrans_CheckMask(uint32_t * pdest, uint32_t color) {
+	uint32_t r,g,b,l;
+
+	//if(color==0) return;
+	if(!color) return;
+
+	l=lSetMask|(color&0x80008000);
+
+	__GetTextureTransColG32Simple(color, &r, &g, &b);
+	
+	// Clamp
+	__GetShadeClampRGB(r, g, b);
+
+	// Apply mask
+	__GetTextureTransColG32CheckMask(pdest, color, l, r, g, b);
+}
+
+
+__inline t_getshadetrans_func GetTextureTransColG32Func() {
+	// By default take the slow one ...
+	t_getshadetrans_func func = GetTextureTransColG32;
+	if(DrawSemiTrans) {
+		if (GlobalTextABR==0)
+		{
+			if (bCheckMask) {
+				func = GetTextureTransColG32ABR0_CheckMask;
+			} else {
+				func = GetTextureTransColG32ABR0_NoCheckMask; 
+			}
+			
+		} else if(GlobalTextABR==1) {
+			if (bCheckMask) {
+				func = GetTextureTransColG32ABR1_CheckMask;
+			} else {
+				func = GetTextureTransColG32ABR1_NoCheckMask; 
+			}
+		} else if(GlobalTextABR==2) {
+			if (bCheckMask) {
+				func = GetTextureTransColG32ABR2_CheckMask;
+			} else {
+				func = GetTextureTransColG32ABR2_NoCheckMask; 
+			}
+		} else {
+			if (bCheckMask) {
+				func = GetTextureTransColG32SemiTrans_CheckMask;
+			} else {
+				func = GetTextureTransColG32SemiTrans_NoCheckMask; 
+			}
+		}
+	} else {
+		if (bCheckMask) {
+			func = GetTextureTransColG32NoSemiTrans_CheckMask;
+		} else {
+			func = GetTextureTransColG32NoSemiTrans_NoCheckMask; 
+		}
+	}
+
+	return func;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1047,7 +1500,6 @@ __inline void GetTextureTransColGX32_S(uint32_t * __restrict pdest,uint32_t colo
 // FILL FUNCS
 ////////////////////////////////////////////////////////////////////////
 
-typedef void (*t_getshadetrans_func)(uint32_t *, uint32_t);
 
 __inline void __GetShadeTransCheckMask(uint32_t * pdest, int32_t r, int32_t g,int32_t b) {
 	uint32_t ma=GETLE32(pdest);
@@ -1055,16 +1507,8 @@ __inline void __GetShadeTransCheckMask(uint32_t * pdest, int32_t r, int32_t g,in
 	if(ma&0x80000000) PUTLE32(pdest, (ma&0xFFFF0000)|(*pdest&0xFFFF));
 	if(ma&0x00008000) PUTLE32(pdest, (ma&0xFFFF)    |(*pdest&0xFFFF0000));
 }
+		
 
-__inline void __GetShadeClampRGB(int32_t * r, int32_t * g, int32_t * b) {
-	
-	if(*r&0x7FE00000) *r=0x1f0000|(*r&0xFFFF);
-	if(*r&0x7FE0)     *r=0x1f    |(*r&0xFFFF0000);
-	if(*b&0x7FE00000) *b=0x1f0000|(*b&0xFFFF);
-	if(*b&0x7FE0)     *b=0x1f    |(*b&0xFFFF0000);
-	if(*g&0x7FE00000) *g=0x1f0000|(*g&0xFFFF);
-	if(*g&0x7FE0)     *g=0x1f    |(*g&0xFFFF0000);
-}
 
 __inline void GetShadeTransCol32ABR0_NoCheckMask(uint32_t * pdest, uint32_t color)
 {
@@ -1079,7 +1523,7 @@ __inline void GetShadeTransCol32ABR0_CheckMask(uint32_t * pdest, uint32_t color)
 	b=(X32ACOL2(GETLE32(pdest))>>1)+((X32ACOL2(color))>>1);
 	g=(X32ACOL3(GETLE32(pdest))>>1)+((X32ACOL3(color))>>1);
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 
 	__GetShadeTransCheckMask(pdest, r, g, b);
 } 
@@ -1092,7 +1536,7 @@ __inline void GetShadeTransCol32ABR1_NoCheckMask(uint32_t * pdest, uint32_t colo
 	b=(X32COL2(GETLE32(pdest)))+((X32COL2(color)));
 	g=(X32COL3(GETLE32(pdest)))+((X32COL3(color)));
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 
 	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
 }  
@@ -1105,7 +1549,7 @@ __inline void GetShadeTransCol32ABR1_CheckMask(uint32_t * pdest, uint32_t color)
 	b=(X32COL2(GETLE32(pdest)))+((X32COL2(color)));
 	g=(X32COL3(GETLE32(pdest)))+((X32COL3(color)));
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 
 	__GetShadeTransCheckMask(pdest, r, g, b);
 }   
@@ -1127,7 +1571,7 @@ __inline void GetShadeTransCol32ABR2_NoCheckMask(uint32_t * pdest, uint32_t colo
 	sg=(XCOL3(c))-sgc; if(sg&0x8000) sg=0;
 	r|=sr;b|=sb>>5;g|=sg>>10;
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 
 	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
 }  
@@ -1149,7 +1593,7 @@ __inline void GetShadeTransCol32ABR2_CheckMask(uint32_t * pdest, uint32_t color)
 	sg=(XCOL3(c))-sgc; if(sg&0x8000) sg=0;
 	r|=sr;b|=sb>>5;g|=sg>>10;
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 
 	__GetShadeTransCheckMask(pdest, r, g, b);
 }   
@@ -1168,7 +1612,7 @@ __inline void GetShadeTransCol32SemiTrans_NoCheckMask(uint32_t * pdest, uint32_t
 	g=(X32COL3(GETLE32(pdest)))+((X32ACOL3(color))>>1);
 #endif
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 
 	PUTLE32(pdest, (X32PSXCOL(r,g,b))|lSetMask);//0x80008000;
 } 
@@ -1187,7 +1631,7 @@ __inline void GetShadeTransCol32SemiTrans_CheckMask(uint32_t * pdest, uint32_t c
 	g=(X32COL3(GETLE32(pdest)))+((X32ACOL3(color))>>1);
 #endif
 
-	__GetShadeClampRGB(&r, &g, &b);
+	__GetShadeClampRGB(r, g, b);
 	
 	__GetShadeTransCheckMask(pdest, r, g, b);
 } 
@@ -1203,6 +1647,48 @@ __inline void GetShadeTransCol32NoSemiTrans_CheckMask(uint32_t * pdest, uint32_t
 __inline void GetShadeTransCol32NoSemiTrans_NoCheckMask(uint32_t * pdest, uint32_t color)
 {
 	PUTLE32(pdest, color|lSetMask);//0x80008000;
+}
+
+__inline t_getshadetrans_func GetShadeTransCol32Func() {
+	// By default take the slow one ...
+	t_getshadetrans_func func = GetShadeTransCol32;
+	if(DrawSemiTrans) {
+		if (GlobalTextABR==0)
+		{
+			if (bCheckMask) {
+				func = GetShadeTransCol32ABR0_CheckMask;
+			} else {
+				func = GetShadeTransCol32ABR0_NoCheckMask; 
+			}
+			
+		} else if(GlobalTextABR==1) {
+			if (bCheckMask) {
+				func = GetShadeTransCol32ABR1_CheckMask;
+			} else {
+				func = GetShadeTransCol32ABR1_NoCheckMask; 
+			}
+		} else if(GlobalTextABR==2) {
+			if (bCheckMask) {
+				func = GetShadeTransCol32ABR2_CheckMask;
+			} else {
+				func = GetShadeTransCol32ABR2_NoCheckMask; 
+			}
+		} else {
+			if (bCheckMask) {
+				func = GetShadeTransCol32SemiTrans_CheckMask;
+			} else {
+				func = GetShadeTransCol32SemiTrans_NoCheckMask; 
+			}
+		}
+	} else {
+		if (bCheckMask) {
+			func = GetShadeTransCol32NoSemiTrans_CheckMask;
+		} else {
+			func = GetShadeTransCol32NoSemiTrans_NoCheckMask; 
+		}
+	}
+
+	return func;
 }
 
 void FillSoftwareAreaTrans(
@@ -1269,43 +1755,7 @@ void FillSoftwareAreaTrans(
 		}
 		else {
 			// New code way ..
-			t_getshadetrans_func func = GetShadeTransCol32;
-
-			if(DrawSemiTrans) {
-				if (GlobalTextABR==0)
-				{
-					if (bCheckMask) {
-						func = GetShadeTransCol32ABR0_CheckMask;
-					} else {
-						func = GetShadeTransCol32ABR0_NoCheckMask; 
-					}
-			
-				} else if(GlobalTextABR==1) {
-					if (bCheckMask) {
-						func = GetShadeTransCol32ABR1_CheckMask;
-					} else {
-						func = GetShadeTransCol32ABR1_NoCheckMask; 
-					}
-				} else if(GlobalTextABR==2) {
-					if (bCheckMask) {
-						func = GetShadeTransCol32ABR2_CheckMask;
-					} else {
-						func = GetShadeTransCol32ABR2_NoCheckMask; 
-					}
-				} else {
-					if (bCheckMask) {
-						func = GetShadeTransCol32SemiTrans_CheckMask;
-					} else {
-						func = GetShadeTransCol32SemiTrans_NoCheckMask; 
-					}
-				}
-			} else {
-				if (bCheckMask) {
-					func = GetShadeTransCol32NoSemiTrans_CheckMask;
-				} else {
-					func = GetShadeTransCol32NoSemiTrans_NoCheckMask; 
-				}
-			}
+			t_getshadetrans_func func = GetShadeTransCol32Func();
 
 			for(i=0;i<dy;i++)
 			{
@@ -2888,12 +3338,15 @@ __inline void drawPoly3Fi(short x1,short y1,short x2,short y2,short x3,short y3,
 
 	for (i=ymin;i<=ymax;i++)
 	{
+		// New code way ..
+		t_getshadetrans_func func32 = GetShadeTransCol32Func();
+
 		xmin=left_x >> 16;      if(drawX>xmin) xmin=drawX;
 		xmax=(right_x >> 16)-1; if(drawW<xmax) xmax=drawW;
 
 		for(j=xmin;j<xmax;j+=2) 
 		{
-			GetShadeTransCol32((uint32_t *)&psxVuw[(i<<10)+j],lcolor);
+			func32((uint32_t *)&psxVuw[(i<<10)+j],lcolor);
 		}
 		if(j==xmax)
 			GetShadeTransCol(&psxVuw[(i<<10)+j],color);
@@ -2968,14 +3421,19 @@ void drawPoly4F(int32_t rgb)
 
 	for (i=ymin;i<=ymax;i++)
 	{
+		// New code way ..
+		t_getshadetrans_func func32 = GetShadeTransCol32Func();
+
 		xmin=left_x >> 16;      if(drawX>xmin) xmin=drawX;
 		xmax=(right_x >> 16)-1; if(drawW<xmax) xmax=drawW;
 
 		for(j=xmin;j<xmax;j+=2) 
 		{
-			GetShadeTransCol32((uint32_t *)&psxVuw[(i<<10)+j],lcolor);
+			func32((uint32_t *)&psxVuw[(i<<10)+j], lcolor);
 		}
-		if(j==xmax) GetShadeTransCol(&psxVuw[(i<<10)+j],color);
+		if(j==xmax) { 
+			GetShadeTransCol(&psxVuw[(i<<10)+j],color);
+		}
 
 		if(NextRow_F4()) return;
 	}
@@ -2992,6 +3450,7 @@ void drawPoly3TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 	int32_t posX,posY,YAdjust,XAdjust;
 	int32_t clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -3067,6 +3526,7 @@ void drawPoly3TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -3092,7 +3552,7 @@ void drawPoly3TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 					(XAdjust>>1)];
 				tC2=(tC2>>((XAdjust&1)<<2))&0xf;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 
@@ -3124,6 +3584,7 @@ void drawPoly3TEx4_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t posX,posY,YAdjust,XAdjust;
 	int32_t clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -3211,6 +3672,7 @@ void drawPoly3TEx4_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -3244,7 +3706,7 @@ void drawPoly3TEx4_IL(short x1, short y1, short x2, short y2, short x3, short y3
 
 				tC2= (GETLE16(&psxVuw[(n_yi<<10)+YAdjust+n_xi]) >> ((XAdjust & 0x03)<<2)) & 0x0f ;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 
@@ -3280,6 +3742,7 @@ void drawPoly3TEx4_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t posX,posY,YAdjust,XAdjust;
 	int32_t clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -3359,6 +3822,7 @@ void drawPoly3TEx4_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -3385,7 +3849,7 @@ void drawPoly3TEx4_TW(short x1, short y1, short x2, short y2, short x3, short y3
 					YAdjust+(XAdjust>>1)];
 				tC2=(tC2>>((XAdjust&1)<<2))&0xf;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 
@@ -3433,6 +3897,7 @@ void drawPoly4TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP,XAdjust;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -3509,6 +3974,7 @@ void drawPoly4TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -3541,7 +4007,7 @@ void drawPoly4TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 					(XAdjust>>1)];
 				tC2=(tC2>>((XAdjust&1)<<2))&0xf;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -3569,6 +4035,7 @@ void drawPoly4TEx4_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX=0,posY=0,YAdjust,clutP,XAdjust;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -3657,6 +4124,7 @@ void drawPoly4TEx4_IL(short x1, short y1, short x2, short y2, short x3, short y3
 		if(NextRow_FT4()) return;
 	}
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -3697,7 +4165,7 @@ void drawPoly4TEx4_IL(short x1, short y1, short x2, short y2, short x3, short y3
 
 				tC2= (GETLE16(&psxVuw[(n_yi<<10)+YAdjust+n_xi]) >> ((XAdjust & 0x03)<<2)) & 0x0f ;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -3728,6 +4196,7 @@ void drawPoly4TEx4_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP,XAdjust;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -3805,6 +4274,7 @@ void drawPoly4TEx4_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -3838,7 +4308,7 @@ void drawPoly4TEx4_TW(short x1, short y1, short x2, short y2, short x3, short y3
 					YAdjust+(XAdjust>>1)];
 				tC2=(tC2>>((XAdjust&1)<<2))&0xf;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4004,6 +4474,7 @@ void drawPoly3TEx8(short x1, short y1, short x2, short y2, short x3, short y3, s
 	int32_t difX, difY,difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -4071,6 +4542,7 @@ void drawPoly3TEx8(short x1, short y1, short x2, short y2, short x3, short y3, s
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -4091,7 +4563,7 @@ void drawPoly3TEx8(short x1, short y1, short x2, short y2, short x3, short y3, s
 				tC1 = psxVub[((posY>>5)&(int32_t)0xFFFFF800)+YAdjust+(posX>>16)];
 				tC2 = psxVub[(((posY+difY)>>5)&(int32_t)0xFFFFF800)+YAdjust+
 					((posX+difX)>>16)];
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4120,6 +4592,7 @@ void drawPoly3TEx8_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t difX, difY,difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -4204,6 +4677,7 @@ void drawPoly3TEx8_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -4235,7 +4709,7 @@ void drawPoly3TEx8_IL(short x1, short y1, short x2, short y2, short x3, short y3
 
 				tC2= (GETLE16(&psxVuw[(n_yi<<10)+YAdjust+n_xi]) >> ((TXU & 0x01)<<3)) & 0xff;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4270,6 +4744,7 @@ void drawPoly3TEx8_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t difX, difY,difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -4342,6 +4817,7 @@ void drawPoly3TEx8_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -4363,7 +4839,7 @@ void drawPoly3TEx8_TW(short x1, short y1, short x2, short y2, short x3, short y3
 					YAdjust+((posX>>16)%TWin.Position.x1)];
 				tC2 = psxVub[((((posY+difY)>>16)%TWin.Position.y1)<<11)+
 					YAdjust+(((posX+difX)>>16)%TWin.Position.x1)];
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4411,6 +4887,7 @@ void drawPoly4TEx8(short x1, short y1, short x2, short y2, short x3, short y3, s
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -4478,6 +4955,7 @@ void drawPoly4TEx8(short x1, short y1, short x2, short y2, short x3, short y3, s
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -4505,7 +4983,7 @@ void drawPoly4TEx8(short x1, short y1, short x2, short y2, short x3, short y3, s
 				tC1 = psxVub[((posY>>5)&(int32_t)0xFFFFF800)+YAdjust+(posX>>16)];
 				tC2 = psxVub[(((posY+difY)>>5)&(int32_t)0xFFFFF800)+YAdjust+
 					((posX+difX)>>16)];
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4530,6 +5008,7 @@ void drawPoly4TEx8_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -4614,6 +5093,7 @@ void drawPoly4TEx8_IL(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -4652,7 +5132,7 @@ void drawPoly4TEx8_IL(short x1, short y1, short x2, short y2, short x3, short y3
 
 				tC2= (GETLE16(&psxVuw[(n_yi<<10)+YAdjust+n_xi]) >> ((TXU & 0x01)<<3)) & 0xff;
 
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4681,6 +5161,7 @@ void drawPoly4TEx8_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY,YAdjust,clutP;
 	short tC1,tC2;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -4751,6 +5232,7 @@ void drawPoly4TEx8_TW(short x1, short y1, short x2, short y2, short x3, short y3
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 
 	for (i=ymin;i<=ymax;i++)
@@ -4780,7 +5262,7 @@ void drawPoly4TEx8_TW(short x1, short y1, short x2, short y2, short x3, short y3
 					YAdjust+((posX>>16)%TWin.Position.x1)];
 				tC2 = psxVub[((((posY+difY)>>16)%TWin.Position.y1)<<11)+
 					YAdjust+(((posX+difX)>>16)%TWin.Position.x1)];
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					GETLE16(&psxVuw[clutP+tC1])|
 					((int32_t)GETLE16(&psxVuw[clutP+tC2]))<<16);
 				posX+=difX2;
@@ -4931,6 +5413,7 @@ void drawPoly3TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
 	int i,j,xmin,xmax,ymin,ymax;
 	int32_t difX, difY,difX2, difY2;
 	int32_t posX,posY;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -4989,6 +5472,7 @@ void drawPoly3TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -5006,7 +5490,7 @@ void drawPoly3TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
 
 			for(j=xmin;j<xmax;j+=2)
 			{
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					(((int32_t)GETLE16(&psxVuw[((((posY+difY)>>16)+GlobalTextAddrY)<<10)+((posX+difX)>>16)+GlobalTextAddrX]))<<16)|
 					GETLE16(&psxVuw[(((posY>>16)+GlobalTextAddrY)<<10)+((posX)>>16)+GlobalTextAddrX]));
 
@@ -5031,6 +5515,7 @@ void drawPoly3TD_TW(short x1, short y1, short x2, short y2, short x3, short y3, 
 	int i,j,xmin,xmax,ymin,ymax;
 	int32_t difX, difY,difX2, difY2;
 	int32_t posX,posY;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH) return;
@@ -5092,6 +5577,7 @@ void drawPoly3TD_TW(short x1, short y1, short x2, short y2, short x3, short y3, 
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -5109,7 +5595,7 @@ void drawPoly3TD_TW(short x1, short y1, short x2, short y2, short x3, short y3, 
 
 			for(j=xmin;j<xmax;j+=2)
 			{
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					(((int32_t)GETLE16(&psxVuw[(((((posY+difY)>>16)%TWin.Position.y1)+GlobalTextAddrY+TWin.Position.y0)<<10)+
 					(((posX+difX)>>16)%TWin.Position.x1)+GlobalTextAddrX+TWin.Position.x0]))<<16)|
 					GETLE16(&psxVuw[((((posY>>16)%TWin.Position.y1)+GlobalTextAddrY+TWin.Position.y0)<<10)+
@@ -5153,6 +5639,7 @@ void drawPoly4TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
 	int32_t i,j,xmin,xmax,ymin,ymax;
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -5212,6 +5699,7 @@ void drawPoly4TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -5236,7 +5724,7 @@ void drawPoly4TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
 
 			for(j=xmin;j<xmax;j+=2)
 			{
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					(((int32_t)GETLE16(&psxVuw[((((posY+difY)>>16)+GlobalTextAddrY)<<10)+((posX+difX)>>16)+GlobalTextAddrX]))<<16)|
 					GETLE16(&psxVuw[(((posY>>16)+GlobalTextAddrY)<<10)+((posX)>>16)+GlobalTextAddrX]));
 
@@ -5259,6 +5747,7 @@ void drawPoly4TD_TW(short x1, short y1, short x2, short y2, short x3, short y3, 
 	int32_t i,j,xmin,xmax,ymin,ymax;
 	int32_t difX, difY, difX2, difY2;
 	int32_t posX,posY;
+	t_getshadetrans_func func;
 
 	if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
 	if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -5321,6 +5810,7 @@ void drawPoly4TD_TW(short x1, short y1, short x2, short y2, short x3, short y3, 
 	}
 
 #endif
+	func = GetTextureTransColG32Func();
 
 	for (i=ymin;i<=ymax;i++)
 	{
@@ -5345,7 +5835,7 @@ void drawPoly4TD_TW(short x1, short y1, short x2, short y2, short x3, short y3, 
 
 			for(j=xmin;j<xmax;j+=2)
 			{
-				GetTextureTransColG32((uint32_t *)&psxVuw[(i<<10)+j],
+				func((uint32_t *)&psxVuw[(i<<10)+j],
 					(((int32_t)GETLE16(&psxVuw[(((((posY+difY)>>16)%TWin.Position.y1)+GlobalTextAddrY+TWin.Position.y0)<<10)+
 					(((posX+difX)>>16)%TWin.Position.x1)+GlobalTextAddrX+TWin.Position.x0]))<<16)|
 					GETLE16(&psxVuw[((((posY>>16)%TWin.Position.y1)+GlobalTextAddrY+TWin.Position.y0)<<10)+
