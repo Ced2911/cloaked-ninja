@@ -41,6 +41,9 @@
     <ClCompile Include="..\..\..\plugins\xbox_soft\zn.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\plugins\xbox_soft\soft.func.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\plugins\xbox_soft\cfg.h">
@@ -89,6 +92,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\plugins\xbox_soft\gputh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\plugins\xbox_soft\soft.func.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

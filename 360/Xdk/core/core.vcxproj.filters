@@ -116,6 +116,9 @@
     <ClInclude Include="..\..\..\libpcsxcore\fileio.wrapper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\libpcsxcore\ppc\ppcAlloc.h">
+      <Filter>ppc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\libpcsxcore\ppc\ppc.c">
@@ -134,9 +137,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\cheat.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\libpcsxcore\debug.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\decode_xa.c">
@@ -203,6 +203,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\libpcsxcore\fileio.wrapper.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libpcsxcore\ppc\ppcAlloc.c">
+      <Filter>ppc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\libpcsxcore\debug.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
