@@ -20,10 +20,6 @@ email                : BlackDove@addcom.de
 #include <sys/stat.h>
 #include <stdlib.h>
 
-#undef FALSE
-#undef TRUE
-#define MAKELONG(low,high)     ((unsigned long)(((unsigned short)(low)) | (((unsigned long)((unsigned short)(high))) << 16)))
-
 #include "externals.h"
 #include "cfg.h"
 #include "gpu.h"

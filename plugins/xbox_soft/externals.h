@@ -14,6 +14,7 @@
  *   additional informations.                                              *
  *                                                                         *
  ***************************************************************************/
+#include <xtl.h>
 
 #define INFO_TW        0
 #define INFO_DRAWSTART 1
@@ -91,7 +92,6 @@
 #ifndef _XBOX
 #define __inline inline
 #endif
-#define CALLBACK
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -156,13 +156,9 @@ typedef struct SDXTAG
 
 #define FALSE 0
 #define TRUE 1
-#define BOOL unsigned short
-#define LOWORD(l)           ((unsigned short)(l))
-#define HIWORD(l)           ((unsigned short)(((uint32_t)(l) >> 16) & 0xFFFF))
+#define BOOL unsigned int
 #define max(a,b)            (((a) > (b)) ? (a) : (b))
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
-#define DWORD uint32_t
-#define __int64 long long int
 #ifndef _XBOX
 typedef struct RECTTAG
 {

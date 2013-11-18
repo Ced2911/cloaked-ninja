@@ -295,7 +295,7 @@ void CALLBACK GPUmakeSnapshot(void)
 	header[0x12] = PreviousPSXDisplay.Range.x1 % 256;
 	header[0x13] = PreviousPSXDisplay.Range.x1 / 256;
 	header[0x16] = height % 256;
-	header[0x17] = height / 256;
+	header[0x17] = (unsigned char)height / 256;
 	header[0x1a] = 0x01;
 	header[0x1c] = 0x18;
 	header[0x26] = 0x12;
@@ -431,10 +431,7 @@ long CALLBACK GPUinit()                                // GPU INIT
 ////////////////////////////////////////////////////////////////////////
 // Here starts all...
 ////////////////////////////////////////////////////////////////////////
-long GPUopen(unsigned long * disp,char * CapText,char * CfgFile)
-{
-	unsigned long d;
-
+long GPUopen(unsigned long * disp,char * CapText,char * CfgFile) {
 	pCaptionText=CapText;
 
 

@@ -23,64 +23,12 @@ email                : BlackDove@addcom.de
 #include "draw.h"
 #include "key.h"
 
-#define VK_INSERT      65379
-#define VK_HOME        65360
-#define VK_PRIOR       65365
-#define VK_NEXT        65366
-#define VK_END         65367
-#define VK_DEL         65535
-#define VK_F5          65474
-
 void GPUmakeSnapshot(void);
 
 unsigned long          ulKeybits=0;
 
 void GPUkeypressed(int keycode)
 {
-	switch(keycode)
-	{
-	case 0xFFC9:			//X11 key: F12
-	case ((1<<29) | 0xFF0D):	//special keycode from pcsx-df: alt-enter
-		bChangeWinMode=TRUE;
-		break;
-	case VK_F5:
-		GPUmakeSnapshot();
-		break;
-
-	case VK_INSERT:
-		if(iUseFixes) {iUseFixes=0;dwActFixes=0;}
-		else          {iUseFixes=1;dwActFixes=dwCfgFixes;}
-		SetFixes();
-		if(iFrameLimit==2) SetAutoFrameCap();
-		break;
-
-	case VK_DEL:
-		if(ulKeybits&KEY_SHOWFPS)
-			ulKeybits&=~KEY_SHOWFPS;
-		else 
-		{
-			ulKeybits|=KEY_SHOWFPS;
-			szDispBuf[0]=0;
-			BuildDispMenu(0);
-		}
-		break;
-
-	case VK_PRIOR: BuildDispMenu(-1);            break;
-	case VK_NEXT:  BuildDispMenu( 1);            break;
-	case VK_END:   SwitchDispMenu(1);            break;
-	case VK_HOME:  SwitchDispMenu(-1);           break;
-	case 0x60:
-		{
-			iFastFwd = 1 - iFastFwd;
-			bSkipNextFrame = FALSE;
-			UseFrameSkip = iFastFwd;
-			BuildDispMenu(0);
-			break;
-		}
-#ifdef _MACGL
-	default: { void HandleKey(int keycode); HandleKey(keycode); }
-#endif
-	}
 }
 
 void SetKeyHandler(void)
